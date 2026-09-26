@@ -1,0 +1,17 @@
+{
+    "name": "network-portfolio",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "description": "Static portfolio of interactive networking labs. No build step — plain HTML/CSS/JS, deployed as-is to GitHub Pages. devDependencies here are for linting/formatting only.",
+    "scripts": {
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "lint": "eslint ."
+    },
+    "devDependencies": {
+        "eslint": "^9.13.0",
+        "globals": "^15.11.0",
+        "prettier": "^3.3.3"
+    }
+}

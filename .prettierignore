@@ -1,0 +1,15 @@
+node_modules/
+package-lock.json
+*.zip
+
+# index.html and every projects/**/*.html lab are intentionally excluded.
+# Prettier's HTML formatter re-indents based on full DOM nesting depth (e.g.
+# adds a level for <head>/<body> under <html>), which conflicts with this
+# project's existing flush-indent convention and, combined with very long
+# Tailwind utility-class strings, produces a near-total rewrite of every line
+# in these hand-authored/AI-generated files for a purely cosmetic reason —
+# checked once against a real run: ~1500 changed lines in a 609-line file.
+# That's a large, low-value diff to verify by hand on files explicitly meant
+# not to change behavior. CSS/JS under assets/ is still fully covered below.
+index.html
+projects/**/*.html
