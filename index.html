@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duc — Network Engineer & Developer</title>
+
+    <!-- Apply the saved theme before first paint, to avoid a flash of the wrong theme -->
+    <script src="assets/js/theme-init.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+                    },
+                    colors: {
+                        cisco: '#00bceb',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Shared theme CSS (identical across every page) -->
+    <link rel="stylesheet" href="assets/css/theme.css">
+
+    <style>
+        /* Subtle animated grid backdrop behind the hero, evoking a network topology field */
+        .net-grid {
+            background-image:
+                linear-gradient(rgba(59,130,246,0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59,130,246,0.08) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 40%, transparent 100%);
+        }
+        .dark .net-grid {
+            background-image:
+                linear-gradient(rgba(96,165,250,0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(96,165,250,0.08) 1px, transparent 1px);
+        }
+
+        @keyframes pingSlow {
+            0% { transform: scale(1); opacity: 0.6; }
+            80%, 100% { transform: scale(2.2); opacity: 0; }
+        }
+        .ping-node::after {
+            content: '';
+            position: absolute; inset: 0;
+            border-radius: 9999px;
+            background: currentColor;
+            animation: pingSlow 2.5s cubic-bezier(0,0,0.2,1) infinite;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen">
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="max-w-6xl mx-auto px-4 md:px-8 py-3 flex justify-between items-center gap-4">
+            <a href="#top" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-900 dark:text-white leading-tight">Duc</h1>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Network Engineer &amp; Developer</p>
+                </div>
+            </a>
+
+            <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                <a href="#about" class="hover:text-blue-600 dark:hover:text-blue-400 transition-all-fast">About</a>
+                <a href="#skills" class="hover:text-blue-600 dark:hover:text-blue-400 transition-all-fast">Skills</a>
+                <a href="#projects" class="hover:text-blue-600 dark:hover:text-blue-400 transition-all-fast">Projects</a>
+                <a href="#contact" class="hover:text-blue-600 dark:hover:text-blue-400 transition-all-fast">Contact</a>
+            </nav>
+
+            <div class="flex items-center gap-2">
+                <a href="#projects" class="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all-fast" title="Projects">
+                    <i class="fas fa-diagram-project"></i>
+                </a>
+                <button id="btn-theme" onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all-fast" title="Đổi giao diện Sáng/Tối">
+                    <i id="theme-icon" class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section id="top" class="relative overflow-hidden">
+        <div class="net-grid absolute inset-0 pointer-events-none"></div>
+        <div class="relative max-w-6xl mx-auto px-4 md:px-8 pt-20 pb-24 flex flex-col items-center text-center gap-6">
+            <div class="relative w-3 h-3">
+                <span class="ping-node absolute inline-flex w-3 h-3 rounded-full bg-emerald-500 text-emerald-500"></span>
+                <span class="relative inline-flex rounded-full w-3 h-3 bg-emerald-500"></span>
+            </div>
+            <p id="hero-status" class="font-mono text-xs md:text-sm text-blue-600 dark:text-blue-400 tracking-wide">Status: all systems nominal</p>
+            <h2 class="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white max-w-3xl leading-tight">
+                I design networks<br class="hidden md:block"> and build the tools that run them.
+            </h2>
+            <p class="text-slate-600 dark:text-slate-300 text-base md:text-lg max-w-xl leading-relaxed">
+                Network engineer and Python developer. This site collects interactive labs that walk through
+                how core networking protocols actually behave, step by step.
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-3 mt-2">
+                <a href="#projects" class="px-6 py-3 rounded-full bg-blue-600 text-white font-semibold shadow-md shadow-blue-500/30 hover:bg-blue-700 transition-all-fast">
+                    <i class="fas fa-play mr-2"></i>View the labs
+                </a>
+                <a href="#contact" class="px-6 py-3 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all-fast">
+                    Get in touch
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <main class="max-w-6xl mx-auto px-4 md:px-8 flex flex-col gap-20 pb-20">
+
+        <!-- About -->
+        <section id="about" class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start scroll-mt-20">
+            <div class="lg:col-span-2">
+                <h3 class="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">About</h3>
+                <p class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white leading-snug">
+                    Working across the stack — from switch config to the software that manages it.
+                </p>
+            </div>
+            <div class="lg:col-span-3 flex flex-col gap-4">
+                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                    I spend most of my time on network infrastructure — switches, access points, and firewalls —
+                    and on the Python tooling that keeps it observable. I'm currently building
+                    <span class="font-semibold text-slate-900 dark:text-white">CMC_NMS_Tool</span>, a desktop
+                    network management system for SNMP monitoring, inventory, and device configuration.
+                </p>
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-desktop text-blue-500"></i>
+                        <span class="font-bold text-slate-800 dark:text-white text-sm">CMC_NMS_Tool</span>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">v5.1</span>
+                    </div>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-3">
+                        Python/PySide6 desktop app. Currently rewriting the SNMP subsystem as a pure-stdlib UDP
+                        socket implementation — zero pip dependencies, SNMPv2c BER encoding by hand.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">Python</span>
+                        <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">PySide6</span>
+                        <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">SNMP</span>
+                        <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">Inventory Mgmt</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills -->
+        <section id="skills" class="scroll-mt-20">
+            <h3 class="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-6">Skills</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800 dark:text-white mb-2">Networking</h4>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">OSPF, STP, VLANs &amp; trunking, SNMP, Cisco IOS/IOS-XE, EVE-NG/GNS3 lab design.</p>
+                </div>
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800 dark:text-white mb-2">Programming</h4>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Python, PySide6 desktop apps, stdlib socket/UDP protocol work, JavaScript.</p>
+                </div>
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
+                        <i class="fas fa-toolbox"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800 dark:text-white mb-2">Tools</h4>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Wireshark, SecureCRT/PuTTY, Windows Credential Manager integration, Git.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects -->
+        <section id="projects" class="scroll-mt-20">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">Projects</h3>
+                    <p class="text-2xl font-extrabold text-slate-900 dark:text-white"><span id="project-count"></span> interactive labs</p>
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <div class="relative w-full md:w-64">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input id="project-search" type="text" placeholder="Search by name, tag, or type..."
+                            class="w-full pl-10 pr-4 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all-fast">
+                    </div>
+                    <select id="project-topic" title="Topic"
+                        class="shrink-0 pl-3 pr-8 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all-fast">
+                        <option value="All">All topics</option>
+                    </select>
+                    <select id="project-sort" title="Sort"
+                        class="shrink-0 pl-3 pr-8 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all-fast">
+                        <option value="newest">Newest</option>
+                        <option value="az">A–Z</option>
+                    </select>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">
+                <span class="font-semibold text-slate-500 dark:text-slate-400">Format</span> — what kind of lab it is:
+            </p>
+            <div id="category-filters" class="flex flex-wrap gap-2 mb-6"></div>
+
+            <div id="project-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <p id="project-empty" class="hidden text-center text-slate-400 dark:text-slate-500 py-12">
+                <i class="fas fa-satellite-dish text-2xl mb-3 block"></i>
+                No labs match that search.
+            </p>
+        </section>
+
+        <!-- Contact -->
+        <section id="contact" class="scroll-mt-20 bg-white dark:bg-slate-900 rounded-2xl p-8 md:p-10 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Let's talk networks.</h3>
+                <p class="text-slate-500 dark:text-slate-400">Open to conversations about network automation, SNMP tooling, or lab design.</p>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+                <a href="https://github.com/" class="w-11 h-11 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all-fast" title="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://www.linkedin.com/" class="w-11 h-11 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all-fast" title="LinkedIn">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="mailto:you@example.com" class="w-11 h-11 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all-fast" title="Email">
+                    <i class="fas fa-envelope"></i>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="border-t border-slate-200 dark:border-slate-800 py-6">
+        <div class="max-w-6xl mx-auto px-4 md:px-8 flex flex-col md:flex-row justify-between items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+            <span>&copy; <span id="year"></span> Duc. Built as a static site, hosted on GitHub Pages.</span>
+            <a href="#top" class="hover:text-blue-500 transition-all-fast">Back to top ↑</a>
+        </div>
+    </footer>
+
+    <script src="assets/js/projects.js"></script>
+    <script>
+        // ---- Project rendering: reads PROJECTS + PROJECT_TYPES from assets/projects.js ----
+        const ALL_PROJECTS = (typeof PROJECTS !== 'undefined' ? PROJECTS : []);
+        const TYPES = (typeof PROJECT_TYPES !== 'undefined' ? PROJECT_TYPES : {});
+        const grid = document.getElementById('project-grid');
+        const emptyState = document.getElementById('project-empty');
+        const countEl = document.getElementById('project-count');
+        const searchInput = document.getElementById('project-search');
+        const sortSelect = document.getElementById('project-sort');
+        const topicSelect = document.getElementById('project-topic');
+        const filterBar = document.getElementById('category-filters');
+
+        let activeType = 'All';
+
+        function buildTopicOptions() {
+            // Free-text, unlike the fixed 6 types — whatever `topic` values exist in
+            // PROJECTS just show up here. No taxonomy file to maintain for this one.
+            const topics = [...new Set(ALL_PROJECTS.map(p => p.topic).filter(Boolean))].sort();
+            topicSelect.innerHTML = '<option value="All">All topics</option>' +
+                topics.map(t => `<option value="${t}">${t}</option>`).join('');
+        }
+
+        function typeMeta(key) {
+            return TYPES[key] || { label: key, short: key, icon: 'fa-diagram-project', accent: 'from-slate-400 to-slate-600' };
+        }
+
+        function buildFilterChips() {
+            // Fixed order from PROJECT_TYPES (the taxonomy), not derived from which labs exist yet —
+            // so all 6 formats are always visible, even ones with only "soon" placeholders.
+            filterBar.innerHTML = '';
+            const allChip = makeChip('All', 'All', ALL_PROJECTS.length);
+            filterBar.appendChild(allChip);
+            Object.keys(TYPES).forEach(key => {
+                const count = ALL_PROJECTS.filter(p => p.type === key).length;
+                filterBar.appendChild(makeChip(key, typeMeta(key).short, count));
+            });
+        }
+
+        function makeChip(key, label, count) {
+            const chip = document.createElement('button');
+            chip.innerHTML = `${label} <span class="opacity-60">${count}</span>`;
+            chip.dataset.type = key;
+            chip.className = chipClasses(key === activeType);
+            chip.onclick = () => {
+                activeType = key;
+                [...filterBar.children].forEach(c => c.className = chipClasses(c.dataset.type === activeType));
+                renderProjects();
+            };
+            return chip;
+        }
+
+        function chipClasses(active) {
+            return `px-4 py-1.5 rounded-full text-xs font-bold border transition-all-fast ${
+                active
+                    ? 'bg-blue-600 border-blue-600 text-white shadow'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-blue-300 dark:hover:border-blue-700'
+            }`;
+        }
+
+        function matchesSearch(p, query) {
+            if (!query) return true;
+            const haystack = [p.title, p.description, p.topic, typeMeta(p.type).label, ...(p.tags || [])].join(' ').toLowerCase();
+            return haystack.includes(query);
+        }
+
+        function sortProjects(list) {
+            const sorted = [...list];
+            if (sortSelect.value === 'az') {
+                sorted.sort((a, b) => a.title.localeCompare(b.title));
+            } else {
+                // "newest" — falls back to 0 (oldest) if dateAdded is missing, so it never crashes
+                sorted.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
+            }
+            return sorted;
+        }
+
+        function renderProjects() {
+            const query = searchInput.value.trim().toLowerCase();
+            const activeTopic = topicSelect.value;
+            const filtered = sortProjects(ALL_PROJECTS.filter(p =>
+                (activeType === 'All' || p.type === activeType) &&
+                (activeTopic === 'All' || p.topic === activeTopic) &&
+                matchesSearch(p, query)
+            ));
+
+            countEl.textContent = ALL_PROJECTS.length;
+            grid.innerHTML = '';
+            emptyState.classList.toggle('hidden', filtered.length > 0);
+
+            filtered.forEach(p => {
+                const isLive = p.status === 'live';
+                const meta = typeMeta(p.type);
+                const icon = p.icon || meta.icon;
+                const accent = p.accent || meta.accent;
+                const card = document.createElement(isLive ? 'a' : 'div');
+                if (isLive) card.href = p.href;
+                card.className = `group relative bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4 transition-all-fast ${isLive ? 'hover:shadow-lg hover:-translate-y-1 cursor-pointer' : 'opacity-70'}`;
+                card.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div class="w-11 h-11 rounded-lg bg-gradient-to-br ${accent} flex items-center justify-center text-white shadow">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                        <span class="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
+                            ${isLive ? '' : '<i class="fas fa-clock text-[9px]"></i>'} ${isLive ? meta.short : 'Soon · ' + meta.short}
+                        </span>
+                    </div>
+                    <div class="flex-1">
+                        ${p.topic ? `<span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">${p.topic}</span>` : ''}
+                        <h4 class="font-bold text-slate-900 dark:text-white mb-1">${p.title}</h4>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">${p.description}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        ${(p.tags || []).map(t => `<span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">${t}</span>`).join('')}
+                    </div>
+                    ${isLive ? '<span class="text-sm font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1">Open lab <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i></span>' : ''}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        searchInput.addEventListener('input', renderProjects);
+        sortSelect.addEventListener('change', renderProjects);
+        topicSelect.addEventListener('change', renderProjects);
+        buildFilterChips();
+        buildTopicOptions();
+        renderProjects();
+
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Hero status line — reflects the actual registry instead of hardcoding one lab's terminology
+        const liveCount = ALL_PROJECTS.filter(p => p.status === 'live').length;
+        const soonCount = ALL_PROJECTS.length - liveCount;
+        document.getElementById('hero-status').textContent =
+            `${liveCount} lab${liveCount === 1 ? '' : 's'} live · ${soonCount} in the pipeline`;
+
+        // ---- Theme (persisted across the whole portfolio via localStorage) ----
+        function applyTheme(isDark) {
+            document.documentElement.classList.toggle('dark', isDark);
+            document.getElementById('theme-icon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        function toggleTheme() {
+            const isDark = !document.documentElement.classList.contains('dark');
+            applyTheme(isDark);
+            try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+        }
+        // Head script already applied the right class before paint — just sync the icon to it
+        document.getElementById('theme-icon').className =
+            document.documentElement.classList.contains('dark') ? 'fas fa-sun' : 'fas fa-moon';
+    </script>
+</body>
+</html>

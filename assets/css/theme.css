@@ -1,0 +1,41 @@
+/**
+ * Shared theme CSS for the portfolio.
+ *
+ * Included by every page (homepage + every lab). This file holds ONLY the
+ * styling that is identical across all pages — smooth theme transition,
+ * scrollbar styling, and the .transition-all-fast utility. Anything specific
+ * to one page (e.g. the homepage's hero grid/ping animation, or a lab's
+ * topology/packet animations) stays in that page's own inline <style> block,
+ * since each lab is still generated and dropped in as a single file — see
+ * docs/prompt-templates.md.
+ */
+
+body {
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Shared fast-transition utility, used throughout every page */
+.transition-all-fast {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

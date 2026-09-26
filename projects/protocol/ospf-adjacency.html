@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng OSPF Neighbor Adjacency</title>
+
+    <!-- Apply the saved theme before first paint, to avoid a flash of the wrong theme -->
+    <script src="../../assets/js/theme-init.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+                    },
+                    colors: {
+                        cisco: '#00bceb',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Shared theme CSS (identical across every page) -->
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+
+    <!-- Custom Styles & Keyframes (specific to this lab) -->
+    <style>
+        /* Topology Link Path */
+        .topology-link {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.5), transparent);
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+        
+        .dark .topology-link { background: linear-gradient(90deg, transparent, rgba(51, 65, 85, 0.8), transparent); }
+
+        /* Packet Animations */
+        #animated-packet {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            opacity: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        @keyframes packetMoveLR {
+            0% { left: 10%; opacity: 0; transform: translateY(-50%) scale(0.8); }
+            15% { opacity: 1; transform: translateY(-50%) scale(1); }
+            85% { opacity: 1; transform: translateY(-50%) scale(1); }
+            100% { left: 90%; opacity: 0; transform: translateY(-50%) scale(0.8); }
+        }
+
+        @keyframes packetMoveRL {
+            0% { left: 90%; opacity: 0; transform: translateY(-50%) scale(0.8); }
+            15% { opacity: 1; transform: translateY(-50%) scale(1); }
+            85% { opacity: 1; transform: translateY(-50%) scale(1); }
+            100% { left: 10%; opacity: 0; transform: translateY(-50%) scale(0.8); }
+        }
+
+        .animate-lr { animation: packetMoveLR 2s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        .animate-rl { animation: packetMoveRL 2s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Sync Pulse Effect */
+        @keyframes syncPulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .sync-pulse { animation: syncPulse 2s infinite; }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen">
+    
+    <!-- Sticky Header & Control Bar -->
+    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <!-- Title -->
+            <div class="flex items-center gap-3">
+                <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0" title="Về trang chủ Portfolio">
+                    <i class="fas fa-network-wired"></i>
+                </a>
+                <div>
+                    <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                        <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                    </a>
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">OSPF Protocol Simulator</h1>
+                </div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+                <button id="btn-prev" onclick="app.prevStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast" title="Lùi lại">
+                    <i class="fas fa-step-backward"></i>
+                </button>
+                <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/30 transition-all-fast" title="Phát / Tạm dừng">
+                    <i id="icon-play" class="fas fa-play ml-1"></i>
+                </button>
+                <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast" title="Tiếp theo">
+                    <i class="fas fa-step-forward"></i>
+                </button>
+                <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast" title="Khôi phục trạng thái đầu">
+                    <i class="fas fa-undo"></i>
+                </button>
+                <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" title="Đổi giao diện Sáng/Tối">
+                    <i id="theme-icon" class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-8">
+        
+        <!-- Timeline Stepper -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors relative overflow-hidden">
+            <h2 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Trạng thái OSPF (7 Bước)</h2>
+            <div class="relative flex justify-between items-center w-full">
+                <!-- Background Line -->
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
+                <!-- Progress Line -->
+                <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out"></div>
+                
+                <!-- Stepper Buttons (Injected by JS) -->
+                <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-2"></div>
+            </div>
+        </section>
+
+        <!-- Visual Topology & State Cards -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-lg relative overflow-hidden">
+            <h2 class="absolute top-4 left-6 text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Sơ đồ Mạng Thực tế (Topology)</h2>
+            
+            <div class="flex flex-col md:flex-row items-center justify-between mt-10 w-full max-w-5xl mx-auto relative gap-8 md:gap-0">
+                
+                <!-- The Link (Line connecting routers) -->
+                <div class="hidden md:block topology-link"></div>
+                <div class="md:hidden absolute top-0 bottom-0 left-1/2 w-1 bg-gradient-to-b from-transparent via-slate-400 to-transparent dark:via-slate-600 -translate-x-1/2 z-0"></div>
+
+                <!-- Animated Packet Container -->
+                <div id="animated-packet" class="hidden flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap">
+                    <i id="packet-icon" class="fas fa-envelope"></i>
+                    <span id="packet-label">Hello Packet</span>
+                </div>
+
+                <!-- Router 1 Card -->
+                <div id="r1-card" class="relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 border-slate-200 dark:border-slate-700 shadow-xl flex flex-col items-center transition-all duration-300">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 px-3 py-0.5 rounded-full text-xs font-bold border border-blue-200 dark:border-blue-700/50">Node A</div>
+                    
+                    <div class="w-20 h-20 mb-3 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-server text-4xl text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    
+                    <h3 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">R1</h3>
+                    <p class="text-xs font-mono text-slate-500 dark:text-slate-400 mb-4 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-700">RID: <span id="r1-rid">1.1.1.1</span></p>
+                    
+                    <div class="w-full space-y-2 mt-2">
+                        <div class="flex justify-between text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
+                            <span class="text-slate-500 dark:text-slate-400">Interface</span>
+                            <span class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">e0/0 (10.0.0.1)</span>
+                        </div>
+                        <div class="flex justify-between text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
+                            <span class="text-slate-500 dark:text-slate-400">Role</span>
+                            <span id="r1-role" class="font-bold text-slate-700 dark:text-slate-300">-</span>
+                        </div>
+                        <div class="flex flex-col mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-center gap-1">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider font-bold">OSPF State</span>
+                            <span id="r1-state" class="text-lg font-black tracking-widest px-3 py-1 rounded">DOWN</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Badge (Center) -->
+                <div id="link-status" class="relative z-10 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 px-4 py-2 rounded-lg shadow text-center hidden md:block min-w-[160px]">
+                    <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Link State</span>
+                    <span id="link-status-text" class="text-xs font-bold text-slate-600 dark:text-slate-300 font-mono"></span>
+                </div>
+
+                <!-- Router 2 Card -->
+                <div id="r2-card" class="relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 border-slate-200 dark:border-slate-700 shadow-xl flex flex-col items-center transition-all duration-300">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 px-3 py-0.5 rounded-full text-xs font-bold border border-purple-200 dark:border-purple-700/50">Node B</div>
+                    
+                    <div class="w-20 h-20 mb-3 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-server text-4xl text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    
+                    <h3 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">R2</h3>
+                    <p class="text-xs font-mono text-slate-500 dark:text-slate-400 mb-4 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-700">RID: <span id="r2-rid">2.2.2.2</span></p>
+                    
+                    <div class="w-full space-y-2 mt-2">
+                        <div class="flex justify-between text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
+                            <span class="text-slate-500 dark:text-slate-400">Interface</span>
+                            <span class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">e0/0 (10.0.0.2)</span>
+                        </div>
+                        <div class="flex justify-between text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
+                            <span class="text-slate-500 dark:text-slate-400">Role</span>
+                            <span id="r2-role" class="font-bold text-slate-700 dark:text-slate-300">-</span>
+                        </div>
+                        <div class="flex flex-col mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-center gap-1">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider font-bold">OSPF State</span>
+                            <span id="r2-state" class="text-lg font-black tracking-widest px-3 py-1 rounded">DOWN</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Details & CLI Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            
+            <!-- Context / Description -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center">
+                <div class="flex items-center gap-3 mb-4">
+                    <span id="phase-badge" class="px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded text-xs font-bold uppercase tracking-widest border border-amber-200 dark:border-amber-700/50">Giai đoạn</span>
+                    <span id="time-badge" class="text-sm font-mono text-slate-500 dark:text-slate-400"><i class="far fa-clock mr-1"></i>00:00:01</span>
+                </div>
+                
+                <h3 id="step-title" class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Khởi tạo OSPF</h3>
+                
+                <div class="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
+                    <p id="step-desc" class="text-base md:text-lg leading-relaxed"></p>
+                </div>
+            </section>
+
+            <!-- Real-time CLI / Terminal -->
+            <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col">
+                <!-- Terminal Header (Mac Style) -->
+                <div class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-[#ff5f56] shadow-sm"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-sm"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#27c93f] shadow-sm"></div>
+                    </div>
+                    <span class="text-xs font-mono text-slate-400 font-semibold tracking-wider">cisco-ios-xe (TTY1)</span>
+                    <div class="w-10"></div> <!-- Spacer for balance -->
+                </div>
+                <!-- Terminal Body -->
+                <div class="p-4 md:p-6 flex-1 overflow-y-auto">
+                    <pre><code id="cli-logs" class="font-mono text-[13px] md:text-sm text-[#00ff00] leading-relaxed whitespace-pre-wrap break-words"></code></pre>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        // 1. Data Architecture: Core Engine representing the full state of the network at each phase.
+        const labTimeline = [
+            {
+                step: 1,
+                time: "00:00:01",
+                phase: "Khởi tạo",
+                title: "Trạng thái DOWN",
+                description: "Giao thức OSPF được kích hoạt trên R1. R1 bắt đầu khởi tạo tiến trình và gửi đi gói tin Hello đầu tiên qua địa chỉ Multicast 224.0.0.5. Lúc này, R1 chưa phát hiện bất kỳ láng giềng nào (Neighbor list rỗng). R2 vẫn chưa cấu hình xong hoặc chưa nhận được gói tin.",
+                cli_logs: "R1(config)# router ospf 1\nR1(config-router)# network 10.0.0.0 0.0.0.255 area 0\n\n*Mar 1 00:00:01.000: OSPF: Interface Ethernet0/0 going Up\n*Mar 1 00:00:01.050: OSPF: Build router LSA for area 0, router ID 1.1.1.1\n*Mar 1 00:00:01.100: OSPF: Send hello to 224.0.0.5 area 0 on Ethernet0/0 from 10.0.0.1",
+                nodes: {
+                    R1: { state: "DOWN", role: "Khởi tạo", color: "red" },
+                    R2: { state: "DOWN", role: "Không hoạt động", color: "red" }
+                },
+                link_state: "Khởi động",
+                animated_packet: { from: "R1", to: "R2", label: "Hello (RID 1.1.1.1)", color: "bg-blue-500", icon: "fa-envelope" }
+            },
+            {
+                step: 2,
+                time: "00:00:05",
+                phase: "Phát hiện",
+                title: "Trạng thái INIT",
+                description: "R2 nhận được gói tin Hello từ R1. R2 đọc thông tin và thêm Router ID của R1 (1.1.1.1) vào danh sách Neighbor của nó. Tuy nhiên, do R2 không thấy Router ID của chính mình trong gói Hello này, nó đánh dấu kết nối với R1 ở trạng thái INIT. R2 lập tức gửi lại gói Hello của nó.",
+                cli_logs: "R2# debug ip ospf adj\n\n*Mar 1 00:00:05.100: OSPF: Rcv hello from 1.1.1.1 area 0 from Ethernet0/0 10.0.0.1\n*Mar 1 00:00:05.105: OSPF: End of hello processing\n*Mar 1 00:00:05.110: %OSPF-5-ADJCHG: Process 1, Nbr 1.1.1.1 on Ethernet0/0 from DOWN to INIT",
+                nodes: {
+                    R1: { state: "DOWN", role: "Chờ phản hồi", color: "red" }, // R1 hasn't processed R2's hello yet in this snapshot
+                    R2: { state: "INIT", role: "Phát hiện R1", color: "amber" }
+                },
+                link_state: "Đang dò tìm",
+                animated_packet: { from: "R2", to: "R1", label: "Hello (RID 2.2.2.2)", color: "bg-amber-500", icon: "fa-reply" }
+            },
+            {
+                step: 3,
+                time: "00:00:07",
+                phase: "Bầu chọn",
+                title: "Trạng thái 2-WAY",
+                description: "R1 nhận được gói Hello từ R2 và thấy Router ID của chính mình (1.1.1.1) nằm trong trường Active Neighbor. Giao tiếp hai chiều chính thức được xác lập (2-WAY). Vì mạng là Broadcast (Ethernet), quá trình bầu chọn DR/BDR diễn ra. Do R2 có Router ID lớn hơn (2.2.2.2 > 1.1.1.1), R2 trở thành DR (Designated Router), R1 là BDR.",
+                cli_logs: "R1# \n*Mar 1 00:00:07.200: OSPF: Rcv hello from 2.2.2.2 area 0 from Ethernet0/0\n*Mar 1 00:00:07.205: OSPF: 2 Way Communication to 2.2.2.2 on Ethernet0/0, state 2WAY\n*Mar 1 00:00:07.210: %OSPF-5-ADJCHG: Process 1, Nbr 2.2.2.2 on Ethernet0/0 from INIT to 2WAY\n*Mar 1 00:00:07.300: OSPF: DR/BDR election on Ethernet0/0\n*Mar 1 00:00:07.310: OSPF: Elect BDR 1.1.1.1\n*Mar 1 00:00:07.320: OSPF: Elect DR 2.2.2.2",
+                nodes: {
+                    R1: { state: "2-WAY", role: "BDR", color: "blue" },
+                    R2: { state: "2-WAY", role: "DR", color: "blue" }
+                },
+                link_state: "2-WAY (DR/BDR)",
+                animated_packet: null // Stop animation momentarily to emphasize state change
+            },
+            {
+                step: 4,
+                time: "00:00:09",
+                phase: "Đàm phán",
+                title: "Trạng thái EXSTART",
+                description: "Trước khi trao đổi cơ sở dữ liệu (LSDB), hai Router cần quyết định ai sẽ quản lý quá trình đồng bộ hóa. Chúng gửi các gói tin DBD (Database Description) rỗng (không có data) để bầu chọn Master/Slave. Router có Router ID cao nhất sẽ làm Master (R2).",
+                cli_logs: "R1# \n*Mar 1 00:00:09.500: OSPF: Send DBD to 2.2.2.2 on Ethernet0/0 seq 0x1A2B opt 0x52 flag 0x7 (I,M,MS)\n*Mar 1 00:00:09.550: OSPF: Rcv DBD from 2.2.2.2 on Ethernet0/0 seq 0x3C4D opt 0x52 flag 0x7\n*Mar 1 00:00:09.555: OSPF: NBR 2.2.2.2 is EXSTART, Negotiated to Slave\n*Mar 1 00:00:09.560: %OSPF-5-ADJCHG: Process 1, Nbr 2.2.2.2 on Ethernet0/0 from 2WAY to EXSTART",
+                nodes: {
+                    R1: { state: "EXSTART", role: "Slave (BDR)", color: "purple" },
+                    R2: { state: "EXSTART", role: "Master (DR)", color: "purple" }
+                },
+                link_state: "Thương lượng MTU/Role",
+                animated_packet: { from: "R2", to: "R1", label: "DBD Rỗng (Cờ MS=1)", color: "bg-purple-500", icon: "fa-gavel" }
+            },
+            {
+                step: 5,
+                time: "00:00:11",
+                phase: "Trao đổi Header",
+                title: "Trạng thái EXCHANGE",
+                description: "Master (R2) và Slave (R1) chính thức gửi cho nhau các gói tin DBD có chứa tóm tắt (Headers) của toàn bộ các bản ghi LSA trong LSDB của mình. Mỗi Router sẽ đọc Header này, đối chiếu với cơ sở dữ liệu hiện có để tìm ra các bản ghi bị thiếu hoặc cũ hơn.",
+                cli_logs: "R1# \n*Mar 1 00:00:11.100: OSPF: Send DBD to 2.2.2.2 on Ethernet0/0 seq 0x3C4D opt 0x52 flag 0x0 len 72\n*Mar 1 00:00:11.150: OSPF: Rcv DBD from 2.2.2.2 on Ethernet0/0 seq 0x3C4E opt 0x52 flag 0x0 len 92\n*Mar 1 00:00:11.160: %OSPF-5-ADJCHG: Process 1, Nbr 2.2.2.2 on Ethernet0/0 from EXSTART to EXCHANGE",
+                nodes: {
+                    R1: { state: "EXCHANGE", role: "Slave (BDR)", color: "indigo" },
+                    R2: { state: "EXCHANGE", role: "Master (DR)", color: "indigo" }
+                },
+                link_state: "Trao đổi LSDB Tóm tắt",
+                animated_packet: { from: "R1", to: "R2", label: "DBD (LSA Headers)", color: "bg-indigo-500", icon: "fa-list-alt" }
+            },
+            {
+                step: 6,
+                time: "00:00:13",
+                phase: "Tải dữ liệu",
+                title: "Trạng thái LOADING",
+                description: "Dựa trên danh sách các bản ghi còn thiếu, Router gửi gói tin LSR (Link State Request) để yêu cầu thông tin chi tiết. Router đối tác phản hồi bằng gói LSU (Link State Update) chứa toàn bộ chi tiết của LSA. Khi nhận xong, Router gửi lại LSAck để xác nhận.",
+                cli_logs: "R1# \n*Mar 1 00:00:13.300: OSPF: Send LSR to 2.2.2.2 on Ethernet0/0\n*Mar 1 00:00:13.350: OSPF: Rcv LSU from 2.2.2.2 on Ethernet0/0, 3 LSAs\n*Mar 1 00:00:13.360: OSPF: Send LSAck to 2.2.2.2 on Ethernet0/0\n*Mar 1 00:00:13.370: %OSPF-5-ADJCHG: Process 1, Nbr 2.2.2.2 on Ethernet0/0 from EXCHANGE to LOADING",
+                nodes: {
+                    R1: { state: "LOADING", role: "Đang yêu cầu...", color: "orange" },
+                    R2: { state: "LOADING", role: "Đang gửi LSU...", color: "orange" }
+                },
+                link_state: "Đồng bộ hóa LSDB",
+                animated_packet: { from: "R2", to: "R1", label: "LSU (Chi tiết LSA)", color: "bg-orange-500", icon: "fa-download" }
+            },
+            {
+                step: 7,
+                time: "00:00:15",
+                phase: "Hoàn tất",
+                title: "Trạng thái FULL",
+                description: "Cả hai Router đã sở hữu cơ sở dữ liệu Link State (LSDB) giống hệt nhau. Quá trình thiết lập Neighbor Adjacency thành công 100%. Lúc này, thuật toán SPF (Dijkstra) sẽ chạy trên cơ sở dữ liệu đồng nhất này để tính toán đường đi tốt nhất và cập nhật bảng định tuyến.",
+                cli_logs: "R1# \n*Mar 1 00:00:15.000: OSPF: Synchronized with 2.2.2.2 on Ethernet0/0, state FULL\n*Mar 1 00:00:15.010: %OSPF-5-ADJCHG: Process 1, Nbr 2.2.2.2 on Ethernet0/0 from LOADING to FULL, Loading Done\n\nR1# show ip ospf neighbor\nNeighbor ID     Pri   State           Dead Time   Address         Interface\n2.2.2.2           1   FULL/DR         00:00:35    10.0.0.2        Ethernet0/0",
+                nodes: {
+                    R1: { state: "FULL", role: "BDR", color: "emerald" },
+                    R2: { state: "FULL", role: "DR", color: "emerald" }
+                },
+                link_state: "Đồng bộ Hoàn toàn",
+                animated_packet: null // Static success state
+            }
+        ];
+
+        class OSPFSimulator {
+            constructor() {
+                this.currentIndex = 0;
+                this.isPlaying = false;
+                this.intervalId = null;
+                this.isDark = true;
+                
+                // DOM Elements
+                this.dom = {
+                    timelineContainer: document.getElementById('stepper-container'),
+                    timelineProgress: document.getElementById('timeline-progress'),
+                    btnPrev: document.getElementById('btn-prev'),
+                    btnNext: document.getElementById('btn-next'),
+                    btnPlay: document.getElementById('btn-play'),
+                    iconPlay: document.getElementById('icon-play'),
+                    themeIcon: document.getElementById('theme-icon'),
+                    
+                    phaseBadge: document.getElementById('phase-badge'),
+                    timeBadge: document.getElementById('time-badge'),
+                    stepTitle: document.getElementById('step-title'),
+                    stepDesc: document.getElementById('step-desc'),
+                    cliLogs: document.getElementById('cli-logs'),
+                    
+                    r1Card: document.getElementById('r1-card'),
+                    r1Role: document.getElementById('r1-role'),
+                    r1State: document.getElementById('r1-state'),
+                    
+                    r2Card: document.getElementById('r2-card'),
+                    r2Role: document.getElementById('r2-role'),
+                    r2State: document.getElementById('r2-state'),
+                    
+                    animatedPacket: document.getElementById('animated-packet'),
+                    packetLabel: document.getElementById('packet-label'),
+                    packetIcon: document.getElementById('packet-icon'),
+                    linkStatus: document.getElementById('link-status'),
+                    linkStatusText: document.getElementById('link-status-text')
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.buildStepper();
+                this.checkTheme();
+                this.renderStep(0);
+            }
+
+            buildStepper() {
+                this.dom.timelineContainer.innerHTML = '';
+                labTimeline.forEach((data, index) => {
+                    const btn = document.createElement('button');
+                    // Styling for timeline nodes
+                    btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm hover:scale-105`;
+                    
+                    btn.innerHTML = `<span class="hidden md:block">${data.step}. ${data.title.replace('Trạng thái ', '')}</span><span class="md:hidden">${data.step}</span>`;
+                    
+                    btn.onclick = () => {
+                        this.pause();
+                        this.renderStep(index);
+                    };
+                    
+                    this.dom.timelineContainer.appendChild(btn);
+                });
+            }
+
+            checkTheme() {
+                // The head script already applied the correct class before paint; just sync our state to it
+                this.isDark = document.documentElement.classList.contains('dark');
+                this.dom.themeIcon.className = this.isDark ? 'fas fa-sun' : 'fas fa-moon';
+            }
+
+            toggleTheme() {
+                this.isDark = !this.isDark;
+                document.documentElement.classList.toggle('dark', this.isDark);
+                this.dom.themeIcon.className = this.isDark ? 'fas fa-sun' : 'fas fa-moon';
+                try { localStorage.setItem('portfolio-theme', this.isDark ? 'dark' : 'light'); } catch (e) {}
+            }
+
+            // Helpers for styling
+            getColorClasses(colorStr, type = 'text') {
+                const colors = {
+                    red: { text: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400', border: 'border-red-400 dark:border-red-500' },
+                    amber: { text: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400', border: 'border-amber-400 dark:border-amber-500' },
+                    blue: { text: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400', border: 'border-blue-400 dark:border-blue-500' },
+                    purple: { text: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400', border: 'border-purple-400 dark:border-purple-500' },
+                    indigo: { text: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400', border: 'border-indigo-400 dark:border-indigo-500' },
+                    orange: { text: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400', border: 'border-orange-400 dark:border-orange-500' },
+                    emerald: { text: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400', border: 'border-emerald-500 dark:border-emerald-500' }
+                };
+                return colors[colorStr][type];
+            }
+
+            renderStep(index) {
+                this.currentIndex = index;
+                const data = labTimeline[index];
+
+                // Update Timeline UI
+                const buttons = this.dom.timelineContainer.children;
+                for(let i=0; i<buttons.length; i++) {
+                    const btn = buttons[i];
+                    if(i === index) {
+                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-600 text-white border-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.5)] scale-110`;
+                    } else if (i < index) {
+                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-500 border-blue-300 dark:border-blue-700 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/50`;
+                    } else {
+                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700`;
+                    }
+                }
+                
+                // Update Progress Line
+                const progressPercentage = (index / (labTimeline.length - 1)) * 100;
+                this.dom.timelineProgress.style.width = `${progressPercentage}%`;
+
+                // Update Context Text
+                this.dom.phaseBadge.textContent = data.phase;
+                this.dom.timeBadge.innerHTML = `<i class="far fa-clock mr-1"></i>${data.time}`;
+                this.dom.stepTitle.textContent = data.title;
+                this.dom.stepDesc.innerHTML = `<strong>Tiến trình:</strong> ${data.description}`;
+                
+                // Typing effect simulation for CLI (simple direct replace for now to prevent issues on fast clicks)
+                this.dom.cliLogs.textContent = data.cli_logs;
+
+                // Update Router 1
+                this.dom.r1Role.textContent = data.nodes.R1.role;
+                this.dom.r1State.textContent = data.nodes.R1.state;
+                this.dom.r1State.className = `text-lg font-black tracking-widest px-3 py-1 rounded transition-colors ${this.getColorClasses(data.nodes.R1.color, 'bg')}`;
+                this.dom.r1Card.className = `relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 shadow-xl flex flex-col items-center transition-all duration-300 ${index === 6 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
+
+                // Update Router 2
+                this.dom.r2Role.textContent = data.nodes.R2.role;
+                this.dom.r2State.textContent = data.nodes.R2.state;
+                this.dom.r2State.className = `text-lg font-black tracking-widest px-3 py-1 rounded transition-colors ${this.getColorClasses(data.nodes.R2.color, 'bg')}`;
+                this.dom.r2Card.className = `relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 shadow-xl flex flex-col items-center transition-all duration-300 ${index === 6 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
+
+                // Update Link State badge (was previously collected but never rendered)
+                this.dom.linkStatusText.textContent = data.link_state;
+
+                // Handle Animations & Packets
+                this.handlePacketAnimation(data.animated_packet);
+
+                // Control Bar States
+                this.dom.btnPrev.disabled = index === 0;
+                this.dom.btnNext.disabled = index === labTimeline.length - 1;
+                
+                // Auto-pause if we hit the end
+                if (index === labTimeline.length - 1 && this.isPlaying) {
+                    this.pause();
+                }
+            }
+
+            handlePacketAnimation(packetData) {
+                // Reset/Remove existing animation to allow restart
+                this.dom.animatedPacket.classList.remove('animate-lr', 'animate-rl');
+                this.dom.animatedPacket.style.animation = 'none';
+                void this.dom.animatedPacket.offsetWidth; // Trigger reflow
+                
+                if (!packetData) {
+                    this.dom.animatedPacket.classList.add('hidden');
+                    return;
+                }
+
+                this.dom.animatedPacket.classList.remove('hidden');
+                
+                // Construct Label & Colors
+                this.dom.packetLabel.textContent = packetData.label;
+                this.dom.packetIcon.className = `fas ${packetData.icon}`;
+                
+                // Reset custom color classes
+                this.dom.animatedPacket.className = `hidden flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap ${packetData.color} shadow-lg`;
+                this.dom.animatedPacket.classList.remove('hidden'); // un-hide
+
+                // Set Animation direction based on from/to
+                if (packetData.from === "R1") {
+                    this.dom.animatedPacket.style.animation = ''; // remove inline
+                    this.dom.animatedPacket.classList.add('animate-lr');
+                } else if (packetData.from === "R2") {
+                    this.dom.animatedPacket.style.animation = '';
+                    this.dom.animatedPacket.classList.add('animate-rl');
+                }
+            }
+
+            nextStep() {
+                if (this.currentIndex < labTimeline.length - 1) {
+                    this.renderStep(this.currentIndex + 1);
+                }
+            }
+
+            prevStep() {
+                if (this.currentIndex > 0) {
+                    this.renderStep(this.currentIndex - 1);
+                }
+            }
+
+            togglePlay() {
+                if (this.isPlaying) {
+                    this.pause();
+                } else {
+                    this.play();
+                }
+            }
+
+            play() {
+                if (this.currentIndex === labTimeline.length - 1) {
+                    this.renderStep(0); // Loop back to start if at end
+                }
+                
+                this.isPlaying = true;
+                this.dom.iconPlay.className = 'fas fa-pause';
+                this.dom.btnPlay.classList.replace('bg-blue-600', 'bg-amber-500');
+                this.dom.btnPlay.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
+                this.dom.btnPlay.classList.replace('shadow-blue-500/30', 'shadow-amber-500/30');
+
+                this.intervalId = setInterval(() => {
+                    if (this.currentIndex < labTimeline.length - 1) {
+                        this.nextStep();
+                    }
+                }, 4000); // 4 seconds per step for better reading time
+            }
+
+            pause() {
+                this.isPlaying = false;
+                clearInterval(this.intervalId);
+                this.dom.iconPlay.className = 'fas fa-play ml-1';
+                this.dom.btnPlay.classList.replace('bg-amber-500', 'bg-blue-600');
+                this.dom.btnPlay.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
+                this.dom.btnPlay.classList.replace('shadow-amber-500/30', 'shadow-blue-500/30');
+            }
+
+            reset() {
+                this.pause();
+                this.renderStep(0);
+            }
+        }
+
+        // Initialize App on DOM Load
+        let app;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new OSPFSimulator();
+        });
+    </script>
+</body>
+</html>
