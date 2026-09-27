@@ -359,3 +359,81 @@ Thiết kế mạng:
 - Area: Area 0 backbone (R1, R2); Area 1 stub (R1, R3)
 - Redistribution: R1 bơm default route vào Area 1 (hành vi chuẩn của stub area)
 ```
+
+---
+
+## 8. Diagnostic Playbook
+
+### Placeholder — English
+
+```
+Subsystem & topology:
+- Subsystem under diagnosis: (e.g. "DNS resolution on a flat LAN")
+- Shared topology: (devices, IPs, roles — stays the same across every case)
+- Cases to cover: (each KB case — name, what's broken, the diagnostic
+  command(s) and exact output/exit code, 2-4 key takeaways)
+```
+
+### Placeholder — Tiếng Việt
+
+```
+Subsystem & topology:
+- Subsystem đang chẩn đoán: (ví dụ: "DNS resolution trên một LAN phẳng")
+- Topology dùng chung: (thiết bị, IP, vai trò — giữ nguyên qua mọi case)
+- Các case cần bao phủ: (mỗi KB case — tên, lỗi gì, lệnh chẩn đoán và
+  output/exit code cụ thể, 2-4 điểm ghi nhớ)
+```
+
+### Example — English
+
+```
+Subsystem & topology:
+- Subsystem: DNS resolution on a flat LAN, 172.28.6.0/24, no router
+- Topology: client (172.28.6.20, Debian/glibc) — dns (172.28.6.53, dnsmasq,
+  zone lab.local) — web (172.28.6.10) — web-cu (172.28.6.11)
+- Cases:
+  - KB1 Healthy: resolv.conf points to .53; dig and curl both succeed
+  - KB2 Unreachable: resolv.conf nameserver is 172.28.6.99 (no device there);
+    dig times out after ~2035ms with no response; curl exits 28 (not 6 —
+    easy to mistake for "server is slow"); query count at the real DNS
+    server stays 0 the whole time
+  - KB3 Refused: DNS server is up but its ACL denies this client's subnet;
+    dig returns REFUSED immediately
+  - KB4 NXDOMAIN: querying a name that doesn't exist in the zone; dig
+    returns NXDOMAIN, not a timeout
+  - KB5 Forwarder: dnsmasq's upstream forwarder is unreachable, so external
+    names fail but lab.local names still resolve fine
+  - KB6 Wrong IP: DNS returns the old server's IP (web-cu, .11) for "web" —
+    a stale/duplicate A record, so curl succeeds but hits the wrong host
+  - KB7 /etc/hosts: an entry in /etc/hosts shadows the DNS answer entirely,
+    so dig is correct but curl still goes to the wrong place
+  - KB8 nscd: nscd's cache is stale, serving an old resolution even though
+    both /etc/hosts and DNS are now correct
+```
+
+### Ví dụ — Tiếng Việt
+
+```
+Subsystem & topology:
+- Subsystem: DNS resolution trên một LAN phẳng, 172.28.6.0/24, không router
+- Topology: client (172.28.6.20, Debian/glibc) — dns (172.28.6.53, dnsmasq,
+  zone lab.local) — web (172.28.6.10) — web-cu (172.28.6.11)
+- Các case:
+  - KB1 Khoẻ: resolv.conf trỏ tới .53; dig và curl đều thành công
+  - KB2 Không tới: resolv.conf trỏ nameserver 172.28.6.99 (không có máy nào ở
+    đó); dig timed out sau ~2035ms, không ai trả lời; curl exit 28 (không
+    phải 6 — dễ nhầm với "server chậm"); query tới DNS server thật vẫn là 0
+    suốt quá trình
+  - KB3 Từ chối: DNS server vẫn sống nhưng ACL từ chối subnet của client;
+    dig trả về REFUSED ngay lập tức
+  - KB4 NXDOMAIN: truy vấn một tên không tồn tại trong zone; dig trả về
+    NXDOMAIN, không phải timeout
+  - KB5 Forwarder: upstream forwarder của dnsmasq không tới được, nên tên
+    ngoài internet lỗi nhưng tên trong lab.local vẫn phân giải bình thường
+  - KB6 IP sai: DNS trả về IP của server cũ (web-cu, .11) cho tên "web" —
+    một bản ghi A cũ/trùng, nên curl thành công nhưng vào nhầm máy
+  - KB7 /etc/hosts: một dòng trong /etc/hosts che mất kết quả DNS, nên dig
+    đúng nhưng curl vẫn đi nhầm chỗ
+  - KB8 nscd: cache của nscd đã cũ, vẫn trả kết quả cũ dù /etc/hosts và DNS
+    đều đã đúng
+```

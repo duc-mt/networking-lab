@@ -1,10 +1,10 @@
 # Prompt templates
 
-Seven reusable prompts for generating new labs that drop straight into this portfolio. Each targets a different shape of networking/security work and produces a different UI pattern — a state machine, a logic tree, a pipeline, a workflow with tabs, a split-screen, a trigger-driven drill, or a static reference graph. All of them still produce a single self-contained HTML file matching the site's existing design system (Tailwind CDN, dark-mode class, Inter + Fira Code, Font Awesome, slate/blue/indigo palette, rounded-2xl SaaS cards).
+Eight reusable prompts for generating new labs that drop straight into this portfolio. Each targets a different shape of networking/security work and produces a different UI pattern — a state machine, a logic tree, a pipeline, a workflow with tabs, a split-screen, a trigger-driven drill, a static reference graph, or a tabbed failure-mode catalog. All of them still produce a single self-contained HTML file matching the site's existing design system (Tailwind CDN, dark-mode class, Inter + Fira Code, Font Awesome, slate/blue/indigo palette, rounded-2xl SaaS cards).
 
 For a quick-copy version of just the scenario/input block of each prompt — blank placeholder and a filled realistic example, both in English and Vietnamese — see `docs/prompt-scenarios.md`.
 
-The site is organized around these 7 formats directly: each one has its own folder under `projects/`, and each project's `type` field in `assets/js/projects.js` (which must be one of the keys below) controls its icon, color, and which filter chip it falls under on the homepage — you don't set icon/color per project, they're inherited from the type.
+The site is organized around these 8 formats directly: each one has its own folder under `projects/`, and each project's `type` field in `assets/js/projects.js` (which must be one of the keys below) controls its icon, color, and which filter chip it falls under on the homepage — you don't set icon/color per project, they're inherited from the type.
 
 After generating a page with any of these prompts:
 
@@ -23,15 +23,16 @@ After generating a page with any of these prompts:
 
 ## Which one to reach for
 
-| Prompt                    | `type` key        | Folder                      | Core engine logic                                                   | Best used for                                                                       |
-| ------------------------- | ----------------- | --------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Protocol Simulator        | `protocol`        | `projects/protocol/`        | Timeline of states, packet/RFC breakdown                            | Training material, explaining how a protocol works internally                       |
-| Troubleshooting Lab       | `troubleshooting` | `projects/troubleshooting/` | Logic tree — symptom → ruled-out hypotheses → root cause            | Post-mortems, incident write-ups, knowledge base, portfolio case studies            |
-| Security Packet Walk      | `packet-walk`     | `projects/packet-walk/`     | Sequential pipeline — Ingress → NAT → Policy → Egress               | Debugging firewall/NAT behavior, explaining zone design, policy audits              |
-| Change / MOP Flow         | `change-mop`      | `projects/change-mop/`      | Process — Pre-checks → Execution → Post-checks → Rollback           | Cutover planning, risk review (SPOF, lockout), documenting a maintenance window     |
-| Automation Workflow       | `automation`      | `projects/automation/`      | API/script request-response, error handling                         | Reviewing automation code, demonstrating retry/error-handling logic                 |
-| Failover / HA Drill       | `failover`        | `projects/failover/`        | Trigger → timers → convergence → impact                             | Chaos-engineering style resilience testing, tuning Hello/Hold/Dead timers           |
-| Topology Design Reference | `topology-design` | `projects/topology-design/` | Static graph — topology + routing tables + path lookup, no timeline | Documenting a network design, showcasing addressing/area layout, reference material |
+| Prompt                    | `type` key            | Folder                          | Core engine logic                                                   | Best used for                                                                                     |
+| ------------------------- | --------------------- | ------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Protocol Simulator        | `protocol`            | `projects/protocol/`            | Timeline of states, packet/RFC breakdown                            | Training material, explaining how a protocol works internally                                     |
+| Troubleshooting Lab       | `troubleshooting`     | `projects/troubleshooting/`     | Logic tree — symptom → ruled-out hypotheses → root cause            | Post-mortems, incident write-ups, knowledge base, portfolio case studies                          |
+| Security Packet Walk      | `packet-walk`         | `projects/packet-walk/`         | Sequential pipeline — Ingress → NAT → Policy → Egress               | Debugging firewall/NAT behavior, explaining zone design, policy audits                            |
+| Change / MOP Flow         | `change-mop`          | `projects/change-mop/`          | Process — Pre-checks → Execution → Post-checks → Rollback           | Cutover planning, risk review (SPOF, lockout), documenting a maintenance window                   |
+| Automation Workflow       | `automation`          | `projects/automation/`          | API/script request-response, error handling                         | Reviewing automation code, demonstrating retry/error-handling logic                               |
+| Failover / HA Drill       | `failover`            | `projects/failover/`            | Trigger → timers → convergence → impact                             | Chaos-engineering style resilience testing, tuning Hello/Hold/Dead timers                         |
+| Topology Design Reference | `topology-design`     | `projects/topology-design/`     | Static graph — topology + routing tables + path lookup, no timeline | Documenting a network design, showcasing addressing/area layout, reference material               |
+| Diagnostic Playbook       | `diagnostic-playbook` | `projects/diagnostic-playbook/` | Tabbed catalog — N static failure snapshots on one shared topology  | A "field guide" of failure signatures for one subsystem (e.g. every way DNS resolution can break) |
 
 ---
 
@@ -492,4 +493,89 @@ Populate `topology`, `areas`, and `routingTables` with data that's actually
 consistent with the design given above — routing tables should reflect real
 OSPF behavior (e.g. a router in Area 1 shows "O IA" for prefixes learned
 from outside its own area, not "O").
+```
+
+---
+
+## 8. Diagnostic playbook
+
+Use this one for a "field guide" of failure modes — not one incident, but every way a subsystem can break, catalogued side by side on the same topology so a viewer can flip through them. This is the format the "Network Bắt Bệnh" DNS lab (KB1 healthy → KB8 nscd) is built from: same LAN, same client/server layout in every tab, only the fault and the diagnostic evidence change.
+
+```
+Act as a Principal Network Architect and Senior UI/UX Frontend Engineer.
+
+Build a single-file "Interactive Diagnostic Playbook" — a tabbed reference
+dashboard cataloging multiple distinct failure modes of the same subsystem on
+one shared topology (e.g. "every way DNS resolution can break" on one LAN),
+so a viewer can flip between "KB" cases and see, for each one, the same
+topology re-rendered with that specific fault highlighted, plus the
+diagnostic command output and takeaways for that case. This is NOT a
+timeline — each case is a static snapshot; switching tabs, not stepping
+through time, is the interaction. Match the visual style of my other project
+pages (Tailwind CDN darkMode:'class', Inter + Fira Code, Font Awesome CSS
+build, slate/blue/indigo palette, rounded-2xl cards) and include the two
+shared includes used across the site:
+
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+    <script src="../../assets/js/theme-init.js"></script>
+
+plus the "← Portfolio" back-link to ../../index.html in the header. No
+playback controls (⏮ ▶/⏸ ⏭ ↺) — this format is tab-driven, not time-driven.
+
+Output: ONE self-contained HTML file, inline CSS + vanilla JS only (aside
+from the two shared includes above).
+
+==================================================
+Subsystem & topology:
+- Subsystem under diagnosis: (e.g. "DNS resolution on a flat LAN")
+- Shared topology: (devices, IPs, roles — this stays the same across every
+  case; only which link/node is "sick" changes per case)
+- Cases to cover: (list each KB case with: name, what's broken, the
+  diagnostic command(s) and their exact output/exit code, and 2-4 key
+  takeaways — e.g. "KB2 Unreachable: DNS server IP is wrong in resolv.conf
+  (172.28.6.99, no device there); dig times out after ~2000ms with no
+  response; curl exits 28, not 6 — easy to mistake for 'server is slow'")
+==================================================
+
+Requirements:
+1. Core data — one entry per case, not a timeline:
+   `playbookCases`: [{
+     id, label,                        // e.g. "kb2", "KB2 Không tới"
+     status: "healthy" | "broken",
+     topology: {
+       nodes: [{ id, name, ip, role }],
+       links: [{ from, to, state: "ok" | "broken" | "no-response", note }]
+     },
+     diagnostics: {
+       config: "...",                  // e.g. resolv.conf contents for this case
+       commands: [{ cmd, output, verdict }]   // dig/curl/etc with realistic output
+     },
+     takeaways: ["...", "...", "..."]
+   }]
+
+2. Header: logo + back-link + theme toggle only (no playback controls).
+
+3. Shared topology diagram: renders once, positions fixed across all cases,
+   but redraws link/node color and adds an X/broken marker per the active
+   case's `topology.links[].state` — this is what makes switching tabs feel
+   like flipping through variants of one picture, not loading unrelated
+   screens.
+
+4. Legend row: explain the visual language once (e.g. solid arrow = healthy
+   query path, dashed red = broken path, ⊗ = no response, dotted box = an
+   address with no device behind it).
+
+5. KB tab row: one pill per case, each showing its `label` and a status dot
+   (green = healthy, red/orange = broken), active tab visually highlighted.
+   Clicking a tab swaps the topology state, diagnostics, and takeaways below.
+
+6. Detail panel below the tabs, two columns: left = config/script snippet
+   and command output in a dark monospace terminal block; right = the
+   `takeaways` as a bullet list.
+
+7. All visible UI text in Vietnamese.
+
+Populate `playbookCases` with technically accurate command output for each
+case — exit codes, timing, and DNS response codes should be realistic and
+internally consistent with what's "broken" in that case.
 ```

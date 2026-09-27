@@ -16,7 +16,7 @@ Static portfolio of interactive networking labs. No build step — plain HTML/CS
 
 ## Structure
 
-The site is organized around 7 lab **formats** — see `docs/prompt-templates.md` for what each one is, when to use it, and the prompt that generates it (and `docs/prompt-scenarios.md` for quick-copy scenario examples in English and Vietnamese).
+The site is organized around 8 lab **formats** — see `docs/prompt-templates.md` for what each one is, when to use it, and the prompt that generates it (and `docs/prompt-scenarios.md` for quick-copy scenario examples in English and Vietnamese).
 
 ```
 /
@@ -35,7 +35,8 @@ The site is organized around 7 lab **formats** — see `docs/prompt-templates.md
 │   ├── change-mop/                # Change management / cutover labs
 │   ├── automation/                # Script/API workflow labs
 │   ├── failover/                  # HA/failover drill labs
-│   └── topology-design/           # Static topology/routing-table reference dashboards
+│   ├── topology-design/           # Static topology/routing-table reference dashboards
+│   └── diagnostic-playbook/       # Tabbed catalogs of failure-mode snapshots
 ├── docs/
 │   ├── prompt-templates.md        # One reusable prompt per folder above, plus a table of which to use when
 │   └── prompt-scenarios.md        # Quick-copy scenario blocks per prompt — placeholder + example, EN + VI
@@ -97,7 +98,7 @@ Optional: install the pre-commit hook so these run automatically before each com
 
 ## Adding a new lab
 
-1. Pick the matching prompt in `docs/prompt-templates.md` — one per format (protocol, troubleshooting, packet-walk, change-mop, automation, failover, topology-design) — and generate the lab HTML with it. If you just finished troubleshooting something real, the troubleshooting prompt is the one to reach for while the details are fresh.
+1. Pick the matching prompt in `docs/prompt-templates.md` — one per format (protocol, troubleshooting, packet-walk, change-mop, automation, failover, topology-design, diagnostic-playbook) — and generate the lab HTML with it. If you just finished troubleshooting something real, the troubleshooting prompt is the one to reach for while the details are fresh.
 2. Save it under the matching folder: `projects/<type>/<slug>.html` — e.g. `projects/failover/hsrp-drill.html`.
 3. Swap the AI-generated no-FOUC script / scrollbar CSS for the two shared includes (`assets/css/theme.css`, `assets/js/theme-init.js`) — see `docs/prompt-templates.md` for the exact snippet — and add the "← Portfolio" back-link, pointing to `../../index.html` (copy the header block from `projects/protocol/ospf-adjacency.html` and adjust the title).
 4. Open `assets/js/projects.js` and add one object to the `PROJECTS` array:
@@ -118,7 +119,7 @@ Nothing in `index.html` changes when you add a lab — it reads `assets/js/proje
 
 ### `type` vs `topic` — two independent axes
 
--   **`type`** — the UI _format_ the lab uses (state machine, logic tree, pipeline, static reference graph, etc). Must be one of the 7 keys defined in `PROJECT_TYPES` at the top of `assets/js/projects.js` (`protocol`, `troubleshooting`, `packet-walk`, `change-mop`, `automation`, `failover`, `topology-design`). Drives the lab's folder, icon, gradient color, and the fixed filter chips — inherited from the type, not set per project (override with an `icon`/`accent` field only to break from the default).
+-   **`type`** — the UI _format_ the lab uses (state machine, logic tree, pipeline, static reference graph, tabbed catalog, etc). Must be one of the 8 keys defined in `PROJECT_TYPES` at the top of `assets/js/projects.js` (`protocol`, `troubleshooting`, `packet-walk`, `change-mop`, `automation`, `failover`, `topology-design`, `diagnostic-playbook`). Drives the lab's folder, icon, gradient color, and the fixed filter chips — inherited from the type, not set per project (override with an `icon`/`accent` field only to break from the default).
 -   **`topic`** — the _subject domain_ (e.g. "Routing", "Switching", "Security", "Automation"). Independent of `type`: two labs can share a type but different topics (STP and VLAN are both `protocol`-type, but "Switching" topic; OSPF is also `protocol`-type but "Routing" topic). Free text — the "Topic" dropdown on the homepage is built from whatever values actually show up in `PROJECTS`.
 
 If you want a new `type` (a genuinely new UI format, not just a new topic), add it to `PROJECT_TYPES` with its own `label`/`short`/`icon`/`accent`, create the matching `projects/<key>/` folder, and add a prompt for it to `docs/prompt-templates.md` following the pattern of the existing ones — this is exactly how `topology-design` was added.

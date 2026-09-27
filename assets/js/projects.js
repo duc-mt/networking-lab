@@ -85,6 +85,14 @@ const PROJECT_TYPES = {
         accent: 'from-teal-500 to-cyan-700',
         description: 'Static topology map, routing tables, and path lookup — no timeline.',
     },
+    'diagnostic-playbook': {
+        label: 'Diagnostic Playbook',
+        short: 'Playbook',
+        icon: 'fa-book-medical',
+        accent: 'from-lime-500 to-green-600',
+        description:
+            'Tabbed catalog of failure-mode snapshots on one shared topology — no timeline, no single narrative.',
+    },
 };
 
 const PROJECTS = [
