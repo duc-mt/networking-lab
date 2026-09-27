@@ -88,20 +88,6 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
-        id: 'rogue-dhcp-security',
-        title: 'Rogue DHCP & Bộ Ba Bảo Mật Layer 2',
-        category: 'troubleshooting',
-        type: 'troubleshooting',
-        status: 'live',
-        dateAdded: '2026-09-27',
-        image: 'assets/images/protocol-placeholder.jpg',
-        description:
-            'Chẩn đoán sự cố mạng do Router Wi-Fi cá nhân gây Rogue DHCP, cấp phát sai Gateway và giải pháp triệt để với DHCP Snooping, DAI, IP Source Guard.',
-        tags: ['DHCP Snooping', 'Rogue DHCP', 'DAI', 'IPSG', 'Layer 2 Security', 'Troubleshooting'],
-        href: 'projects/troubleshooting/rogue-dhcp-security.html',
-    },
-
-    {
         id: 'clusterxl-patching',
         title: 'ClusterXL Zero-Downtime Patching',
         category: 'failover',
