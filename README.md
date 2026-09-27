@@ -1,10 +1,5 @@
 # Network Engineering Portfolio
 
-<!--
-  Placeholders below (duc-mt/network-portfolio) — fill in once this is pushed to a
-  real GitHub repo. See "Placeholders to fill in before publishing" at the
-  bottom of this file for the full list.
--->
 
 [![CI](https://github.com/duc-mt/network-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/duc-mt/network-portfolio/actions/workflows/ci.yml)
 [![Deploy](https://github.com/duc-mt/network-portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/duc-mt/network-portfolio/actions/workflows/deploy.yml)
@@ -142,8 +137,3 @@ Dark/light mode is stored in `localStorage` under the key `portfolio-theme`. Eve
 - **Tailwind CDN console warning** ("should not be used in production") — expected. The Play CDN isn't optimized for production traffic, but for a static portfolio like this it's fine; ignore the warning.
 - **Font Awesome icons may show as empty boxes when previewed inside Claude's chat UI.** Claude's in-app HTML preview only allows external stylesheets from `fonts.googleapis.com`; Font Awesome's CSS comes from `cdnjs.cloudflare.com`, so the preview silently blocks it. This is a preview-sandbox limitation only — a real browser (and GitHub Pages) has no such restriction. **Do not** "fix" this by switching Font Awesome to its JS/SVG build — that build permanently replaces `<i class="fas fa-x">` with a static `<svg>` on load, which breaks every place these labs swap icons at runtime via `.className` reassignment (theme toggle, play/pause, per-step packet icons). Verify icons in an actual browser or the deployed Pages URL, not the in-chat preview.
 
-## Placeholders to fill in before publishing
-
-- `README.md` (this file) — badge URLs and the Live Demo link at the top use `duc-mt`/`network-portfolio` placeholders; replace both once this is pushed to a real repo.
-- `index.html` — GitHub, LinkedIn, and email links in the Contact section currently point to generic placeholders.
-- Any lab's CLI output, IPs, or hostnames — the prompts in `docs/prompt-templates.md` generate realistic but fictional data by default; swap in real details only if you want a lab to reflect an actual environment (and scrub anything sensitive first).
