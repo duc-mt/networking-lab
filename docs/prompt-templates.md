@@ -1,8 +1,8 @@
 # Prompt templates
 
-Six reusable prompts for generating new labs that drop straight into this portfolio. Each targets a different shape of networking/security work and produces a different UI pattern — a state machine, a logic tree, a pipeline, a workflow with tabs, a split-screen, or a trigger-driven drill. All of them still produce a single self-contained HTML file matching the site's existing design system (Tailwind CDN, dark-mode class, Inter + Fira Code, Font Awesome, slate/blue/indigo palette, rounded-2xl SaaS cards).
+Seven reusable prompts for generating new labs that drop straight into this portfolio. Each targets a different shape of networking/security work and produces a different UI pattern — a state machine, a logic tree, a pipeline, a workflow with tabs, a split-screen, a trigger-driven drill, or a static reference graph. All of them still produce a single self-contained HTML file matching the site's existing design system (Tailwind CDN, dark-mode class, Inter + Fira Code, Font Awesome, slate/blue/indigo palette, rounded-2xl SaaS cards).
 
-The site is organized around these 6 formats directly: each one has its own folder under `projects/`, and each project's `type` field in `assets/js/projects.js` (which must be one of the keys below) controls its icon, color, and which filter chip it falls under on the homepage — you don't set icon/color per project, they're inherited from the type.
+The site is organized around these 7 formats directly: each one has its own folder under `projects/`, and each project's `type` field in `assets/js/projects.js` (which must be one of the keys below) controls its icon, color, and which filter chip it falls under on the homepage — you don't set icon/color per project, they're inherited from the type.
 
 After generating a page with any of these prompts:
 
@@ -21,14 +21,15 @@ After generating a page with any of these prompts:
 
 ## Which one to reach for
 
-| Prompt               | `type` key        | Folder                      | Core engine logic                                         | Best used for                                                                   |
-| -------------------- | ----------------- | --------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Protocol Simulator   | `protocol`        | `projects/protocol/`        | Timeline of states, packet/RFC breakdown                  | Training material, explaining how a protocol works internally                   |
-| Troubleshooting Lab  | `troubleshooting` | `projects/troubleshooting/` | Logic tree — symptom → ruled-out hypotheses → root cause  | Post-mortems, incident write-ups, knowledge base, portfolio case studies        |
-| Security Packet Walk | `packet-walk`     | `projects/packet-walk/`     | Sequential pipeline — Ingress → NAT → Policy → Egress     | Debugging firewall/NAT behavior, explaining zone design, policy audits          |
-| Change / MOP Flow    | `change-mop`      | `projects/change-mop/`      | Process — Pre-checks → Execution → Post-checks → Rollback | Cutover planning, risk review (SPOF, lockout), documenting a maintenance window |
-| Automation Workflow  | `automation`      | `projects/automation/`      | API/script request-response, error handling               | Reviewing automation code, demonstrating retry/error-handling logic             |
-| Failover / HA Drill  | `failover`        | `projects/failover/`        | Trigger → timers → convergence → impact                   | Chaos-engineering style resilience testing, tuning Hello/Hold/Dead timers       |
+| Prompt                    | `type` key        | Folder                      | Core engine logic                                                   | Best used for                                                                       |
+| ------------------------- | ----------------- | --------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Protocol Simulator        | `protocol`        | `projects/protocol/`        | Timeline of states, packet/RFC breakdown                            | Training material, explaining how a protocol works internally                       |
+| Troubleshooting Lab       | `troubleshooting` | `projects/troubleshooting/` | Logic tree — symptom → ruled-out hypotheses → root cause            | Post-mortems, incident write-ups, knowledge base, portfolio case studies            |
+| Security Packet Walk      | `packet-walk`     | `projects/packet-walk/`     | Sequential pipeline — Ingress → NAT → Policy → Egress               | Debugging firewall/NAT behavior, explaining zone design, policy audits              |
+| Change / MOP Flow         | `change-mop`      | `projects/change-mop/`      | Process — Pre-checks → Execution → Post-checks → Rollback           | Cutover planning, risk review (SPOF, lockout), documenting a maintenance window     |
+| Automation Workflow       | `automation`      | `projects/automation/`      | API/script request-response, error handling                         | Reviewing automation code, demonstrating retry/error-handling logic                 |
+| Failover / HA Drill       | `failover`        | `projects/failover/`        | Trigger → timers → convergence → impact                             | Chaos-engineering style resilience testing, tuning Hello/Hold/Dead timers           |
+| Topology Design Reference | `topology-design` | `projects/topology-design/` | Static graph — topology + routing tables + path lookup, no timeline | Documenting a network design, showcasing addressing/area layout, reference material |
 
 ---
 
@@ -415,4 +416,78 @@ Requirements:
 
 Populate `failoverTimeline` with realistic timer values and a believable
 convergence sequence for the given mechanism and trigger event.
+```
+
+---
+
+## 7. Topology design reference
+
+Use this one when there's no time dimension at all — you're documenting a network _design_, not a process or an event. The dashboard shows the whole topology, every device's routing table, and a path-lookup tool, all at once. No playback controls, because nothing changes over time here.
+
+```
+Act as a Principal Network Architect and Senior UI/UX Frontend Engineer.
+
+Build a single-file "Interactive Topology Design Reference" — a static (non-
+animated) dashboard for exploring a fully-designed OSPF network: the topology
+map, per-device routing tables, area structure, and a path lookup tool, all
+viewable at once rather than as a time-based animation. Match the visual
+style of my other project pages (Tailwind CDN darkMode:'class', Inter + Fira
+Code, Font Awesome CSS build, slate/blue/indigo palette, rounded-2xl cards)
+and include the two shared includes used across the site:
+
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+    <script src="../../assets/js/theme-init.js"></script>
+
+plus the "← Portfolio" back-link to ../../index.html in the header. Do NOT
+include playback controls (⏮ ▶/⏸ ⏭ ↺) — there's no time axis in this format.
+
+Output: ONE self-contained HTML file, inline CSS + vanilla JS only (aside
+from the two shared includes above).
+
+==================================================
+Network design:
+- Routers: (hostname, Router ID/loopback, OSPF area membership — e.g.
+  "R1 (1.1.1.1) - Area 0", "R2 (2.2.2.2) - Area 0", "R3 (3.3.3.3) - Area 1 (stub)")
+- Links: (connected routers, interface, cost/bandwidth, network type — e.g.
+  "R1 Gi0/0 <-> R2 Gi0/0, 10.1.1.0/30, cost 1, point-to-point")
+- Areas: (area ID, type — backbone/standard/stub/NSSA/totally-stubby — and
+  which routers belong to each)
+- Redistribution/default routes, if any (e.g. "R3 is an ABR injecting a
+  default route into Area 1")
+==================================================
+
+Requirements:
+1. Core data — no timeline; structure this as topology data, not steps:
+   `topology`: { nodes: [{ id, name, routerId, area, role }],
+                 links: [{ from, to, cost, bandwidth, type, network }] }
+   `areas`: [{ id, label, type, color }]
+   `routingTables`: { <nodeId>: [{ network, mask, type: "O"|"O IA"|"C"|"D"|"S", nextHop, metric }] }
+
+2. Header: logo + "← Portfolio" back-link + theme toggle only (no playback
+   controls). Optional: a small legend showing each area's color.
+
+3. Topology map (centerpiece): all routers as an interactive diagram, links
+   labeled with cost, OSPF areas visually grouped (colored zone per area,
+   the backbone Area 0 visually distinct). Clicking a router opens an
+   inspector panel; clicking a link shows its cost/bandwidth/network type.
+
+4. Device inspector panel: on selecting a router, show its Router ID, area,
+   interfaces, and full routing table — styled like the dark, monospace
+   CLI panels used elsewhere on the site.
+
+5. Path lookup tool: two dropdowns (source, destination) + a "Trace Path"
+   button. On click, compute the lowest-cost path across the topology
+   (implement a simple Dijkstra over the `links` cost data in vanilla JS),
+   highlight it on the map, and list the ordered hops with cumulative cost.
+   This is what keeps a static dashboard interactive rather than a picture.
+
+6. Area legend/filter: let the viewer dim or hide areas, so a larger
+   multi-area design stays readable.
+
+7. All visible UI text in Vietnamese.
+
+Populate `topology`, `areas`, and `routingTables` with data that's actually
+consistent with the design given above — routing tables should reflect real
+OSPF behavior (e.g. a router in Area 1 shows "O IA" for prefixes learned
+from outside its own area, not "O").
 ```

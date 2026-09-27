@@ -78,6 +78,13 @@ const PROJECT_TYPES = {
         accent: 'from-cyan-500 to-blue-600',
         description: 'Trigger an outage, watch timers and convergence play out.',
     },
+    'topology-design': {
+        label: 'Topology Design Reference',
+        short: 'Topology Design',
+        icon: 'fa-diagram-project',
+        accent: 'from-teal-500 to-cyan-700',
+        description: 'Static topology map, routing tables, and path lookup — no timeline.',
+    },
 };
 
 const PROJECTS = [
