@@ -131,9 +131,9 @@
     .link-line.type-overlay { stroke: #a855f7; stroke-width: 3; stroke-dasharray: 8; }
     
     .link-line.highlight {
-      stroke: #3b82f6;
-      stroke-width: 4;
-      filter: drop-shadow(0 0 4px rgba(59,130,246,0.8));
+      stroke: #3b82f6 !important;
+      stroke-width: 4 !important;
+      filter: drop-shadow(0 0 4px rgba(59,130,246,0.8)) !important;
     }
     
     .link-label-group {
@@ -188,9 +188,9 @@
         </h1>
       </div>
       <div class="flex items-center gap-4">
-        <div id="theme-toggle" class="cursor-pointer text-slate-400 hover:text-white">
-          <i class="fa-solid fa-moon"></i>
-        </div>
+        <button id="btn-theme" onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all-fast" title="Toggle Theme">
+          <i id="theme-icon" class="fas fa-sun"></i>
+        </button>
       </div>
     </div>
   </header>
@@ -287,6 +287,19 @@
   </main>
 
   <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle('dark');
+      try {
+        localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light');
+      } catch(e) {}
+      
+      const icon = document.getElementById('theme-icon');
+      if (icon) {
+        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+      }
+    }
+
     // --- 1. Data Schema ---
     const data = {
       zones: [
