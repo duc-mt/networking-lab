@@ -194,4 +194,15 @@ const PROJECTS = [
         status: 'soon',
         dateAdded: '2026-09-26',
     },
+    {
+        title: 'Check Point ClusterXL Zero Downtime Patching',
+        topic: 'Security',
+        description:
+            'Quy trình nâng cấp firmware cho Check Point ClusterXL không gây gián đoạn dịch vụ.',
+        type: 'change-mop',
+        tags: ['Check Point', 'ClusterXL', 'Upgrade', 'MOP'],
+        href: 'projects/change-mop/checkpoint-cluster-patching.html',
+        status: 'live',
+        dateAdded: '2026-09-27',
+    },
 ];

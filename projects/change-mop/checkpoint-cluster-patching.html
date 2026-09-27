@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOP: Check Point ClusterXL Patching</title>
+
+    <!-- Apply the saved theme before first paint -->
+    <script src="../../assets/js/theme-init.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Shared theme CSS -->
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+
+    <style>
+        .mop-tab-active {
+            border-bottom-width: 2px;
+            border-color: #2563eb; /* blue-600 */
+            color: #2563eb;
+        }
+        .dark .mop-tab-active {
+            border-color: #60a5fa; /* blue-400 */
+            color: #60a5fa;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0">
+                    <i class="fas fa-clipboard-check"></i>
+                </a>
+                <div>
+                    <a href="../../index.html" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                        <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                    </a>
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">MOP: Check Point ClusterXL Patching</h1>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all-fast" title="Đổi giao diện Sáng/Tối">
+                    <i id="theme-icon" class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-8">
+        
+        <!-- Context Card -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Bối cảnh CR</span>
+                <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded text-xs font-bold uppercase tracking-widest">Zero Downtime</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Upgrade FW-CORE Cluster (sk184766)</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">Patch lỗi CPUSE và HTTPS Inspection do bug tính toán "Not Before" X.509. Thực hiện theo nguyên lý: Luôn có 1 Member Active; chỉ upgrade Member Standby.</p>
+            
+            <!-- Diff / Config Changes -->
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Thông tin Cluster</h3>
+                    <ul class="text-sm space-y-1 text-slate-600 dark:text-slate-300">
+                        <li><strong>Model:</strong> Check Point 1800</li>
+                        <li><strong>FW-CORE-01:</strong> 10.10.10.1 <span class="text-emerald-500 font-bold">(Active)</span></li>
+                        <li><strong>FW-CORE-02:</strong> 10.10.10.2 <span class="text-slate-500 font-bold">(Standby)</span></li>
+                        <li><strong>VIP:</strong> 10.10.10.254</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 shadow-inner font-mono text-sm flex flex-col justify-center">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-sans">Thay đổi Firmware</h3>
+                    <div class="text-red-400 line-through">- R82.00.10 build 998002279</div>
+                    <div class="text-emerald-400">+ 1800_R82.00.10_998002325</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive MOP Workspace -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+            
+            <!-- Tabs Navigation -->
+            <div class="flex overflow-x-auto border-b border-slate-200 dark:border-slate-800 px-2 pt-2 bg-slate-50 dark:bg-slate-900/50">
+                <button onclick="switchTab('preChecks')" id="tab-preChecks" class="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors mop-tab-active">Pre-Checks</button>
+                <button onclick="switchTab('execution')" id="tab-execution" class="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors">Execution</button>
+                <button onclick="switchTab('postChecks')" id="tab-postChecks" class="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors">Post-Checks</button>
+                <button onclick="switchTab('rollback')" id="tab-rollback" class="px-6 py-3 text-sm font-bold text-red-500 hover:text-red-600 border-b-2 border-transparent transition-colors hidden"><i class="fas fa-exclamation-triangle mr-1"></i> Rollback</button>
+            </div>
+
+            <!-- Tab Content Area -->
+            <div class="p-6">
+                <!-- Risk Banner (Only for Execution) -->
+                <div id="risk-banner" class="hidden mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4 flex items-start gap-4 transition-all">
+                    <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                        <i class="fas fa-radiation"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-red-800 dark:text-red-400 mb-1">Cảnh báo rủi ro (Risk Flag Detected)</h4>
+                        <p class="text-sm text-red-700 dark:text-red-300 mb-3" id="risk-text">Giai đoạn này chứa rủi ro SPOF (Single Point of Failure) trong 10-15 phút khi thiết bị reboot.</p>
+                        <label class="flex items-center gap-2 text-sm font-bold text-red-800 dark:text-red-300 cursor-pointer select-none">
+                            <input type="checkbox" id="risk-ack" onchange="toggleRiskAck()" class="w-4 h-4 rounded text-red-600 focus:ring-red-500">
+                            Tôi xác nhận rủi ro và chấp nhận thực hiện.
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Lists Container -->
+                <div id="list-container" class="space-y-4">
+                    <!-- Javascript populates this -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Data Structure for MOP
+        const mopData = {
+            preChecks: [
+                { id: "p1", description: "Chạy cphaprob stat trên cả 2 Member", command: "cphaprob stat", expected_result: "FW-CORE-01 = Active, FW-CORE-02 = Standby, cả 2 Healthy", status: "pending" },
+                { id: "p2", description: "Export backup configuration qua WebUI", command: "WebUI > Maintenance > Backup", expected_result: "Lưu file backup an toàn", status: "pending" },
+                { id: "p3", description: "Tải firmware vào thiết bị", command: "WebUI > Device > Firmware", expected_result: "File 1800_R82.00.10_998002325 sẵn sàng", status: "pending" }
+            ],
+            execution: [
+                { id: "e1", description: "Upgrade Member Standby (FW-CORE-02)", command: "WebUI > Device > Firmware > Upgrade", output: "Rebooting (10-15 mins). Rejoined as Standby at 998002325.", risk_flag: "SPOF trong quá trình reboot", status: "pending" },
+                { id: "e2", description: "Failover chủ động", command: "clusterXL_admin down (trên FW-CORE-01)", output: "FW-CORE-01 changes to DOWN.\nFW-CORE-02 promotes to ACTIVE.\nTraffic failovers in < 2s.", risk_flag: null, status: "pending" },
+                { id: "e3", description: "Upgrade Member Active cũ (FW-CORE-01)", command: "WebUI > Device > Firmware > Upgrade", output: "Rebooting (10-15 mins). Rejoined as Standby at 998002325.", risk_flag: "SPOF trong quá trình reboot", status: "pending" },
+                { id: "e4", description: "Normalize (Tuỳ chọn)", command: "clusterXL_admin up (trên FW-CORE-01)", output: "FW-CORE-01 is UP.", risk_flag: null, status: "pending" }
+            ],
+            postChecks: [
+                { id: "po1", description: "Kiểm tra Cluster Healthy & Role", command: "cphaprob stat", expected_result: "Cả 2 Healthy, đúng Active/Standby", actual_result: "", status: "pending" },
+                { id: "po2", description: "Kiểm tra Firmware Version", command: "WebUI > Device > Firmware", expected_result: "1800_R82.00.10_998002325", actual_result: "", status: "pending" },
+                { id: "po3", description: "Kiểm tra lỗi cert sk184766", command: "WebUI > Software Updates", expected_result: "Không còn lỗi CPUSE/cert", actual_result: "", status: "pending" },
+                { id: "po4", description: "Theo dõi traffic/Log 30 phút", command: "SmartConsole / Log", expected_result: "Traffic ổn định", actual_result: "", status: "pending" }
+            ],
+            rollback: [
+                { id: "r1", description: "Revert FW-CORE-01 về firmware cũ", command: "WebUI > Device > Firmware > Revert to 998002279" },
+                { id: "r2", description: "Revert FW-CORE-02 về firmware cũ", command: "WebUI > Device > Firmware > Revert to 998002279" },
+                { id: "r3", description: "Khôi phục cấu hình/Database nếu cần", command: "WebUI > Maintenance > Restore" }
+            ]
+        };
+
+        let currentTab = 'preChecks';
+        let riskAcknowledged = false;
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Update Tab UI styling
+            ['preChecks', 'execution', 'postChecks', 'rollback'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (el) {
+                    if (t === tabName) {
+                        el.classList.add('mop-tab-active');
+                    } else {
+                        el.classList.remove('mop-tab-active');
+                    }
+                }
+            });
+
+            renderList();
+        }
+
+        function checkFailures() {
+            // If any postCheck failed, unhide the rollback tab and highlight it
+            const hasFailure = mopData.postChecks.some(c => c.status === 'fail');
+            const rbTab = document.getElementById('tab-rollback');
+            if (hasFailure) {
+                rbTab.classList.remove('hidden');
+                // Auto switch to rollback if we haven't yet
+                if (currentTab !== 'rollback' && currentTab === 'postChecks') {
+                    // Just unhide it, let user switch
+                }
+            } else {
+                rbTab.classList.add('hidden');
+            }
+        }
+
+        function setStatus(phase, id, newStatus) {
+            const item = mopData[phase].find(i => i.id === id);
+            if (item) item.status = newStatus;
+            
+            checkFailures();
+            renderList();
+        }
+
+        function toggleRiskAck() {
+            riskAcknowledged = document.getElementById('risk-ack').checked;
+            renderList();
+        }
+
+        function renderList() {
+            const container = document.getElementById('list-container');
+            const banner = document.getElementById('risk-banner');
+            container.innerHTML = '';
+
+            const items = mopData[currentTab];
+            let hasRisk = false;
+
+            // Check if current tab is execution and has un-acknowledged risks
+            if (currentTab === 'execution') {
+                const risks = items.filter(i => i.risk_flag);
+                if (risks.length > 0) {
+                    hasRisk = true;
+                    banner.classList.remove('hidden');
+                    const riskList = [...new Set(risks.map(r => r.risk_flag))].join('; ');
+                    document.getElementById('risk-text').textContent = `MOP này có các rủi ro đã biết: ${riskList}. Vui lòng xác nhận trước khi thực hiện các bước bên dưới.`;
+                } else {
+                    banner.classList.add('hidden');
+                }
+            } else {
+                banner.classList.add('hidden');
+            }
+
+            // Render Items
+            items.forEach((item, idx) => {
+                const card = document.createElement('div');
+                const isBlocked = (currentTab === 'execution' && hasRisk && !riskAcknowledged);
+                
+                card.className = `flex flex-col md:flex-row md:items-stretch gap-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 transition-opacity ${isBlocked ? 'opacity-50 pointer-events-none' : ''}`;
+                
+                let controlsHtml = '';
+                
+                if (currentTab === 'preChecks' || currentTab === 'execution') {
+                    controlsHtml = `
+                        <div class="flex items-center gap-2 mt-4 md:mt-0 md:ml-auto shrink-0 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 pt-3 md:pt-0 md:pl-4">
+                            <button onclick="setStatus('${currentTab}', '${item.id}', 'pass')" class="px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${item.status === 'pass' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-200'}">
+                                <i class="fas fa-check"></i> Hoàn thành
+                            </button>
+                        </div>
+                    `;
+                } else if (currentTab === 'postChecks') {
+                    controlsHtml = `
+                        <div class="flex items-center gap-2 mt-4 md:mt-0 md:ml-auto shrink-0 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 pt-3 md:pt-0 md:pl-4">
+                            <button onclick="setStatus('${currentTab}', '${item.id}', 'pass')" class="px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${item.status === 'pass' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-200'}">
+                                <i class="fas fa-check"></i> Pass
+                            </button>
+                            <button onclick="setStatus('${currentTab}', '${item.id}', 'fail')" class="px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${item.status === 'fail' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-200'}">
+                                <i class="fas fa-times"></i> Fail
+                            </button>
+                        </div>
+                    `;
+                } else if (currentTab === 'rollback') {
+                     controlsHtml = `
+                        <div class="flex items-center gap-2 mt-4 md:mt-0 md:ml-auto shrink-0 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 pt-3 md:pt-0 md:pl-4">
+                            <button class="px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 transition-all">
+                                <i class="fas fa-undo"></i> Thực thi
+                            </button>
+                        </div>
+                    `;
+                }
+
+                const riskBadge = item.risk_flag ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-[10px] uppercase font-bold tracking-widest rounded ml-2"><i class="fas fa-exclamation-triangle"></i> ${item.risk_flag}</span>` : '';
+                
+                const cmdOutput = item.output ? `
+                    <div class="mt-2 text-xs font-mono text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
+                        <span class="text-slate-400 select-none">> </span>${item.output.replace(/\n/g, '<br><span class="text-slate-400 select-none">> </span>')}
+                    </div>
+                ` : '';
+
+                card.innerHTML = `
+                    <div class="flex-1">
+                        <div class="flex items-center mb-1">
+                            <span class="w-6 h-6 rounded bg-slate-100 dark:bg-slate-900 text-slate-400 flex items-center justify-center text-xs font-bold mr-3">${idx + 1}</span>
+                            <h4 class="font-bold text-slate-800 dark:text-white">${item.description}${riskBadge}</h4>
+                        </div>
+                        <div class="ml-9">
+                            <div class="font-mono text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded inline-block mb-2">
+                                <i class="fas fa-terminal opacity-50 mr-1"></i> ${item.command}
+                            </div>
+                            ${item.expected_result ? `<p class="text-sm text-slate-500 dark:text-slate-400"><span class="font-semibold text-slate-600 dark:text-slate-300">Kỳ vọng:</span> ${item.expected_result}</p>` : ''}
+                            ${cmdOutput}
+                        </div>
+                    </div>
+                    ${controlsHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            // The theme is handled by theme-init.js and matched here
+            document.getElementById('theme-icon').className = document.documentElement.classList.contains('dark') ? 'fas fa-sun' : 'fas fa-moon';
+            switchTab('preChecks');
+        });
+
+        function toggleTheme() {
+            const isDark = !document.documentElement.classList.contains('dark');
+            document.documentElement.classList.toggle('dark', isDark);
+            document.getElementById('theme-icon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+        }
+    </script>
+</body>
+</html>
