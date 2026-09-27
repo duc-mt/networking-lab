@@ -248,4 +248,15 @@ const PROJECTS = [
         status: 'live',
         dateAdded: '2026-10-04',
     },
+    {
+        title: 'Hybrid Cloud Transit Topology (VyOS / OSPF)',
+        topic: 'Architecture',
+        description:
+            'Bản đồ Topology tĩnh mô phỏng kiến trúc Hybrid Cloud qua VPN Tunnel và OSPF định tuyến động.',
+        type: 'topology-design',
+        tags: ['Cloud', 'VyOS', 'OSPF', 'GRE Tunnel', 'Topology'],
+        href: 'projects/topology-design/hybrid-cloud-transit.html',
+        status: 'live',
+        dateAdded: '2026-10-05',
+    },
 ];

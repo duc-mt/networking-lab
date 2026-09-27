@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topology: Hybrid Cloud Transit</title>
+
+    <!-- Apply the saved theme before first paint -->
+    <script src="../../assets/js/theme-init.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Shared theme CSS -->
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+
+    <style>
+        .node { transition: all 0.2s ease; cursor: pointer; }
+        .node:hover { transform: scale(1.05); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
+        .node.active { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); }
+        .dark .node.active { border-color: #60a5fa; box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3); }
+        
+        .link-line { stroke: #cbd5e1; stroke-width: 2; transition: all 0.3s; stroke-dasharray: 4; }
+        .dark .link-line { stroke: #334155; }
+        .link-line.active-path { stroke: #10b981; stroke-width: 4; stroke-dasharray: 0; filter: drop-shadow(0 0 4px rgba(16,185,129,0.5)); }
+        
+        .link-label { font-family: 'Fira Code', monospace; font-size: 10px; fill: #64748b; font-weight: bold; text-anchor: middle; }
+        .dark .link-label { fill: #94a3b8; }
+        .link-label.active-path { fill: #10b981; font-size: 11px; }
+
+        .area-box { position: absolute; border: 2px dashed; border-radius: 16px; pointer-events: none; opacity: 0.15; }
+        .area-label { position: absolute; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.4; }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex justify-between items-center gap-4">
+            <a href="../../index.html" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-700 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0">
+                    <i class="fas fa-diagram-project"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-900 dark:text-white leading-tight">Hybrid Cloud Transit</h1>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium hover:underline flex items-center gap-1">
+                        <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                    </p>
+                </div>
+            </a>
+            <div class="flex items-center gap-2 ml-auto">
+                <button onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all-fast" title="Đổi giao diện Sáng/Tối">
+                    <i id="theme-icon" class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-6 flex flex-col lg:flex-row gap-6">
+        
+        <!-- Left: Interactive Topology Canvas -->
+        <div class="flex-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
+                <h2 class="font-bold text-slate-800 dark:text-white"><i class="fas fa-sitemap mr-2 text-cyan-600"></i>Bản đồ Kiến trúc (Interactive)</h2>
+                <div class="text-xs font-mono bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-400">
+                    Cost = OSPF Metric
+                </div>
+            </div>
+            
+            <div class="relative w-full h-[600px] bg-slate-50 dark:bg-[#0f172a] overflow-hidden" id="topology-container">
+                <!-- SVG Links Layer -->
+                <svg id="links-layer" class="absolute inset-0 w-full h-full pointer-events-none"></svg>
+                
+                <!-- Background Areas -->
+                <div id="areas-layer" class="absolute inset-0 pointer-events-none"></div>
+                
+                <!-- HTML Nodes Layer -->
+                <div id="nodes-layer" class="absolute inset-0"></div>
+            </div>
+        </div>
+
+        <!-- Right: Inspector & Tools -->
+        <div class="w-full lg:w-[400px] flex flex-col gap-6">
+            
+            <!-- Path Lookup Tool -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <h3 class="text-sm font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-4"><i class="fas fa-route mr-2"></i>Tra cứu Đường đi</h3>
+                <div class="flex flex-col gap-3">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 mb-1 block">Nguồn (Source)</label>
+                        <select id="path-src" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 mb-1 block">Đích (Destination)</label>
+                        <select id="path-dst" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"></select>
+                    </div>
+                    <button onclick="calculatePath()" class="mt-2 w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        Mô phỏng SPF Dijkstra
+                    </button>
+                    
+                    <div id="path-result" class="mt-4 text-sm font-mono hidden bg-slate-100 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700"></div>
+                </div>
+            </div>
+
+            <!-- Device Inspector -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl flex-1 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-widest"><i class="fas fa-server mr-2 text-slate-500"></i>Trạng thái Thiết bị</h3>
+                </div>
+                
+                <div id="inspector-empty" class="p-8 text-center text-slate-400 flex flex-col items-center justify-center h-full">
+                    <i class="fas fa-hand-pointer text-3xl mb-3 opacity-50"></i>
+                    <p class="text-sm">Bấm vào một node trên bản đồ để xem chi tiết và bảng định tuyến (Routing Table).</p>
+                </div>
+                
+                <div id="inspector-content" class="hidden flex-col h-full">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div id="insp-icon" class="w-8 h-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center font-bold"></div>
+                            <div>
+                                <h4 id="insp-name" class="font-bold text-slate-900 dark:text-white leading-tight"></h4>
+                                <span id="insp-role" class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full"></span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
+                            <div><span class="text-slate-400">Router ID:</span> <span id="insp-rid" class="font-mono font-bold dark:text-slate-300"></span></div>
+                            <div><span class="text-slate-400">Vùng:</span> <span id="insp-area" class="font-bold dark:text-slate-300"></span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 bg-[#1e1e1e] flex-1 overflow-y-auto">
+                        <h5 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Routing Table</h5>
+                        <table class="w-full text-[11px] font-mono text-slate-300 text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-700/50 text-slate-500">
+                                    <th class="pb-2 font-normal">Mạng đích</th>
+                                    <th class="pb-2 font-normal">Next Hop</th>
+                                    <th class="pb-2 font-normal text-right">Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody id="insp-routes"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <script>
+        // --- DATA ---
+        const topologyData = {
+            nodes: [
+                { id: "vpc1", name: "AWS VPC 1", role: "Cloud Network", area: "cloud", icon: "fa-cloud", rid: "10.0.1.0/24", x: 15, y: 15 },
+                { id: "vpc2", name: "AWS VPC 2", role: "Cloud Network", area: "cloud", icon: "fa-cloud", rid: "10.0.2.0/24", x: 80, y: 15 },
+                { id: "vyos_transit", name: "VyOS Transit", role: "Core Gateway", area: "cloud", icon: "fa-router", rid: "10.0.0.1", x: 47.5, y: 35 },
+                { id: "vyos_onsite", name: "VyOS Onsite", role: "Edge Router", area: "onprem", icon: "fa-router", rid: "192.168.100.1", x: 80, y: 65 },
+                { id: "pfsense", name: "pfSense", role: "Legacy FW", area: "onprem", icon: "fa-shield-halved", rid: "192.168.200.1", x: 15, y: 65 },
+                { id: "fw_ho", name: "Firewall HO", role: "Main FW", area: "onprem", icon: "fa-shield-halved", rid: "192.168.0.1", x: 47.5, y: 80 },
+                { id: "hp5700", name: "HP 5700 Core", role: "Core Switch", area: "onprem", icon: "fa-network-wired", rid: "192.168.10.254", x: 47.5, y: 95 }
+            ],
+            links: [
+                { from: "vpc1", to: "vpc2", type: "VPC Peering", cost: 1 },
+                { from: "vpc1", to: "vyos_transit", type: "VPC Attach", cost: 10 },
+                { from: "vpc2", to: "vyos_transit", type: "VPC Attach", cost: 10 },
+                { from: "vyos_transit", to: "fw_ho", type: "L3 NOC Link (Primary)", cost: 100 },
+                { from: "vyos_transit", to: "vyos_onsite", type: "GRE tun0 (OSPF Area 0)", cost: 20 },
+                { from: "vyos_onsite", to: "fw_ho", type: "Static Route", cost: 10 },
+                { from: "pfsense", to: "fw_ho", type: "Legacy BGP", cost: 200 },
+                { from: "fw_ho", to: "hp5700", type: "LACP 2x10G", cost: 5 }
+            ],
+            areas: {
+                "cloud": { label: "Cloud Environment (AWS)", color: "#0ea5e9", bounds: { top: 5, left: 5, width: 90, height: 45 } },
+                "onprem": { label: "On-Premise (HO)", color: "#10b981", bounds: { top: 55, left: 5, width: 90, height: 45 } }
+            },
+            routes: {
+                "vyos_transit": [
+                    { net: "10.0.1.0/24", type: "C", hop: "eth1", cost: 0 },
+                    { net: "10.0.2.0/24", type: "C", hop: "eth2", cost: 0 },
+                    { net: "192.168.10.0/24", type: "O", hop: "tun0 (VyOS Onsite)", cost: 35 },
+                    { net: "192.168.10.0/24", type: "O", hop: "eth0 (FW HO)", cost: 105 }
+                ],
+                "vyos_onsite": [
+                    { net: "10.0.0.0/16", type: "O", hop: "tun0 (VyOS Transit)", cost: 20 },
+                    { net: "192.168.10.0/24", type: "S", hop: "eth1 (FW HO)", cost: 10 }
+                ],
+                "fw_ho": [
+                    { net: "0.0.0.0/0", type: "S", hop: "VyOS Transit (Primary)", cost: 100 },
+                    { net: "0.0.0.0/0", type: "S", hop: "VyOS Onsite (Overlay)", cost: 110 },
+                    { net: "10.0.0.0/16", type: "O", hop: "VyOS Transit", cost: 100 },
+                    { net: "192.168.10.0/24", type: "C", hop: "LACP Bond0", cost: 0 }
+                ],
+                "hp5700": [
+                    { net: "0.0.0.0/0", type: "S", hop: "FW HO", cost: 1 },
+                    { net: "192.168.10.0/24", type: "C", hop: "Vlan10", cost: 0 }
+                ]
+            }
+        };
+
+        // --- RENDER LOGIC ---
+        const nodesLayer = document.getElementById('nodes-layer');
+        const linksLayer = document.getElementById('links-layer');
+        const areasLayer = document.getElementById('areas-layer');
+        let selectedNode = null;
+
+        function renderTopology() {
+            // Draw Areas
+            Object.entries(topologyData.areas).forEach(([id, area]) => {
+                const box = document.createElement('div');
+                box.className = 'area-box';
+                box.style.borderColor = area.color;
+                box.style.backgroundColor = area.color + '10';
+                box.style.top = area.bounds.top + '%';
+                box.style.left = area.bounds.left + '%';
+                box.style.width = area.bounds.width + '%';
+                box.style.height = area.bounds.height + '%';
+                areasLayer.appendChild(box);
+
+                const label = document.createElement('div');
+                label.className = 'area-label text-xs';
+                label.style.color = area.color;
+                label.style.top = (area.bounds.top + 2) + '%';
+                label.style.left = (area.bounds.left + 2) + '%';
+                label.textContent = area.label;
+                areasLayer.appendChild(label);
+            });
+
+            // Draw Nodes
+            topologyData.nodes.forEach(n => {
+                const node = document.createElement('div');
+                node.id = `node-${n.id}`;
+                node.className = 'node absolute -translate-x-1/2 -translate-y-1/2 w-32 bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-200 dark:border-slate-700 shadow flex flex-col items-center justify-center p-3 text-center';
+                node.style.left = n.x + '%';
+                node.style.top = n.y + '%';
+                
+                let iconColor = n.area === 'cloud' ? 'text-blue-500' : 'text-emerald-500';
+                if(n.id.includes('fw')) iconColor = 'text-red-500';
+                
+                node.innerHTML = `
+                    <i class="fas ${n.icon} text-2xl ${iconColor} mb-2"></i>
+                    <span class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">${n.name}</span>
+                `;
+                
+                node.onclick = () => selectNode(n.id);
+                nodesLayer.appendChild(node);
+            });
+
+            // Populate Path Dropdowns
+            const srcSel = document.getElementById('path-src');
+            const dstSel = document.getElementById('path-dst');
+            topologyData.nodes.forEach(n => {
+                srcSel.add(new Option(n.name, n.id));
+                dstSel.add(new Option(n.name, n.id));
+            });
+            dstSel.selectedIndex = 1;
+
+            drawLinks();
+            window.addEventListener('resize', drawLinks);
+        }
+
+        function drawLinks() {
+            linksLayer.innerHTML = ''; // Clear SVG
+            const container = document.getElementById('topology-container');
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+
+            topologyData.links.forEach((l, idx) => {
+                const from = topologyData.nodes.find(n => n.id === l.from);
+                const to = topologyData.nodes.find(n => n.id === l.to);
+                
+                const x1 = (from.x / 100) * w;
+                const y1 = (from.y / 100) * h;
+                const x2 = (to.x / 100) * w;
+                const y2 = (to.y / 100) * h;
+                
+                // Line
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('id', `link-${l.from}-${l.to}`);
+                line.setAttribute('class', 'link-line');
+                linksLayer.appendChild(line);
+
+                // Label background
+                const mx = (x1 + x2) / 2;
+                const my = (y1 + y2) / 2;
+                
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', mx - 40);
+                rect.setAttribute('y', my - 8);
+                rect.setAttribute('width', 80);
+                rect.setAttribute('height', 16);
+                rect.setAttribute('fill', 'var(--bg-label, #f8fafc)');
+                rect.setAttribute('rx', 4);
+                rect.classList.add('dark:fill-slate-900');
+                linksLayer.appendChild(rect);
+
+                // Label
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', mx);
+                text.setAttribute('y', my + 3);
+                text.setAttribute('id', `label-${l.from}-${l.to}`);
+                text.setAttribute('class', 'link-label');
+                text.textContent = `cost ${l.cost}`;
+                linksLayer.appendChild(text);
+            });
+        }
+
+        function selectNode(id) {
+            // UI Selection
+            document.querySelectorAll('.node').forEach(el => el.classList.remove('active'));
+            document.getElementById(`node-${id}`).classList.add('active');
+            
+            const node = topologyData.nodes.find(n => n.id === id);
+            document.getElementById('inspector-empty').classList.add('hidden');
+            document.getElementById('inspector-content').classList.remove('hidden');
+            document.getElementById('inspector-content').classList.add('flex');
+            
+            document.getElementById('insp-icon').innerHTML = `<i class="fas ${node.icon}"></i>`;
+            document.getElementById('insp-name').textContent = node.name;
+            document.getElementById('insp-role').textContent = node.role;
+            document.getElementById('insp-rid').textContent = node.rid;
+            document.getElementById('insp-area').textContent = topologyData.areas[node.area].label;
+
+            // Routes
+            const tbody = document.getElementById('insp-routes');
+            tbody.innerHTML = '';
+            const routes = topologyData.routes[id] || [];
+            
+            if (routes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-500 italic">Route table not simulated</td></tr>`;
+            } else {
+                routes.forEach(r => {
+                    let typeColor = r.type === 'O' ? 'text-emerald-400' : (r.type === 'C' ? 'text-blue-400' : 'text-amber-400');
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-700/30 hover:bg-slate-800/50 transition-colors">
+                            <td class="py-2"><span class="mr-2 font-bold ${typeColor}">${r.type}</span>${r.net}</td>
+                            <td class="py-2 text-slate-400">${r.hop}</td>
+                            <td class="py-2 text-right text-emerald-300">${r.cost}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function calculatePath() {
+            const src = document.getElementById('path-src').value;
+            const dst = document.getElementById('path-dst').value;
+            const res = document.getElementById('path-result');
+            
+            // Clear highlights
+            document.querySelectorAll('.link-line').forEach(el => el.classList.remove('active-path'));
+            document.querySelectorAll('.link-label').forEach(el => el.classList.remove('active-path'));
+
+            if(src === dst) {
+                res.classList.remove('hidden');
+                res.innerHTML = '<span class="text-amber-500"><i class="fas fa-exclamation-triangle mr-2"></i>Nguồn và đích trùng nhau!</span>';
+                return;
+            }
+
+            // Simple Dijkstra
+            const graph = {};
+            topologyData.nodes.forEach(n => graph[n.id] = {});
+            topologyData.links.forEach(l => {
+                graph[l.from][l.to] = l.cost;
+                graph[l.to][l.from] = l.cost; // Undirected
+            });
+
+            const distances = {};
+            const prev = {};
+            const pq = new Set(topologyData.nodes.map(n => n.id));
+
+            topologyData.nodes.forEach(n => distances[n.id] = Infinity);
+            distances[src] = 0;
+
+            while (pq.size > 0) {
+                let minNode = null;
+                for (let node of pq) {
+                    if (minNode === null || distances[node] < distances[minNode]) minNode = node;
+                }
+                
+                if (distances[minNode] === Infinity) break;
+                pq.delete(minNode);
+
+                if (minNode === dst) break;
+
+                for (let neighbor in graph[minNode]) {
+                    let alt = distances[minNode] + graph[minNode][neighbor];
+                    if (alt < distances[neighbor]) {
+                        distances[neighbor] = alt;
+                        prev[neighbor] = minNode;
+                    }
+                }
+            }
+
+            if (distances[dst] === Infinity) {
+                res.classList.remove('hidden');
+                res.innerHTML = '<span class="text-red-500"><i class="fas fa-times-circle mr-2"></i>Không tìm thấy đường đi khả thi.</span>';
+                return;
+            }
+
+            const path = [];
+            let u = dst;
+            while (u) {
+                path.unshift(u);
+                u = prev[u];
+            }
+
+            // Highlight SVG
+            for (let i = 0; i < path.length - 1; i++) {
+                let n1 = path[i];
+                let n2 = path[i+1];
+                let linkId1 = `link-${n1}-${n2}`;
+                let linkId2 = `link-${n2}-${n1}`;
+                let labelId1 = `label-${n1}-${n2}`;
+                let labelId2 = `label-${n2}-${n1}`;
+                
+                let linkEl = document.getElementById(linkId1) || document.getElementById(linkId2);
+                let labelEl = document.getElementById(labelId1) || document.getElementById(labelId2);
+                if(linkEl) linkEl.classList.add('active-path');
+                if(labelEl) labelEl.classList.add('active-path');
+            }
+
+            // Print Output
+            res.classList.remove('hidden');
+            let pathText = path.map(id => topologyData.nodes.find(n => n.id === id).name).join(' <i class="fas fa-arrow-right text-emerald-500 mx-1"></i> ');
+            res.innerHTML = `
+                <div class="mb-2"><span class="text-slate-500">Tổng Cost OSPF:</span> <span class="font-bold text-emerald-600 dark:text-emerald-400">${distances[dst]}</span></div>
+                <div>${pathText}</div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Apply Dark Mode from System/LocalStorage
+            let isDark = false;
+            try {
+                const saved = localStorage.getItem('portfolio-theme');
+                isDark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            } catch (e) {}
+            document.documentElement.classList.toggle('dark', isDark);
+            document.getElementById('theme-icon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+
+            renderTopology();
+        });
+
+        function toggleTheme() {
+            const isDark = !document.documentElement.classList.contains('dark');
+            document.documentElement.classList.toggle('dark', isDark);
+            document.getElementById('theme-icon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+            drawLinks(); // Re-draw to update colors if needed
+        }
+    </script>
+</body>
+</html>
