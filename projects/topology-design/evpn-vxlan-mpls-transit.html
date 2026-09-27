@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" class="dark">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,28 +32,33 @@
   <link rel="stylesheet" href="../../assets/css/theme.css">
   <script src="../../assets/js/theme-init.js"></script>
 
-  <style>
-    body { background-color: #0f172a; color: #f8fafc; }
-    
+    <style>
     /* Topology Map Styles */
     #topology-container {
       position: relative;
       width: 1000px;
       height: 500px;
-      background-color: #151e2e;
-      border: 1px solid #334155;
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 1rem;
       overflow: hidden;
       margin: 0 auto;
+    }
+    .dark #topology-container {
+      background-color: #151e2e;
+      border-color: #334155;
     }
     
     .zone {
       position: absolute;
       border: 2px dashed;
       border-radius: 0.75rem;
-      background-color: rgba(255, 255, 255, 0.02);
+      background-color: rgba(0, 0, 0, 0.02);
       pointer-events: none;
       transition: opacity 0.5s;
+    }
+    .dark .zone {
+      background-color: rgba(255, 255, 255, 0.02);
     }
     .zone-title {
       position: absolute;
@@ -71,8 +76,8 @@
       width: 64px;
       height: 64px;
       transform: translate(-50%, -50%);
-      background-color: #1e293b;
-      border: 2px solid #475569;
+      background-color: #ffffff;
+      border: 2px solid #cbd5e1;
       border-radius: 50%;
       display: flex;
       flex-direction: column;
@@ -83,6 +88,10 @@
       z-index: 10;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
+    .dark .node {
+      background-color: #1e293b;
+      border-color: #475569;
+    }
     
     .node:hover, .node.selected {
       border-color: #3b82f6;
@@ -91,8 +100,11 @@
     
     .node i {
       font-size: 1.5rem;
-      color: #94a3b8;
+      color: #64748b;
       transition: color 0.2s;
+    }
+    .dark .node i {
+      color: #94a3b8;
     }
     .node:hover i, .node.selected i {
       color: #3b82f6;
@@ -104,10 +116,16 @@
       white-space: nowrap;
       font-size: 0.75rem;
       font-weight: 500;
-      background-color: #0f172a;
+      background-color: #ffffff;
+      color: #334155;
       padding: 2px 6px;
       border-radius: 4px;
-      border: 1px solid #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .dark .node-label {
+      background-color: #0f172a;
+      color: #f8fafc;
+      border-color: #334155;
     }
 
     svg.links {
@@ -127,7 +145,8 @@
     }
     
     .link-line.type-trunk { stroke: #10b981; stroke-dasharray: 4; }
-    .link-line.type-routed { stroke: #64748b; }
+    .link-line.type-routed { stroke: #94a3b8; }
+    .dark .link-line.type-routed { stroke: #64748b; }
     .link-line.type-overlay { stroke: #a855f7; stroke-width: 3; stroke-dasharray: 8; }
     
     .link-line.highlight {
@@ -141,16 +160,22 @@
     }
     
     .link-label-bg {
-      fill: #1e293b;
+      fill: #f1f5f9;
       rx: 4;
+    }
+    .dark .link-label-bg {
+      fill: #1e293b;
     }
     
     .link-label-text {
       font-family: 'Inter', sans-serif;
       font-size: 10px;
-      fill: #cbd5e1;
+      fill: #475569;
       text-anchor: middle;
       dominant-baseline: central;
+    }
+    .dark .link-label-text {
+      fill: #cbd5e1;
     }
     
     /* View Toggle Fade */
@@ -160,28 +185,36 @@
     .cli-table th, .cli-table td {
       padding: 0.5rem 0.75rem;
       text-align: left;
-      border-bottom: 1px solid #334155;
+      border-bottom: 1px solid #e2e8f0;
+      color: #334155;
+    }
+    .dark .cli-table th, .dark .cli-table td {
+      border-bottom-color: #334155;
+      color: #cbd5e1;
     }
     .cli-table th {
-      color: #94a3b8;
+      color: #64748b;
       font-weight: 500;
       text-transform: uppercase;
       font-size: 0.75rem;
     }
+    .dark .cli-table th {
+      color: #94a3b8;
+    }
     .cli-table tr:last-child td { border-bottom: none; }
   </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col">
+<body class="antialiased min-h-screen flex flex-col bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-800 dark:text-slate-200">
 
   <!-- Header -->
-  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+  <header class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-50 dark:bg-slate-900/50 backdrop-blur sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <a href="../../index.html" class="text-slate-400 hover:text-white transition-colors text-sm font-medium">
+        <a href="../../index.html" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors text-sm font-medium">
           <i class="fa-solid fa-arrow-left mr-2"></i>Portfolio
         </a>
         <div class="h-6 w-px bg-slate-700"></div>
-        <h1 class="text-lg font-semibold text-white flex items-center gap-3">
+        <h1 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-3">
           WAN & Multi-Cloud Transit
           <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30">EVPN-VXLAN STRETCHED L2</span>
           <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">MPLS UNDERLAY</span>
@@ -203,7 +236,7 @@
       <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-1 text-xl shrink-0"></i>
       <div>
         <h4 class="text-amber-400 font-semibold mb-1">Crucial Design Note: MTU & Overhead Warning</h4>
-        <p class="text-slate-300 text-sm leading-relaxed">
+        <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
           VXLAN encapsulation adds <strong>~50-54 bytes</strong> of overhead (Outer IP 20B + UDP 8B + VXLAN 8B + Outer Ethernet 14-18B). 
           Đường truyền MPLS Underlay bắt buộc phải cấu hình Path MTU đủ lớn (thường 1554-1600 bytes, hoặc cấu hình Jumbo Frames 9000 bytes) trên toàn tuyến từ đầu đến cuối. 
           Nếu cấu hình MTU sai, các gói tin nhỏ như `ping` (ICMP 64 bytes) vẫn phản hồi bình thường, nhưng các gói TCP/UDP kích thước lớn sẽ bị drop im lặng (do cờ DF-bit không cho phép phân mảnh), dẫn đến tình trạng "Ping thông nhưng App không chạy".
@@ -212,32 +245,32 @@
     </div>
 
     <!-- Toolbar: View Toggles & Tracer -->
-    <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+    <div class="bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
       
       <div class="flex items-center gap-3">
-        <span class="text-sm font-medium text-slate-400 shrink-0">Architecture View:</span>
-        <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700">
-          <button id="btn-view-underlay" class="px-4 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-white transition-colors shadow" onclick="switchView('underlay')">
+        <span class="text-sm font-medium text-slate-500 dark:text-slate-400 shrink-0">Architecture View:</span>
+        <div class="flex bg-slate-50 dark:bg-slate-900 rounded-lg p-1 border border-slate-300 dark:border-slate-700">
+          <button id="btn-view-underlay" class="px-4 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-slate-900 dark:text-white transition-colors shadow" onclick="switchView('underlay')">
             <i class="fa-solid fa-layer-group mr-2"></i>Physical / Underlay
           </button>
-          <button id="btn-view-overlay" class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick="switchView('overlay')">
+          <button id="btn-view-overlay" class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors" onclick="switchView('overlay')">
             <i class="fa-solid fa-cloud mr-2"></i>Overlay (EVPN)
           </button>
         </div>
       </div>
 
-      <div class="flex items-center gap-3 border-l border-slate-700 pl-4 flex-1 justify-end">
-        <span class="text-sm font-medium text-slate-400 shrink-0"><i class="fa-solid fa-route mr-2"></i>Path Tracer:</span>
-        <select id="trace-src" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-blue-500">
+      <div class="flex items-center gap-3 border-l border-slate-300 dark:border-slate-700 pl-4 flex-1 justify-end">
+        <span class="text-sm font-medium text-slate-500 dark:text-slate-400 shrink-0"><i class="fa-solid fa-route mr-2"></i>Path Tracer:</span>
+        <select id="trace-src" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:border-blue-500">
           <option value="host-a">Host-A (On-Prem)</option>
           <option value="host-b">Host-B (Cloud)</option>
         </select>
         <span class="text-slate-500"><i class="fa-solid fa-arrow-right"></i></span>
-        <select id="trace-dst" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-blue-500">
+        <select id="trace-dst" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:border-blue-500">
           <option value="host-b">Host-B (Cloud)</option>
           <option value="host-a">Host-A (On-Prem)</option>
         </select>
-        <button onclick="traceFlow()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors shadow">
+        <button onclick="traceFlow()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white text-sm font-medium transition-colors shadow">
           Trace Flow
         </button>
       </div>
@@ -260,26 +293,26 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
       <!-- Panel: Device Inspector -->
-      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl flex flex-col h-[350px]">
-        <div class="p-4 border-b border-slate-700 bg-slate-800/50 rounded-t-2xl flex items-center gap-3">
-          <i class="fa-solid fa-microchip text-slate-400"></i>
-          <h3 class="font-semibold text-white">Device Inspector</h3>
-          <span id="inspector-badge" class="ml-auto px-2 py-0.5 rounded text-xs font-medium bg-slate-700 text-slate-300">NO DEVICE SELECTED</span>
+      <div class="bg-white dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-2xl flex flex-col h-[350px]">
+        <div class="p-4 border-b border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 rounded-t-2xl flex items-center gap-3">
+          <i class="fa-solid fa-microchip text-slate-500 dark:text-slate-400"></i>
+          <h3 class="font-semibold text-slate-900 dark:text-white">Device Inspector</h3>
+          <span id="inspector-badge" class="ml-auto px-2 py-0.5 rounded text-xs font-medium bg-slate-700 text-slate-600 dark:text-slate-300">NO DEVICE SELECTED</span>
         </div>
         <div id="inspector-content" class="p-4 flex-1 overflow-y-auto">
-          <div class="text-slate-400 text-sm text-center mt-10">Click on any node in the topology map to inspect its configuration and state.</div>
+          <div class="text-slate-500 dark:text-slate-400 text-sm text-center mt-10">Click on any node in the topology map to inspect its configuration and state.</div>
         </div>
       </div>
 
       <!-- Panel: Path Tracer Results -->
-      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl flex flex-col h-[350px]">
-        <div class="p-4 border-b border-slate-700 bg-slate-800/50 rounded-t-2xl flex items-center gap-3">
-          <i class="fa-solid fa-list-ol text-slate-400"></i>
-          <h3 class="font-semibold text-white">Flow Analysis</h3>
+      <div class="bg-white dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-2xl flex flex-col h-[350px]">
+        <div class="p-4 border-b border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 rounded-t-2xl flex items-center gap-3">
+          <i class="fa-solid fa-list-ol text-slate-500 dark:text-slate-400"></i>
+          <h3 class="font-semibold text-slate-900 dark:text-white">Flow Analysis</h3>
           <span id="flow-view-badge" class="ml-auto px-2 py-0.5 rounded text-xs font-medium bg-blue-900/50 text-blue-400 border border-blue-800/50">UNDERLAY MODE</span>
         </div>
         <div id="flow-content" class="p-4 flex-1 overflow-y-auto font-mono text-sm space-y-3">
-          <div class="text-slate-400 font-sans text-sm text-center mt-10">Select Source and Destination, then click "Trace Flow" to analyze end-to-end forwarding decisions.</div>
+          <div class="text-slate-500 dark:text-slate-400 font-sans text-sm text-center mt-10">Select Source and Destination, then click "Trace Flow" to analyze end-to-end forwarding decisions.</div>
         </div>
       </div>
 
@@ -525,20 +558,20 @@
       const badge = document.getElementById('flow-view-badge');
       
       if (view === 'underlay') {
-        btnU.className = "px-4 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-white transition-colors shadow";
-        btnO.className = "px-4 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors";
+        btnU.className = "px-4 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-slate-900 dark:text-white transition-colors shadow";
+        btnO.className = "px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors";
         badge.className = "ml-auto px-2 py-0.5 rounded text-xs font-bold bg-blue-900/50 text-blue-400 border border-blue-800/50";
         badge.innerText = "UNDERLAY MODE";
       } else {
-        btnO.className = "px-4 py-1.5 rounded-md text-sm font-medium bg-purple-600 text-white transition-colors shadow";
-        btnU.className = "px-4 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors";
+        btnO.className = "px-4 py-1.5 rounded-md text-sm font-medium bg-purple-600 text-slate-900 dark:text-white transition-colors shadow";
+        btnU.className = "px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors";
         badge.className = "ml-auto px-2 py-0.5 rounded text-xs font-bold bg-purple-900/50 text-purple-400 border border-purple-800/50";
         badge.innerText = "OVERLAY MODE";
       }
       
       // Clear tracing states
       clearHighlights();
-      document.getElementById('flow-content').innerHTML = '<div class="text-slate-400 font-sans text-sm text-center mt-10">View switched. Run "Trace Flow" again to see the path in this layer.</div>';
+      document.getElementById('flow-content').innerHTML = '<div class="text-slate-500 dark:text-slate-400 font-sans text-sm text-center mt-10">View switched. Run "Trace Flow" again to see the path in this layer.</div>';
       
       drawLinks();
     }
@@ -560,7 +593,7 @@
       
       let html = `
         <div class="mb-4">
-          <h4 class="text-lg font-bold text-white">${node.name}</h4>
+          <h4 class="text-lg font-bold text-slate-900 dark:text-white">${node.name}</h4>
         </div>
         <div class="flex flex-wrap items-center gap-4 mb-6">
       `;
@@ -568,9 +601,9 @@
       // Specs
       for (const [key, val] of Object.entries(node.specs)) {
         html += `
-          <div class="bg-slate-900 rounded p-2 border border-slate-700 min-w-[140px] flex-1">
-            <div class="text-slate-400 text-xs font-medium uppercase shrink-0">${key}</div>
-            <div class="text-slate-200 text-sm mt-1 font-mono">${val}</div>
+          <div class="bg-slate-50 dark:bg-slate-900 rounded p-2 border border-slate-300 dark:border-slate-700 min-w-[140px] flex-1">
+            <div class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase shrink-0">${key}</div>
+            <div class="text-slate-800 dark:text-slate-200 text-sm mt-1 font-mono">${val}</div>
           </div>
         `;
       }
@@ -583,17 +616,17 @@
       if(node.tableType === 'interfaces') tableTitle = "Network Interfaces";
       
       html += `
-        <h5 class="text-sm font-semibold text-slate-300 mb-2">${tableTitle}</h5>
-        <div class="overflow-x-auto border border-slate-700 rounded-lg">
+        <h5 class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">${tableTitle}</h5>
+        <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg">
           <table class="w-full text-sm cli-table">
-            <thead class="bg-slate-900">
+            <thead class="bg-slate-50 dark:bg-slate-900">
       `;
       
       if(node.tableData.length > 0) {
         const keys = Object.keys(node.tableData[0]);
-        html += `<tr>${keys.map(k => `<th>${k}</th>`).join('')}</tr></thead><tbody class="bg-slate-800/50">`;
+        html += `<tr>${keys.map(k => `<th>${k}</th>`).join('')}</tr></thead><tbody class="bg-slate-100 dark:bg-slate-800/50">`;
         node.tableData.forEach(row => {
-          html += `<tr>${keys.map(k => `<td class="font-mono text-slate-300 whitespace-nowrap">${row[k]}</td>`).join('')}</tr>`;
+          html += `<tr>${keys.map(k => `<td class="font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">${row[k]}</td>`).join('')}</tr>`;
         });
       }
       
@@ -643,12 +676,12 @@
               <div class="w-6 h-6 rounded-full bg-blue-900 border border-blue-500 flex items-center justify-center text-xs font-bold text-blue-300 shrink-0">${idx + 1}</div>
               ${idx < steps.length - 1 ? '<div class="w-px h-full bg-slate-700 mt-1"></div>' : ''}
             </div>
-            <div class="bg-slate-900 border border-slate-700 rounded-lg p-3 flex-1 mb-2">
-              <div class="flex flex-wrap items-center gap-2 mb-2 border-b border-slate-800 pb-2">
-                <span class="font-semibold text-slate-200">${step.hop}</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300 ml-auto">${step.action.toUpperCase()}</span>
+            <div class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 flex-1 mb-2">
+              <div class="flex flex-wrap items-center gap-2 mb-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                <span class="font-semibold text-slate-800 dark:text-slate-200">${step.hop}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-600 dark:text-slate-300 ml-auto">${step.action.toUpperCase()}</span>
               </div>
-              <div class="text-slate-400 font-sans leading-relaxed text-[13px]">${step.desc}</div>
+              <div class="text-slate-500 dark:text-slate-400 font-sans leading-relaxed text-[13px]">${step.desc}</div>
             </div>
           </div>
         `;
