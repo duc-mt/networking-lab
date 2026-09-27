@@ -839,13 +839,14 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 
 > **MỤC TIÊU:** Đảm bảo toàn bộ các trang mô phỏng Topology (đặc biệt là dạng `topology-design`) đều nhất quán tuyệt đối về khoảng cách, màu sắc, cấu trúc hiển thị trên màn hình siêu rộng (Ultra-wide) và tuân thủ các chuẩn mực trực quan.
 
-### 1. Canvas and Layout Widths (Ultra-wide Support)
+### 1. Canvas and Layout Widths (Responsive Auto-Scale Support)
 - **Main Container**: Thẻ `<main>` bọc ngoài cùng bắt buộc dùng `class="flex-1 w-full max-w-[1600px] mx-auto ..."` (KHÔNG dùng `max-w-7xl`).
-- **Topology Canvas**: Khung chứa sơ đồ `<div id="topology-container">` bắt buộc dùng `class="relative w-full max-w-[1400px] mx-auto overflow-x-auto ..."` và kèm style inline `style="min-width: 1400px;"`. Cách setup này đảm bảo sơ đồ "bành" ra phủ đều trên màn hình lớn, nhưng vẫn có thanh cuộn ngang (scroll) an toàn trên thiết bị nhỏ.
+- **Topology Canvas**: Khung chứa sơ đồ `<div id="topology-container">` dùng `class="relative w-full max-w-[1400px] mx-auto overflow-hidden ..."` với chiều cao tối thiểu (ví dụ `min-h-[500px]` hoặc `min-h-[600px]`). Loại bỏ chế độ cuộn ngang tĩnh (overflow-x-auto), sơ đồ phải tự động co giãn chủ động (responsive) lấp đầy chiều rộng.
 
-### 2. Node Positioning & Symmetry (Cân Bằng Đối Xứng)
-- Sử dụng tọa độ Pixel tuyệt đối (ví dụ: `x: 180, y: 350`) được tính toán tỉ mỉ trên hệ quy chiếu chiều ngang `1400px` để đảm bảo đối xứng trái - phải hoàn hảo.
-- **TUYỆT ĐỐI KHÔNG** để các Node bị dồn tụm về bên trái. Phải tính khoảng cách chia đều cho các Region để trải đều từ biên trái sang biên phải.
+### 2. Node Positioning & Symmetry (Tọa độ Tương đối)
+- **CẤM SỬ DỤNG** tọa độ Pixel tĩnh (hardcode pixel). Toàn bộ thiết bị (nodes) và phân vùng (zones) BẮT BUỘC sử dụng tọa độ theo **Phần trăm (%)** (Ví dụ: `left: 15%, top: 50%`) để tự động co giãn mượt mà theo kích thước trình duyệt.
+- Bạn có thể khai báo thẳng % trong array data, hoặc khai báo tọa độ hệ quy chiếu ảo (VD: `REF_W = 1400, REF_H = 600`) rồi tự động tính ra % khi render bằng JS: `el.style.left = (n.x / REF_W * 100) + '%'`.
+- **TUYỆT ĐỐI KHÔNG** để các Node bị dồn tụm về bên trái. Phải phân bổ khoảng cách chia đều cho các Region để trải rộng hài hòa trên bản vẽ.
 
 ### 3. Zone Bounding Boxes (Khung Phân Vùng)
 - **Bắt buộc** vẽ các khung viền đứt nét để phân định khu vực vật lý (Ví dụ: On-Prem Site, Cloud Region, MPLS Core).
@@ -864,6 +865,7 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
   - Router biên mạng (PE Router/L3): Hiển thị **VRF Name** hoặc **Loopback IP**.
   - **TUYỆT ĐỐI KHÔNG** vứt một cái tên interface chung chung như `Gi0/0/0` vào vị trí này gây hiểu nhầm kiến trúc.
 
-### 5. Topology Links & Interface Labels (Cáp Mạng và Nhãn Cổng)
+### 5. Topology Links & Event Listeners (Cáp Mạng và Co Giãn)
+- **Resize Listener (QUAN TRỌNG):** Vì thiết bị đã dùng `%`, Bắt buộc phải có `window.addEventListener('resize', drawLinks);` để tính toán lại tọa độ Pixel thực tế (dựa vào `container.clientWidth` và `clientHeight`) rồi cập nhật lại nét vẽ của các thẻ `<svg><path>` mỗi khi trình duyệt co giãn.
 - **Line Animation:** Các liên kết mạng đang active phải có hiệu ứng luồng dữ liệu chạy (Traffic Flowing). Dùng `stroke-dasharray` kết hợp class `.animate-dash` gọi tới CSS `@keyframes dash { to { stroke-dashoffset: -N; } }`.
-- **Port Labels (Nhãn Cổng Vật Lý/Logic):** Bất kỳ thông số cổng nào (như `Gi1/0/24`, `eth0`, `Tunnel0`) **PHẢI** được gắn chặt vào 2 đầu của sợi cáp dưới dạng HTML Badge. **CẤM DÙNG tỷ lệ phần trăm cố định (VD: 20%)** vì nó sẽ lọt vào trong Node nếu Node nằm gần nhau. Bắt buộc dùng công thức toán học nội suy để đẩy Badge ra cách tâm Node một khoảng Pixel tuyệt đối (Khoảng `85px`) để nó nằm hoàn toàn trên cáp. VD: `let t_src = Math.min(0.4, 85 / distance);`. Đồng thời, CẤM ghim nhãn nằm chết tại tâm đường link, phải tính vector pháp tuyến (Normal Vector) và tịnh tiến (Shift) nhãn sang hai bên đường link khoảng `18px` để né xung đột (Anchor Collision) với các nhãn khác ở Top/Bottom của thiết bị.
+- **Port Labels (Nhãn Cổng Vật Lý/Logic):** Bất kỳ thông số cổng nào (như `Gi1/0/24`, `eth0`) PHẢI được gắn vào 2 đầu của cáp. Dùng toán học nội suy trên JS để đẩy khoảng cách Badge ra cách tâm Node một lượng an toàn tương đối khi màn hình bị thu nhỏ (VD: `px = sx + (dx - sx) * 0.2`).. Đồng thời, CẤM ghim nhãn nằm chết tại tâm đường link, phải tính vector pháp tuyến (Normal Vector) và tịnh tiến (Shift) nhãn sang hai bên đường link khoảng `18px` để né xung đột (Anchor Collision) với các nhãn khác ở Top/Bottom của thiết bị.

@@ -304,6 +304,9 @@
     let selectedNodeId = null;
 
     // --- 2. Render Topology ---
+    const REF_W = 1180;
+    const REF_H = 500;
+
     function renderTopology() {
       // Render Zones
       const zonesLayer = document.getElementById('zones-layer');
@@ -313,10 +316,10 @@
         el.className = 'absolute border-2 border-dashed rounded-xl pointer-events-none transition-all duration-500 opacity-80 dark:opacity-60 z-0';
         el.style.borderColor = z.color;
         el.style.backgroundColor = z.color + '0D';
-        el.style.left = z.bounds.left + 'px';
-        el.style.top = z.bounds.top + 'px';
-        el.style.width = z.bounds.width + 'px';
-        el.style.height = z.bounds.height + 'px';
+        el.style.left = (z.bounds.left / REF_W * 100) + '%';
+        el.style.top = (z.bounds.top / REF_H * 100) + '%';
+        el.style.width = (z.bounds.width / REF_W * 100) + '%';
+        el.style.height = (z.bounds.height / REF_H * 100) + '%';
         
         if (currentView === 'overlay' && z.id === 'mpls') el.classList.add('opacity-10');
 
@@ -355,8 +358,8 @@
         }
         
         el.className = `absolute w-32 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 ${borderClass} flex flex-col items-center cursor-pointer transition-all duration-300 z-10 hover:scale-105 group`;
-        el.style.left = n.x + 'px';
-        el.style.top = n.y + 'px';
+        el.style.left = (n.x / REF_W * 100) + '%';
+        el.style.top = (n.y / REF_H * 100) + '%';
         el.style.transform = 'translate(-50%, -50%)';
         el.onclick = () => selectNode(n.id);
         
@@ -381,6 +384,13 @@
 
     function drawLinks() {
       const svg = document.getElementById('links-layer');
+      const container = document.getElementById('topology-container');
+      const cw = container.clientWidth;
+      const ch = container.clientHeight;
+
+      const getX = (x) => (x / REF_W) * cw;
+      const getY = (y) => (y / REF_H) * ch;
+
       svg.innerHTML = '';
       document.getElementById('links-labels-layer').innerHTML = '';
       
@@ -390,15 +400,21 @@
         const src = data.nodes.find(n => n.id === l.from);
         const dst = data.nodes.find(n => n.id === l.to);
         
+        const sx = getX(src.x);
+        const sy = getY(src.y);
+        const dx = getX(dst.x);
+        const dy = getY(dst.y);
+
         // Calculate path
         let d = '';
-        const mx = (src.x + dst.x) / 2;
-        const my = (src.y + dst.y) / 2;
+        const mx = (sx + dx) / 2;
+        const my = (sy + dy) / 2;
         
         if (l.curve) {
-          d = `M ${src.x} ${src.y} Q ${mx} ${my + l.curve} ${dst.x} ${dst.y}`;
+          const curveY = getY((src.y + dst.y) / 2 + l.curve);
+          d = `M ${sx} ${sy} Q ${mx} ${curveY} ${dx} ${dy}`;
         } else {
-          d = `M ${src.x} ${src.y} L ${dst.x} ${dst.y}`;
+          d = `M ${sx} ${sy} L ${dx} ${dy}`;
         }
         
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -408,7 +424,8 @@
         svg.appendChild(path);
         
         // Main Link Badge (Tech Label)
-        const ly = l.curve ? (my + l.curve/2) : my;
+        const curveY = l.curve ? getY((src.y + dst.y) / 2 + l.curve) : null;
+        const ly = l.curve ? (sy + curveY + dy) / 3 : my; // approximate midpoint for bezier label
         const badge = document.createElement('div');
         let badgeStyle = "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 border-blue-200 dark:border-blue-800"; // default routed
         if (l.type === 'overlay') badgeStyle = "bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 border-purple-200 dark:border-purple-700";
@@ -425,13 +442,13 @@
         // Interface Endpoints (Port Labels)
         const getBezierPoint = (t, p0, p1, p2) => (1-t)*(1-t)*p0 + 2*(1-t)*t*p1 + t*t*p2;
         const cpX = mx;
-        const cpY = my + (l.curve || 0);
+        const cpY = curveY;
         
         if (l.srcPort) {
             const spBadge = document.createElement('div');
             spBadge.className = 'absolute z-20 text-[8px] font-mono font-bold px-1 py-px rounded bg-white/90 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 whitespace-nowrap transition-opacity duration-500 backdrop-blur-sm';
-            let px = l.curve ? getBezierPoint(0.18, src.x, cpX, dst.x) : src.x + (dst.x - src.x)*0.22;
-            let py = l.curve ? getBezierPoint(0.18, src.y, cpY, dst.y) : src.y + (dst.y - src.y)*0.22;
+            let px = l.curve ? getBezierPoint(0.18, sx, cpX, dx) : sx + (dx - sx)*0.22;
+            let py = l.curve ? getBezierPoint(0.18, sy, cpY, dy) : sy + (dy - sy)*0.22;
             spBadge.style.left = px + 'px';
             spBadge.style.top = py + 'px';
             spBadge.style.transform = 'translate(-50%, -50%)';
@@ -443,8 +460,8 @@
         if (l.dstPort) {
             const dpBadge = document.createElement('div');
             dpBadge.className = 'absolute z-20 text-[8px] font-mono font-bold px-1 py-px rounded bg-white/90 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 whitespace-nowrap transition-opacity duration-500 backdrop-blur-sm';
-            let px = l.curve ? getBezierPoint(0.82, src.x, cpX, dst.x) : src.x + (dst.x - src.x)*0.78;
-            let py = l.curve ? getBezierPoint(0.82, src.y, cpY, dst.y) : src.y + (dst.y - src.y)*0.78;
+            let px = l.curve ? getBezierPoint(0.82, sx, cpX, dx) : sx + (dx - sx)*0.78;
+            let py = l.curve ? getBezierPoint(0.82, sy, cpY, dy) : sy + (dy - sy)*0.78;
             dpBadge.style.left = px + 'px';
             dpBadge.style.top = py + 'px';
             dpBadge.style.transform = 'translate(-50%, -50%)';
@@ -454,6 +471,9 @@
         }
       });
     }
+
+    // Add resize listener
+    window.addEventListener('resize', drawLinks);
 
     function switchView(view) {
       currentView = view;
