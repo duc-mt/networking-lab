@@ -100,7 +100,7 @@ const PROJECTS = [
         title: 'STP Evolution & Variants',
         topic: 'Network Architecture',
         category: 'protocol',
-        type: 'reference',
+        type: 'topology-design',
         status: 'live',
         dateAdded: '2026-09-27',
         image: 'assets/images/protocol-placeholder.jpg',
