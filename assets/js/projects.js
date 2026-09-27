@@ -205,4 +205,15 @@ const PROJECTS = [
         status: 'live',
         dateAdded: '2026-09-27',
     },
+    {
+        title: 'Check Point: Optimize Cluster Sync',
+        topic: 'Security',
+        description:
+            'MOP chuyển đổi ClusterXL sang chế độ Optimized Sync zero-downtime để giảm tải CPU.',
+        type: 'change-mop',
+        tags: ['Check Point', 'ClusterXL', 'Optimization', 'Zero Downtime'],
+        href: 'projects/change-mop/checkpoint-optimized-sync.html',
+        status: 'live',
+        dateAdded: '2026-10-01',
+    },
 ];
