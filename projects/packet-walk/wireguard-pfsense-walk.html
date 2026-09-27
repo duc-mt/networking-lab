@@ -180,11 +180,11 @@
 
             <!-- Checkpoint Information Card -->
             <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
-                <div class="flex items-center justify-between">
-                    <span id="stage-badge" class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border border-rose-300 dark:border-rose-700 bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <span id="stage-badge" class="inline-flex self-start items-center px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border border-rose-300 dark:border-rose-700 bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 shrink-0">
                         1. ENCAPSULATION
                     </span>
-                    <span id="device-badge" class="text-xs font-mono text-slate-400">Endpoint: Client Laptop</span>
+                    <span id="device-badge" class="text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md self-start sm:self-auto break-all sm:break-normal">Endpoint: Client Laptop</span>
                 </div>
                 <h3 id="stage-title" class="text-xl font-extrabold text-slate-900 dark:text-white leading-snug"></h3>
                 <p id="stage-desc" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300"></p>
@@ -203,20 +203,20 @@
                 </div>
 
                 <div class="flex flex-col gap-2.5 text-xs font-mono">
-                    <div class="flex items-start justify-between p-2 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
-                        <span class="text-slate-400 font-sans">Vị trí xử lý:</span>
+                    <div class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans shrink-0">Vị trí xử lý:</span>
                         <span id="inspector-subsystem" class="font-bold text-slate-800 dark:text-slate-200 text-right">WireGuard App / Driver</span>
                     </div>
-                    <div class="flex items-start justify-between p-2 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
-                        <span class="text-slate-400 font-sans">Luật Firewall áp dụng:</span>
+                    <div class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans shrink-0">Luật Firewall:</span>
                         <span id="inspector-rule" class="font-bold text-blue-600 dark:text-blue-400 text-right">N/A (Client Local Stack)</span>
                     </div>
-                    <div class="flex items-start justify-between p-2 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
-                        <span class="text-slate-400 font-sans">Cryptokey Routing:</span>
+                    <div class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans shrink-0">Cryptokey Routing:</span>
                         <span id="inspector-cryptokey" class="font-bold text-emerald-600 dark:text-emerald-400 text-right">AllowedIPs 10.10.10.2/32</span>
                     </div>
-                    <div class="flex items-start justify-between p-2 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
-                        <span class="text-slate-400 font-sans">Session State:</span>
+                    <div class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans shrink-0">Session State:</span>
                         <span id="inspector-session" class="font-bold text-indigo-600 dark:text-indigo-400 text-right">ESTABLISHED (Rekey in 94s)</span>
                     </div>
                 </div>
@@ -440,7 +440,7 @@ const TIMELINE = [
         step: 5,
         phase: 'FILTER',
         title: 'Bộ lọc Interface WireGuard: Phân quyền truy cập LAN',
-        device: 'pfSense Packet Filter (Tab WireGuard / OPT_WG)',
+        device: 'pfSense Filter (OPT_WG / WireGuard)',
         description: `Gói tin gốc xuất hiện trên giao diện ảo <code>OPT_WG</code> (hoặc tab WireGuard).<br>Đây mới là nơi người quản trị kiểm soát thực sự: <strong>VPN user được phép truy cập những đâu trong nội bộ công ty?</strong><br>Luật Firewall trên tab này cho phép traffic từ mạng VPN <code>10.10.10.0/24</code> tới Server <code>192.168.1.50</code> cổng 80 (HTTP).`,
         encapStatus: 'VPN Firewall Interface Filtering',
         beforeBadge: 'Unfiltered Packet on OPT_WG',
