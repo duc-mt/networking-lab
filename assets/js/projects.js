@@ -216,4 +216,15 @@ const PROJECTS = [
         status: 'live',
         dateAdded: '2026-10-01',
     },
+    {
+        title: 'Check Point: Enable VMAC',
+        topic: 'Security',
+        description:
+            'MOP kích hoạt Virtual MAC trên ClusterXL giúp loại bỏ hoàn toàn gián đoạn ARP trong quá trình Failover.',
+        type: 'change-mop',
+        tags: ['Check Point', 'ClusterXL', 'VMAC', 'Layer 2', 'Failover'],
+        href: 'projects/change-mop/checkpoint-vmac-enable.html',
+        status: 'live',
+        dateAdded: '2026-10-02',
+    },
 ];
