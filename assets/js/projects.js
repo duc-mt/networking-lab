@@ -96,6 +96,21 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        id: 'stp-visual-compare',
+        title: 'STP Variants in Action',
+        topic: 'Network Services',
+        category: 'protocol',
+        type: 'protocol',
+        status: 'live',
+        dateAdded: '2026-09-27',
+        image: 'assets/images/protocol-placeholder.jpg',
+        description:
+            'So sánh trực quan cơ chế hoạt động của STP, Load-balancing của PVST+, Tốc độ hội tụ của RSTP và Gom nhóm VLAN của MSTP.',
+        tags: ['STP', 'PVST+', 'RSTP', 'MSTP', 'Simulation'],
+        href: 'projects/protocol/stp-visual-compare.html',
+    },
+
+    {
         id: 'stp-variants',
         title: 'STP Evolution & Variants',
         topic: 'Network Architecture',
