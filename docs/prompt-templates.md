@@ -276,10 +276,11 @@ Requirements:
    above the Execution tab that cannot be dismissed silently — it should
    visually demand acknowledgment before the person can mark that step done.
 
-5. Config diff viewer: a side-by-side or unified diff view of the old vs new
-   config snippets, with added lines highlighted green and removed lines
-   highlighted red/strikethrough (a simple line-by-line diff is fine — it
-   doesn't need a real diff algorithm, just clear visual differentiation).
+5. Config diff viewer: a side-by-side diff view of the old vs new
+   config snippets. Ensure the column headers (e.g. "Baseline" and "Target")
+   are properly centered above their respective columns. Added lines are
+   highlighted green and removed lines highlighted red/strikethrough (a simple
+   line-by-line diff is fine).
 
 6. Rollback tab: hidden/collapsed by default, auto-expands and is highlighted
    if any `postChecks` item has `status: "fail"`.
