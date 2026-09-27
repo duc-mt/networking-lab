@@ -119,17 +119,17 @@ Nothing in `index.html` changes when you add a lab — it reads `assets/js/proje
 
 ### `type` vs `topic` — two independent axes
 
--   **`type`** — the UI _format_ the lab uses (state machine, logic tree, pipeline, static reference graph, tabbed catalog, etc). Must be one of the 8 keys defined in `PROJECT_TYPES` at the top of `assets/js/projects.js` (`protocol`, `troubleshooting`, `packet-walk`, `change-mop`, `automation`, `failover`, `topology-design`, `diagnostic-playbook`). Drives the lab's folder, icon, gradient color, and the fixed filter chips — inherited from the type, not set per project (override with an `icon`/`accent` field only to break from the default).
--   **`topic`** — the _subject domain_ (e.g. "Routing", "Switching", "Security", "Automation"). Independent of `type`: two labs can share a type but different topics (STP and VLAN are both `protocol`-type, but "Switching" topic; OSPF is also `protocol`-type but "Routing" topic). Free text — the "Topic" dropdown on the homepage is built from whatever values actually show up in `PROJECTS`.
+- **`type`** — the UI _format_ the lab uses (state machine, logic tree, pipeline, static reference graph, tabbed catalog, etc). Must be one of the 8 keys defined in `PROJECT_TYPES` at the top of `assets/js/projects.js` (`protocol`, `troubleshooting`, `packet-walk`, `change-mop`, `automation`, `failover`, `topology-design`, `diagnostic-playbook`). Drives the lab's folder, icon, gradient color, and the fixed filter chips — inherited from the type, not set per project (override with an `icon`/`accent` field only to break from the default).
+- **`topic`** — the _subject domain_ (e.g. "Routing", "Switching", "Security", "Automation"). Independent of `type`: two labs can share a type but different topics (STP and VLAN are both `protocol`-type, but "Switching" topic; OSPF is also `protocol`-type but "Routing" topic). Free text — the "Topic" dropdown on the homepage is built from whatever values actually show up in `PROJECTS`.
 
 If you want a new `type` (a genuinely new UI format, not just a new topic), add it to `PROJECT_TYPES` with its own `label`/`short`/`icon`/`accent`, create the matching `projects/<key>/` folder, and add a prompt for it to `docs/prompt-templates.md` following the pattern of the existing ones — this is exactly how `topology-design` was added.
 
 ## Search, filtering & sorting
 
--   A live **search box** — matches title, description, topic, type label, and tags.
--   **Type filter chips** — one per format in `PROJECT_TYPES`, plus "All", always shown with a live count even for types with only "soon" placeholders.
--   A **Topic dropdown** — built dynamically from whatever `topic` values exist in `PROJECTS`.
--   A **Newest / A–Z sort** — "Newest" sorts by each entry's `dateAdded`.
+- A live **search box** — matches title, description, topic, type label, and tags.
+- **Type filter chips** — one per format in `PROJECT_TYPES`, plus "All", always shown with a live count even for types with only "soon" placeholders.
+- A **Topic dropdown** — built dynamically from whatever `topic` values exist in `PROJECTS`.
+- A **Newest / A–Z sort** — "Newest" sorts by each entry's `dateAdded`.
 
 All four are driven entirely by `assets/js/projects.js`.
 
@@ -139,11 +139,11 @@ Dark/light mode is stored in `localStorage` under the key `portfolio-theme`. Eve
 
 ## Known caveats (not bugs)
 
--   **Tailwind CDN console warning** ("should not be used in production") — expected. The Play CDN isn't optimized for production traffic, but for a static portfolio like this it's fine; ignore the warning.
--   **Font Awesome icons may show as empty boxes when previewed inside Claude's chat UI.** Claude's in-app HTML preview only allows external stylesheets from `fonts.googleapis.com`; Font Awesome's CSS comes from `cdnjs.cloudflare.com`, so the preview silently blocks it. This is a preview-sandbox limitation only — a real browser (and GitHub Pages) has no such restriction. **Do not** "fix" this by switching Font Awesome to its JS/SVG build — that build permanently replaces `<i class="fas fa-x">` with a static `<svg>` on load, which breaks every place these labs swap icons at runtime via `.className` reassignment (theme toggle, play/pause, per-step packet icons). Verify icons in an actual browser or the deployed Pages URL, not the in-chat preview.
+- **Tailwind CDN console warning** ("should not be used in production") — expected. The Play CDN isn't optimized for production traffic, but for a static portfolio like this it's fine; ignore the warning.
+- **Font Awesome icons may show as empty boxes when previewed inside Claude's chat UI.** Claude's in-app HTML preview only allows external stylesheets from `fonts.googleapis.com`; Font Awesome's CSS comes from `cdnjs.cloudflare.com`, so the preview silently blocks it. This is a preview-sandbox limitation only — a real browser (and GitHub Pages) has no such restriction. **Do not** "fix" this by switching Font Awesome to its JS/SVG build — that build permanently replaces `<i class="fas fa-x">` with a static `<svg>` on load, which breaks every place these labs swap icons at runtime via `.className` reassignment (theme toggle, play/pause, per-step packet icons). Verify icons in an actual browser or the deployed Pages URL, not the in-chat preview.
 
 ## Placeholders to fill in before publishing
 
--   `README.md` (this file) — badge URLs and the Live Demo link at the top use `duc-mt`/`network-portfolio` placeholders; replace both once this is pushed to a real repo.
--   `index.html` — GitHub, LinkedIn, and email links in the Contact section currently point to generic placeholders.
--   Any lab's CLI output, IPs, or hostnames — the prompts in `docs/prompt-templates.md` generate realistic but fictional data by default; swap in real details only if you want a lab to reflect an actual environment (and scrub anything sensitive first).
+- `README.md` (this file) — badge URLs and the Live Demo link at the top use `duc-mt`/`network-portfolio` placeholders; replace both once this is pushed to a real repo.
+- `index.html` — GitHub, LinkedIn, and email links in the Contact section currently point to generic placeholders.
+- Any lab's CLI output, IPs, or hostnames — the prompts in `docs/prompt-templates.md` generate realistic but fictional data by default; swap in real details only if you want a lab to reflect an actual environment (and scrub anything sensitive first).
