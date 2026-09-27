@@ -89,14 +89,14 @@ const PROJECT_TYPES = {
 const PROJECTS = [
     {
         id: 'rogue-dhcp-investigation',
-        title: 'Rogue DHCP & Bộ Ba Bảo Mật Layer 2',
+        title: 'Rogue DHCP & Layer 2 Security',
         category: 'troubleshooting',
         type: 'troubleshooting',
         status: 'live',
         dateAdded: '2026-09-27',
         image: 'assets/images/protocol-placeholder.jpg',
         description:
-            'Chẩn đoán sự cố mạng do Router Wi-Fi cá nhân gây Rogue DHCP, cấp phát sai Gateway và giải pháp triệt để với DHCP Snooping, DAI, IP Source Guard.',
+            'Chẩn đoán sự cố mạng do Router Wi-Fi cá nhân gây Rogue DHCP, cấp phát sai Gateway và giải pháp phòng thủ triệt để với DHCP Snooping, DAI, IP Source Guard.',
         tags: ['DHCP Snooping', 'Rogue DHCP', 'DAI', 'IPSG', 'Layer 2 Security', 'Troubleshooting'],
         href: 'projects/troubleshooting/rogue-dhcp-investigation.html',
     },

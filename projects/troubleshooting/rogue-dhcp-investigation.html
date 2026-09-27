@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sự Cố Rogue DHCP & Bộ Ba Bảo Mật Layer 2 — Troubleshooting Lab</title>
+    <title>Rogue DHCP Server & Layer 2 Security — Troubleshooting Lab</title>
     <script src="../../assets/js/theme-init.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -38,7 +38,7 @@
                 <a href="../../index.html" class="text-[11px] font-semibold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1">
                     <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
                 </a>
-                <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">Sự Cố Rogue DHCP & Bảo Mật Layer 2</h1>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">Rogue DHCP Server & Layer 2 Security</h1>
             </div>
         </div>
         <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
@@ -55,15 +55,15 @@
 
 <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
 
-    <!-- Incident Banner -->
+    <!-- Symptom Banner -->
     <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl px-6 py-4 flex items-start gap-4">
         <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0 mt-0.5">
             <i class="fas fa-triangle-exclamation text-red-600 dark:text-red-400 text-lg"></i>
         </div>
         <div>
-            <div class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">Ticket #INC-8942 — Cảnh báo cấp P1: Network Disruption</div>
+            <div class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">Ticket #INC-2024-1102 — Mức độ: HIGH</div>
             <div class="font-bold text-red-800 dark:text-red-300 text-sm md:text-base leading-snug">
-                "Chỉ cắm thêm một Router Wi-Fi thôi mà..." — Người dùng cắm Router Wi-Fi cá nhân vào cổng LAN mạng công ty. 5 phút sau: Nhiều máy nhận IP lạ <code class="font-mono bg-red-100 dark:bg-red-900/60 px-1 py-0.5 rounded">192.168.0.x</code>, mất hoàn toàn kết nối Server nội bộ và máy in mạng!
+                Triệu chứng: Người dùng cắm Router Wi-Fi cá nhân vào cổng LAN công ty. 5 phút sau: Nhiều máy nhận IP lạ <code class="font-mono bg-red-100 dark:bg-red-900/60 px-1 py-0.5 rounded">192.168.0.x</code>, mất hoàn toàn kết nối Server nội bộ và máy in mạng.
             </div>
         </div>
     </div>
@@ -82,7 +82,7 @@
 
         <!-- Left: Topology Canvas + CLI -->
         <div class="xl:col-span-2 flex flex-col gap-6">
-            <section id="topology-canvas" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[520px] md:min-h-[580px]">
+            <section id="topology-canvas" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[500px] md:min-h-[580px]">
                 <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
 
                 <!-- Port Labels / Badges -->
@@ -96,11 +96,11 @@
 
                 <!-- Node: Valid DHCP Server (Top Left) -->
                 <div id="node-DHCP" class="absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:22%;top:16%;transform:translate(-50%,-50%)">
-                    <div id="role-DHCP" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">DHCP Server Thật</div>
+                    <div id="role-DHCP" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">DHCP Server</div>
                     <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
                         <i class="fas fa-server text-base text-slate-700 dark:text-slate-300"></i>
                     </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">DHCP Server</h3>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">SRV-DHCP-01</h3>
                     <div class="text-[8px] font-mono text-slate-500 mt-0.5">10.10.10.5</div>
                     <span id="state-DHCP" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
                 </div>
@@ -111,53 +111,53 @@
                     <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
                         <i class="fas fa-network-wired text-base text-slate-700 dark:text-slate-300"></i>
                     </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Core Switch</h3>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">SW-CORE-01</h3>
                     <div class="text-[8px] font-mono text-slate-500 mt-0.5">VLAN 10: 10.10.10.0/24</div>
                     <span id="state-Core" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">FORWARDING</span>
                 </div>
 
                 <!-- Node: Access Switch (Center) -->
                 <div id="node-SW-ACC" class="absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:50%;top:46%;transform:translate(-50%,-50%)">
-                    <div id="role-SW-ACC" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-700">Access Switch (Cisco)</div>
+                    <div id="role-SW-ACC" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-700">Access Switch</div>
                     <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
                         <i class="fas fa-layer-group text-base text-slate-700 dark:text-slate-300"></i>
                     </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Access_Switch</h3>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">SW-ACC-01</h3>
                     <div class="text-[8px] font-mono text-slate-500 mt-0.5">Gi1/0/1 - Gi1/0/24</div>
-                    <span id="state-SW-ACC" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">DEFAULT NO SEC</span>
+                    <span id="state-SW-ACC" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">NORMAL</span>
                 </div>
 
                 <!-- Node: Victim PC 1 (Bottom Left) -->
                 <div id="node-PC1" class="absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:16%;top:82%;transform:translate(-50%,-50%)">
-                    <div id="role-PC1" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700">Victim PC 1 (OK)</div>
+                    <div id="role-PC1" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700">Victim PC 1</div>
                     <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
                         <i class="fas fa-desktop text-base text-slate-700 dark:text-slate-300"></i>
                     </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Victim PC 1</h3>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">PC-VICTIM-01</h3>
                     <div class="text-[8px] font-mono text-slate-500 mt-0.5">10.10.10.50 (Gi1/0/1)</div>
                     <span id="state-PC1" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
                 </div>
 
                 <!-- Node: Victim PC 2 (Bottom Center) -->
                 <div id="node-PC2" class="absolute w-30 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:50%;top:82%;transform:translate(-50%,-50%)">
-                    <div id="role-PC2" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-700">Victim PC 2 (Lỗi)</div>
+                    <div id="role-PC2" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-700">Victim PC 2</div>
                     <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
                         <i class="fas fa-laptop text-base text-slate-700 dark:text-slate-300"></i>
                     </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Victim PC 2</h3>
-                    <div id="ip-pc2" class="text-[8px] font-mono text-red-500 font-bold mt-0.5">192.168.0.100 (Lạ!)</div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">PC-VICTIM-02</h3>
+                    <div id="ip-pc2" class="text-[8px] font-mono text-red-500 font-bold mt-0.5">192.168.0.100</div>
                     <span id="state-PC2" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">MISCONFIGURED</span>
                 </div>
 
                 <!-- Node: Rogue Router (Bottom Right) -->
                 <div id="node-Rogue" class="absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:84%;top:82%;transform:translate(-50%,-50%)">
-                    <div id="role-Rogue" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-700">Rogue Wi-Fi Router</div>
+                    <div id="role-Rogue" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-700">Rogue Router</div>
                     <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
                         <i class="fas fa-wifi text-base text-red-600 dark:text-red-400"></i>
                     </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Rogue Router</h3>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">ROUTER-WIFI</h3>
                     <div class="text-[8px] font-mono text-slate-500 mt-0.5">192.168.0.1 (Gi1/0/5)</div>
-                    <span id="state-Rogue" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ROGUE DHCP ON</span>
+                    <span id="state-Rogue" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ROGUE ACTIVE</span>
                 </div>
 
                 <!-- Floating Packet Animation -->
@@ -168,14 +168,14 @@
             </section>
 
             <!-- Terminal / CLI Window -->
-            <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-60 md:h-72">
+            <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-56 md:h-64">
                 <div class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none">
                     <div class="flex items-center gap-2">
                         <div class="w-3 h-3 rounded-full bg-red-500"></div>
                         <div class="w-3 h-3 rounded-full bg-amber-500"></div>
                         <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
                     </div>
-                    <span id="cli-header" class="text-xs font-mono text-slate-400">Victim_PC_2 / Access_Switch#</span>
+                    <span id="cli-header" class="text-xs font-mono text-slate-400">PC-VICTIM-02> ipconfig /all</span>
                 </div>
                 <div class="p-4 overflow-y-auto flex-1 font-mono text-xs text-emerald-400 whitespace-pre-wrap leading-relaxed" id="cli-logs"></div>
             </section>
@@ -188,7 +188,6 @@
             <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div class="flex items-center gap-2 mb-3">
                     <span id="phase-badge" class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border"></span>
-                    <span id="step-number-badge" class="text-xs font-mono text-slate-400"></span>
                 </div>
                 <h3 id="step-title" class="text-xl font-extrabold text-slate-900 dark:text-white mb-3 leading-snug"></h3>
                 <p id="step-desc" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300"></p>
@@ -196,12 +195,9 @@
 
             <!-- Hypotheses Checklist -->
             <section class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex-1">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-list-check text-amber-500"></i>
-                        <span class="font-bold text-slate-700 dark:text-slate-300 text-sm">Danh Sách Giả Thuyết</span>
-                    </div>
-                    <span class="text-[10px] text-slate-400 font-mono">Phương pháp loại trừ</span>
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-list-check text-amber-500"></i>
+                    <span class="font-bold text-slate-700 dark:text-slate-300 text-sm">Danh sách Giả thuyết</span>
                 </div>
                 <ul id="hypothesis-list" class="flex flex-col gap-2"></ul>
             </section>
@@ -209,17 +205,17 @@
             <!-- Root Cause Banner -->
             <div id="root-cause-panel" class="hidden bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-700 rounded-2xl p-5">
                 <div class="flex items-center gap-2 mb-2 text-red-700 dark:text-red-400 font-bold text-sm">
-                    <i class="fas fa-bullseye"></i> Nguyên Nhân Gốc Rễ Đã Xác Nhận
+                    <i class="fas fa-bullseye"></i> Nguyên nhân gốc rễ
                 </div>
-                <p id="root-cause-text" class="text-xs md:text-sm text-red-800 dark:text-red-300 leading-relaxed"></p>
+                <p id="root-cause-text" class="text-sm text-red-800 dark:text-red-300 leading-relaxed"></p>
             </div>
 
             <!-- Fix Applied Banner -->
             <div id="fix-panel" class="hidden bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700 rounded-2xl p-5">
                 <div class="flex items-center gap-2 mb-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
-                    <i class="fas fa-shield-halved"></i> Giải Pháp: Bộ Ba Bảo Mật Layer 2
+                    <i class="fas fa-screwdriver-wrench"></i> Biện pháp Khắc phục
                 </div>
-                <p id="fix-text" class="text-xs md:text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed"></p>
+                <p id="fix-text" class="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed"></p>
             </div>
 
         </div>
@@ -233,7 +229,7 @@
                     <i class="fas fa-clipboard-check"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Checklist Vận Hành & Phương Án Rollback</h3>
+                    <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Checklist Vận hành & Phương án Rollback</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400">Các bước chuẩn hóa quy trình triển khai Layer 2 Security theo tiêu chuẩn Cisco</p>
                 </div>
             </div>
@@ -244,10 +240,10 @@
             <table class="w-full text-left text-xs">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        <th class="py-3 px-3 font-semibold">Hành Động</th>
-                        <th class="py-3 px-3 font-semibold">Lệnh Kiểm Tra / Thao Tác</th>
-                        <th class="py-3 px-3 font-semibold">Trạng Thái Kỳ Vọng (Expected Output)</th>
-                        <th class="py-3 px-3 font-semibold">Phương Án Rollback</th>
+                        <th class="py-3 px-3 font-semibold">Hành động</th>
+                        <th class="py-3 px-3 font-semibold">Lệnh kiểm tra / Thao tác</th>
+                        <th class="py-3 px-3 font-semibold">Trạng thái kỳ vọng (Expected Output)</th>
+                        <th class="py-3 px-3 font-semibold">Phương án Rollback</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
@@ -291,26 +287,26 @@
 <script>
 const HYPOTHESES_MASTER = [
     { id: 'h1', text: 'DHCP Pool trên Server thật bị cạn kiệt (Exhaustion)' },
-    { id: 'h2', text: 'Lỗi cấu hình VLAN trên Access Switch (Port cắm sai VLAN)' },
-    { id: 'h3', text: 'DHCP Server thật bị treo hoặc đứt đường truyền Uplink' },
+    { id: 'h2', text: 'Cổng switch bị gán nhầm VLAN khác' },
+    { id: 'h3', text: 'DHCP Server thật bị treo hoặc đứt kết nối Uplink' },
     { id: 'h4', text: 'Có Rogue DHCP Server phát IP lạ tranh chấp trong mạng LAN' },
     { id: 'h5', text: 'Nguy cơ tấn công leo thang: ARP Spoofing / Man-in-the-Middle (MitM)' },
 ];
 
 const TIMELINE = [
     {
-        step: 1, phase: 'TIẾP NHẬN SỰ CỐ', phaseColor: 'amber',
-        title: 'Bước 1: Kiểm tra IP trên máy trạm bị ảnh hưởng',
+        step: 1, phase: 'TRIAGE', phaseColor: 'amber',
+        title: 'Tiếp nhận sự cố: Endpoint nhận IP lạ & mất kết nối',
         description: `Helpdesk nhận hàng loạt cuộc gọi phản ánh mạng chập chờn: máy vào được mạng, máy thì không, không in được tài liệu. Kỹ thuật viên kiểm tra <code class="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">ipconfig /all</code> trên <strong>Victim PC 2</strong> và phát hiện nó nhận địa chỉ IP <code class="font-mono text-red-500 font-bold">192.168.0.100</code> cùng Default Gateway <code class="font-mono text-red-500 font-bold">192.168.0.1</code> — hoàn toàn sai lệch so với subnet doanh nghiệp (<code class="font-mono">10.10.10.0/24</code>)!`,
-        cli_header: 'Victim_PC_2 (C:\\Windows\\system32)> ipconfig /all',
-        cli_logs: `C:\\Users\\Victim2> ipconfig /all\n\nWindows IP Configuration\n   Host Name . . . . . . . . . . . . : VICTIM-PC-02\n   Primary Dns Suffix  . . . . . . . : company.local\n\nEthernet adapter Ethernet0:\n   Connection-specific DNS Suffix  . : \n   Description . . . . . . . . . . . : Intel(R) Ethernet Connection\n   Physical Address. . . . . . . . . : 00-0C-29-84-11-22\n   DHCP Enabled. . . . . . . . . . . : Yes\n   IPv4 Address. . . . . . . . . . . : 192.168.0.100 (Preferred) ⚠️\n   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n   Default Gateway . . . . . . . . . : 192.168.0.1 ❌ (LẠ!)\n   DHCP Server . . . . . . . . . . . : 192.168.0.1 ❌\n   DNS Servers . . . . . . . . . . . : 192.168.0.1`,
+        cli_header: 'PC-VICTIM-02 (C:\\Windows\\system32)> ipconfig /all',
+        cli_logs: `C:\\Users\\Victim2> ipconfig /all\n\nWindows IP Configuration\n   Host Name . . . . . . . . . . . . : PC-VICTIM-02\n   Primary Dns Suffix  . . . . . . . : company.local\n\nEthernet adapter Ethernet0:\n   Connection-specific DNS Suffix  . : \n   Description . . . . . . . . . . . : Intel(R) Ethernet Connection\n   Physical Address. . . . . . . . . : 00-0C-29-84-11-22\n   DHCP Enabled. . . . . . . . . . . : Yes\n   IPv4 Address. . . . . . . . . . . : 192.168.0.100 (Preferred) ⚠️\n   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n   Default Gateway . . . . . . . . . : 192.168.0.1 ❌ (LẠ!)\n   DHCP Server . . . . . . . . . . . : 192.168.0.1 ❌\n   DNS Servers . . . . . . . . . . . : 192.168.0.1`,
         nodes: {
             DHCP:    { state: 'ONLINE', color: 'emerald', border: 'border-emerald-300 dark:border-emerald-700' },
             Core:    { state: 'FORWARDING', color: 'blue', border: 'border-blue-300 dark:border-blue-700' },
-            'SW-ACC': { state: 'DEFAULT SEC', color: 'amber', border: 'border-amber-400' },
-            PC1:     { state: '10.10.10.50 (OK)', color: 'emerald', border: 'border-emerald-300 dark:border-emerald-700' },
-            PC2:     { state: '192.168.0.100 ❌', color: 'red', border: 'border-red-500 danger-pulse' },
-            Rogue:   { state: 'ROGUE DHCP ON', color: 'red', border: 'border-red-400' },
+            'SW-ACC': { state: 'NORMAL', color: 'amber', border: 'border-amber-400' },
+            PC1:     { state: 'ONLINE', color: 'emerald', border: 'border-emerald-300 dark:border-emerald-700' },
+            PC2:     { state: 'MISCONFIGURED', color: 'red', border: 'border-red-500 danger-pulse' },
+            Rogue:   { state: 'ROGUE ACTIVE', color: 'red', border: 'border-red-400' },
         },
         links: [
             { src: 'DHCP', dst: 'Core', st: 'ACTIVE' },
@@ -326,18 +322,18 @@ const TIMELINE = [
         rootCause: null, fix: null,
     },
     {
-        step: 2, phase: 'LOẠI TRỪ HẠ TẦNG', phaseColor: 'amber',
-        title: 'Bước 2: Kiểm tra DHCP Server thật & Core Switch',
+        step: 2, phase: 'ISOLATE', phaseColor: 'amber',
+        title: 'Kiểm tra hạ tầng: Loại trừ lỗi DHCP Server chính',
         description: `Kỹ sư kiểm tra hạ tầng trung tâm. <strong>DHCP Server thật</strong> (<code>10.10.10.5</code>) vẫn hoạt động bình thường, tài nguyên CPU thấp. Scope VLAN 10 vẫn còn tới <strong>80 địa chỉ IP trống</strong>. Cùng lúc đó, <strong>Victim PC 1</strong> trên cùng switch vẫn đang dùng IP <code>10.10.10.50</code> và truy cập bình thường.<br>➔ <strong>Loại trừ hoàn toàn giả thuyết H1 (hết IP) và H3 (Server thật lỗi)</strong>.`,
-        cli_header: 'DHCP_Server (10.10.10.5) & Core_Switch#',
-        cli_logs: `Core_Switch# ping 10.10.10.5\nSending 5, 100-byte ICMP Echos to 10.10.10.5, timeout is 2 seconds:\n!!!!!\nSuccess rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms\n\nDHCP_Server# show dhcp scope 10.10.10.0 summary\nScope: VLAN-10-USERS (10.10.10.0/24)\n  Total Addresses: 200\n  Active Leases:   120\n  Available:       80 (40% free) ✅\n  Server Status:   RUNNING / HEALTHY\n\n→ Hạ tầng DHCP chính hoạt động 100% bình thường. Không có hiện tượng cạn IP.`,
+        cli_header: 'SW-CORE-01# ping 10.10.10.5 & show dhcp',
+        cli_logs: `SW-CORE-01# ping 10.10.10.5\nSending 5, 100-byte ICMP Echos to 10.10.10.5, timeout is 2 seconds:\n!!!!!\nSuccess rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms\n\nSRV-DHCP-01# show dhcp scope 10.10.10.0 summary\nScope: VLAN-10-USERS (10.10.10.0/24)\n  Total Addresses: 200\n  Active Leases:   120\n  Available:       80 (40% free) ✅\n  Server Status:   RUNNING / HEALTHY\n\n→ Hạ tầng DHCP chính hoạt động bình thường. Không có hiện tượng cạn IP.`,
         nodes: {
-            DHCP:    { state: 'HEALTHY 80 FREE', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
-            Core:    { state: 'CORE OK', color: 'blue', border: 'border-blue-300 dark:border-blue-700' },
-            'SW-ACC': { state: 'DEFAULT SEC', color: 'amber', border: 'border-amber-400' },
-            PC1:     { state: '10.10.10.50 (OK)', color: 'emerald', border: 'border-emerald-300 dark:border-emerald-700' },
-            PC2:     { state: '192.168.0.100 ❌', color: 'red', border: 'border-red-500 danger-pulse' },
-            Rogue:   { state: 'ROGUE DHCP ON', color: 'red', border: 'border-red-400' },
+            DHCP:    { state: 'HEALTHY', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
+            Core:    { state: 'FORWARDING', color: 'blue', border: 'border-blue-300 dark:border-blue-700' },
+            'SW-ACC': { state: 'NORMAL', color: 'amber', border: 'border-amber-400' },
+            PC1:     { state: 'ONLINE', color: 'emerald', border: 'border-emerald-300 dark:border-emerald-700' },
+            PC2:     { state: 'MISCONFIGURED', color: 'red', border: 'border-red-500 danger-pulse' },
+            Rogue:   { state: 'ROGUE ACTIVE', color: 'red', border: 'border-red-400' },
         },
         links: [
             { src: 'DHCP', dst: 'Core', st: 'ACTIVE' },
@@ -353,17 +349,17 @@ const TIMELINE = [
         rootCause: null, fix: null,
     },
     {
-        step: 3, phase: 'KHOANH VÙNG & TRUY VẾT', phaseColor: 'amber',
-        title: 'Bước 3: Truy vết địa chỉ MAC của thiết bị lạ',
+        step: 3, phase: 'ISOLATE', phaseColor: 'amber',
+        title: 'Truy vết Access Switch: Định vị cổng cắm thiết bị lạ',
         description: `Bắt gói tin hoặc kiểm tra ARP cache trên máy Victim 2 phát hiện Gateway lạ <code>192.168.0.1</code> có địa chỉ MAC <code class="font-mono">aaaa.bbbb.cccc</code>.<br>Kỹ sư tra cứu bảng MAC table trên Access Switch: Địa chỉ MAC này đang được học động trực tiếp trên cổng <strong>GigabitEthernet1/0/5</strong>! Một thiết bị Router Wi-Fi cá nhân cắm cổng LAN vào hệ thống công ty đã được xác định đích danh.`,
-        cli_header: 'Access_Switch# show mac address-table',
-        cli_logs: `Access_Switch# show mac address-table | include aaaa.bbbb.cccc\nVlan    Mac Address       Type        Ports\n----    -----------       --------    -----\n  10    aaaa.bbbb.cccc    DYNAMIC     Gi1/0/5 ⚠️\n\nAccess_Switch# show interfaces GigabitEthernet1/0/5 status\nPort      Name               Status       Vlan       Duplex  Speed Type\nGi1/0/5   PORT-USER-TABLE-03 connected    10         a-full  a-1000 10/100/1000BaseTX\n\n→ Đã định vị chính xác vị trí vật lý: Cổng Gi1/0/5 đang cắm thiết bị lạ cấp phát DHCP trái phép!`,
+        cli_header: 'SW-ACC-01# show mac address-table',
+        cli_logs: `SW-ACC-01# show mac address-table | include aaaa.bbbb.cccc\nVlan    Mac Address       Type        Ports\n----    -----------       --------    -----\n  10    aaaa.bbbb.cccc    DYNAMIC     Gi1/0/5 ⚠️\n\nSW-ACC-01# show interfaces GigabitEthernet1/0/5 status\nPort      Name               Status       Vlan       Duplex  Speed Type\nGi1/0/5   PORT-USER-TABLE-03 connected    10         a-full  a-1000 10/100/1000BaseTX\n\n→ Đã định vị chính xác vị trí vật lý: Cổng Gi1/0/5 đang cắm thiết bị lạ cấp phát DHCP trái phép!`,
         nodes: {
-            DHCP:    { state: 'LEGIT SERVER', color: 'emerald', border: 'border-emerald-400' },
+            DHCP:    { state: 'ONLINE', color: 'emerald', border: 'border-emerald-400' },
             Core:    { state: 'FORWARDING', color: 'blue', border: 'border-blue-400' },
             'SW-ACC': { state: 'TRACED Gi1/0/5', color: 'amber', border: 'border-amber-500' },
-            PC1:     { state: 'PC 1 (LEGIT)', color: 'emerald', border: 'border-emerald-300 dark:border-emerald-700' },
-            PC2:     { state: 'POISONED IP ❌', color: 'red', border: 'border-red-500 danger-pulse' },
+            PC1:     { state: 'ONLINE', color: 'emerald', border: 'border-emerald-300 dark:border-emerald-700' },
+            PC2:     { state: 'POISONED', color: 'red', border: 'border-red-500 danger-pulse' },
             Rogue:   { state: 'LOCATED! Gi1/0/5', color: 'red', border: 'border-red-600 danger-pulse' },
         },
         links: [
@@ -380,18 +376,18 @@ const TIMELINE = [
         rootCause: null, fix: null,
     },
     {
-        step: 4, phase: 'NGUYÊN NHÂN & RỦI RO', phaseColor: 'red',
-        title: 'Bước 4: Xác định Nguyên nhân & Rủi ro Leo thang (MitM)',
+        step: 4, phase: 'ROOT CAUSE', phaseColor: 'red',
+        title: 'Xác định nguyên nhân gốc: Rogue DHCP & Nguy cơ MitM',
         description: `<strong>Bản chất cơ chế:</strong> Khi PC gửi broadcast <code>DHCP Discover</code>, cả hai thiết bị đều trả lời <code>DHCP Offer</code>. Rogue Router ở ngay cổng Access cùng tầng vật lý gửi Offer đến trước, khiến Victim PC 2 nhận IP và Gateway sai.<br><strong>Rủi ro leo thang (ARP Spoofing / MitM):</strong> Nếu kẻ xấu cố ý dùng kỹ thuật này, toàn bộ lưu lượng sẽ bị dẫn qua máy tấn công trước khi ra ngoài, dẫn tới đánh cắp mật khẩu, nghe lén phiên truyền thông và ngộ độc ARP toàn mạng!`,
-        cli_header: 'Access_Switch# (Phân tích rủi ro an ninh mạng Layer 2)',
+        cli_header: 'SW-ACC-01# — Phân tích rủi ro an ninh mạng Layer 2',
         cli_logs: `[!] CẢNH BÁO AN NINH MẠNG LAYER 2: ROGUE DHCP SERVER DETECTED\n\n1. Cơ chế tranh chấp (Race Condition):\n   - Client Broadcast DHCP Discover (Port 67 UDP)\n   - Rogue Router trả lời Offer trong 2ms (cùng Switch)\n   - DHCP Server hợp lệ trả lời Offer trong 8ms (qua Core Switch Trunk)\n   ==> Client chấp nhận gói tin đến trước (First-come First-served)!\n\n2. Rủi ro tấn công leo thang (Escalation):\n   - Man-in-the-Middle (MitM) qua Default Gateway giả mạo\n   - ARP Spoofing / Poisoning làm chuyển hướng lưu lượng nhạy cảm\n   - Từ chối dịch vụ (DoS) cô lập các dịch vụ Intranet công ty`,
         nodes: {
-            DHCP:    { state: 'LEGIT SERVER', color: 'emerald', border: 'border-emerald-400' },
+            DHCP:    { state: 'ONLINE', color: 'emerald', border: 'border-emerald-400' },
             Core:    { state: 'FORWARDING', color: 'blue', border: 'border-blue-400' },
-            'SW-ACC': { state: 'NO PROTECTION!', color: 'red', border: 'border-red-500 danger-pulse' },
-            PC1:     { state: 'VULNERABLE', color: 'amber', border: 'border-amber-400' },
-            PC2:     { state: 'HIJACKED GATEWAY', color: 'red', border: 'border-red-500 danger-pulse' },
-            Rogue:   { state: 'ACTIVE ROGUE', color: 'red', border: 'border-red-600 danger-pulse' },
+            'SW-ACC': { state: 'VULNERABLE', color: 'red', border: 'border-red-500 danger-pulse' },
+            PC1:     { state: 'ONLINE', color: 'amber', border: 'border-amber-400' },
+            PC2:     { state: 'HIJACKED', color: 'red', border: 'border-red-500 danger-pulse' },
+            Rogue:   { state: 'ROGUE ACTIVE', color: 'red', border: 'border-red-600 danger-pulse' },
         },
         links: [
             { src: 'DHCP', dst: 'Core', st: 'ACTIVE' },
@@ -408,21 +404,21 @@ const TIMELINE = [
         fix: null,
     },
     {
-        step: 5, phase: 'TRIỂN KHAI BẢO MẬT', phaseColor: 'blue',
-        title: 'Bước 5: Kích hoạt Bộ Ba Bảo Mật Layer 2 Cisco',
+        step: 5, phase: 'FIX', phaseColor: 'blue',
+        title: 'Khắc phục: Kích hoạt DHCP Snooping & DAI & IPSG',
         description: `Kỹ sư triển khai kiến trúc phòng thủ 3 lớp chuyên sâu ngay trên Access Switch:<br>
         1. <strong>DHCP Snooping:</strong> Cổng Gi1/0/24 (hướng về Core/DHCP thật) là <code>Trusted</code>. Các cổng Gi1/0/1-20 là <code>Untrusted</code>. Switch lập tức DROP mọi DHCP Offer/ACK từ cổng lạ.<br>
         2. <strong>Dynamic ARP Inspection (DAI):</strong> Dùng DHCP Snooping Binding Table để xác thực gói tin ARP, ngăn chặn tuyệt đối ARP Spoofing.<br>
         3. <strong>IP Source Guard (IPSG):</strong> Khóa cứng IP+MAC trên từng port access.`,
-        cli_header: 'Access_Switch(config)# [Cấu hình Bộ 3 Bảo Mật Layer 2]',
-        cli_logs: `Access_Switch(config)# ip dhcp snooping\nAccess_Switch(config)# ip dhcp snooping vlan 10\nAccess_Switch(config)# ip arp inspection vlan 10\n\n! 1. Thiết lập Cổng Tin Cậy (Trusted Uplink hướng về DHCP Server thật):\nAccess_Switch(config)# interface GigabitEthernet1/0/24\nAccess_Switch(config-if)# description UPLINK-TO-CORE\nAccess_Switch(config-if)# ip dhcp snooping trust\nAccess_Switch(config-if)# ip arp inspection trust\n\n! 2. Áp dụng bảo vệ trên toàn bộ cổng người dùng (User Access Ports):\nAccess_Switch(config)# interface range GigabitEthernet1/0/1-20\nAccess_Switch(config-if-range)# switchport mode access\nAccess_Switch(config-if-range)# switchport access vlan 10\nAccess_Switch(config-if-range)# spanning-tree portfast\nAccess_Switch(config-if-range)# spanning-tree bpduguard enable\nAccess_Switch(config-if-range)# ip verify source port-security\nAccess_Switch(config-if-range)# ip dhcp snooping limit rate 15\n\n%DHCP_SNOOPING-5-DHCP_OFFER_DROPPED: DHCP Offer packet dropped on untrusted port Gi1/0/5!`,
+        cli_header: 'SW-ACC-01(config)# — Cấu hình Bộ ba Bảo mật Layer 2',
+        cli_logs: `SW-ACC-01(config)# ip dhcp snooping\nSW-ACC-01(config)# ip dhcp snooping vlan 10\nSW-ACC-01(config)# ip arp inspection vlan 10\n\n! 1. Thiết lập Cổng Tin Cậy (Trusted Uplink hướng về DHCP Server thật):\nSW-ACC-01(config)# interface GigabitEthernet1/0/24\nSW-ACC-01(config-if)# description UPLINK-TO-CORE\nSW-ACC-01(config-if)# ip dhcp snooping trust\nSW-ACC-01(config-if)# ip arp inspection trust\n\n! 2. Áp dụng bảo vệ trên toàn bộ cổng người dùng (User Access Ports):\nSW-ACC-01(config)# interface range GigabitEthernet1/0/1-20\nSW-ACC-01(config-if-range)# switchport mode access\nSW-ACC-01(config-if-range)# switchport access vlan 10\nSW-ACC-01(config-if-range)# spanning-tree portfast\nSW-ACC-01(config-if-range)# spanning-tree bpduguard enable\nSW-ACC-01(config-if-range)# ip verify source port-security\nSW-ACC-01(config-if-range)# ip dhcp snooping limit rate 15\n\n%DHCP_SNOOPING-5-DHCP_OFFER_DROPPED: DHCP Offer packet dropped on untrusted port Gi1/0/5!`,
         nodes: {
-            DHCP:    { state: 'TRUSTED SOURCE', color: 'emerald', border: 'border-emerald-500' },
-            Core:    { state: 'TRUSTED PATH', color: 'blue', border: 'border-blue-400' },
-            'SW-ACC': { state: 'SNOOPING + DAI + IPSG', color: 'blue', border: 'border-blue-500 ok-pulse' },
-            PC1:     { state: '10.10.10.50 (BIND)', color: 'emerald', border: 'border-emerald-400' },
-            PC2:     { state: 'SNOOPING ACTIVE', color: 'amber', border: 'border-amber-400' },
-            Rogue:   { state: 'BLOCKED BY SWITCH ❌', color: 'red', border: 'border-red-600' },
+            DHCP:    { state: 'TRUSTED', color: 'emerald', border: 'border-emerald-500' },
+            Core:    { state: 'FORWARDING', color: 'blue', border: 'border-blue-400' },
+            'SW-ACC': { state: 'SNOOPING ON', color: 'blue', border: 'border-blue-500 ok-pulse' },
+            PC1:     { state: 'BOUND', color: 'emerald', border: 'border-emerald-400' },
+            PC2:     { state: 'RECOVERING', color: 'amber', border: 'border-amber-400' },
+            Rogue:   { state: 'BLOCKED', color: 'red', border: 'border-red-600' },
         },
         links: [
             { src: 'DHCP', dst: 'Core', st: 'ACTIVE' },
@@ -432,25 +428,25 @@ const TIMELINE = [
             { src: 'SW-ACC', dst: 'Rogue', st: 'BLOCKED' },
         ],
         hypotheses: ['h1:ruled_out','h2:ruled_out','h3:ruled_out','h4:confirmed','h5:confirmed'],
-        badgeRogueText: 'Gi1/0/5: UNTRUSTED — DHCP OFFER DROPPED! 🛑',
+        badgeRogueText: 'Gi1/0/5: UNTRUSTED — DHCP OFFER DROPPED!',
         badgeRogueColor: 'bg-red-600 text-white border-red-700',
         packet: { from: 'Rogue', to: 'SW-ACC', label: 'Rogue Offer [DROPPED ❌]', color: 'bg-red-500', icon: 'fa-ban' },
         rootCause: 'Rogue DHCP Server từ một Router Wi-Fi cá nhân cắm vào Gi1/0/5 phát IP/Gateway sai dải (192.168.0.0/24) và chiếm quyền định tuyến của Client.',
         fix: 'Kích hoạt bộ 3 giải pháp bảo vệ Layer 2 toàn diện: (1) DHCP Snooping thiết lập Gi1/0/24 Trusted, tự động Drop DHCP Offer trên cổng Access Gi1/0/1-20; (2) Dynamic ARP Inspection (DAI) chống ARP Spoofing; (3) IP Source Guard chống giả mạo IP.',
     },
     {
-        step: 6, phase: 'XÁC MINH & HOÀN TẤT', phaseColor: 'emerald',
-        title: 'Bước 6: Xác minh Khôi phục Mạng & Binding Table',
+        step: 6, phase: 'VERIFY', phaseColor: 'emerald',
+        title: 'Xác minh & Khôi phục hoàn toàn kết nối',
         description: `Kỹ sư thực hiện giải phóng và xin lại IP (<code class="font-mono">ipconfig /renew</code>) trên <strong>Victim PC 2</strong>. Do cổng Gi1/0/5 bị Switch chặn toàn bộ gói tin DHCP Offer, PC 2 đã nhận đúng IP <code class="font-mono text-emerald-600 font-bold">10.10.10.51</code> và Gateway <code class="font-mono text-emerald-600 font-bold">10.10.10.1</code> từ Server thật.<br>Bảng <code>DHCP Snooping Binding</code> ghi nhận đầy đủ ánh xạ an toàn. Mọi dịch vụ Internet, Server nội bộ và máy in mạng hoạt động bình thường!`,
-        cli_header: 'Access_Switch# show ip dhcp snooping binding & statistics',
-        cli_logs: `Access_Switch# show ip dhcp snooping binding\nMacAddress          IpAddress        Lease(sec)  Type          VLAN  Interface\n------------------  ---------------  ----------  ------------  ----  --------------------\n00:0C:29:84:11:22   10.10.10.51      86400       dhcp-snooping   10    GigabitEthernet1/0/2 ✅\n00:50:56:C0:00:01   10.10.10.50      86400       dhcp-snooping   10    GigabitEthernet1/0/1 ✅\nTotal number of bindings: 2\n\nAccess_Switch# show ip dhcp snooping statistics\nPackets Forwarded                                     = 24\nPackets Dropped                                       = 18 (Rogue Offers Dropped on Gi1/0/5!)\n\nC:\\Users\\Victim2> ping 10.10.10.5\nPinging 10.10.10.5 with 32 bytes of data:\nReply from 10.10.10.5: bytes=32 time=1ms TTL=64\nReply from 10.10.10.5: bytes=32 time=1ms TTL=64\n\n→ Sự cố đã được xử lý triệt để! Hệ thống an toàn 100% trước Rogue DHCP và ARP Spoofing.`,
+        cli_header: 'SW-ACC-01# show ip dhcp snooping binding & statistics',
+        cli_logs: `SW-ACC-01# show ip dhcp snooping binding\nMacAddress          IpAddress        Lease(sec)  Type          VLAN  Interface\n------------------  ---------------  ----------  ------------  ----  --------------------\n00:0C:29:84:11:22   10.10.10.51      86400       dhcp-snooping   10    GigabitEthernet1/0/2 ✅\n00:50:56:C0:00:01   10.10.10.50      86400       dhcp-snooping   10    GigabitEthernet1/0/1 ✅\nTotal number of bindings: 2\n\nSW-ACC-01# show ip dhcp snooping statistics\nPackets Forwarded                                     = 24\nPackets Dropped                                       = 18 (Rogue Offers Dropped on Gi1/0/5!)\n\nPC-VICTIM-02> ping 10.10.10.5\nPinging 10.10.10.5 with 32 bytes of data:\nReply from 10.10.10.5: bytes=32 time=1ms TTL=64\nReply from 10.10.10.5: bytes=32 time=1ms TTL=64\n\n→ Sự cố đã được xử lý triệt để! Hệ thống an toàn 100% trước Rogue DHCP và ARP Spoofing.`,
         nodes: {
-            DHCP:    { state: 'SERVING (10.10.10.5)', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
+            DHCP:    { state: 'SERVING', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
             Core:    { state: 'FORWARDING', color: 'emerald', border: 'border-emerald-500' },
-            'SW-ACC': { state: 'FULLY PROTECTED ✅', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
-            PC1:     { state: '10.10.10.50 (OK)', color: 'emerald', border: 'border-emerald-400' },
-            PC2:     { state: '10.10.10.51 (RESTORED ✅)', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
-            Rogue:   { state: 'ISOLATED / DROPPED', color: 'slate', border: 'border-slate-400' },
+            'SW-ACC': { state: 'PROTECTED', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
+            PC1:     { state: 'ONLINE ✓', color: 'emerald', border: 'border-emerald-400' },
+            PC2:     { state: 'RESTORED ✓', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
+            Rogue:   { state: 'ISOLATED', color: 'slate', border: 'border-slate-400' },
         },
         links: [
             { src: 'DHCP', dst: 'Core', st: 'ACTIVE' },
@@ -460,7 +456,7 @@ const TIMELINE = [
             { src: 'SW-ACC', dst: 'Rogue', st: 'BLOCKED' },
         ],
         hypotheses: ['h1:ruled_out','h2:ruled_out','h3:ruled_out','h4:confirmed','h5:confirmed'],
-        badgeRogueText: 'Gi1/0/5: Rogue Router cách ly hoàn toàn',
+        badgeRogueText: 'Gi1/0/5: Rogue Router bị cô lập hoàn toàn',
         badgeRogueColor: 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300',
         packet: { from: 'DHCP', to: 'PC2', label: 'Valid DHCP ACK (10.10.10.51)', color: 'bg-emerald-500', icon: 'fa-shield-halved' },
         rootCause: 'Rogue DHCP Server từ một Router Wi-Fi cá nhân cắm vào Gi1/0/5 phát IP/Gateway sai dải (192.168.0.0/24) và chiếm quyền định tuyến của Client.',
@@ -484,7 +480,6 @@ class TroubleshootingApp {
             iconPlay: document.getElementById('icon-play'),
             themeIcon: document.getElementById('theme-icon'),
             phaseBadge: document.getElementById('phase-badge'),
-            stepNumberBadge: document.getElementById('step-number-badge'),
             title: document.getElementById('step-title'),
             desc: document.getElementById('step-desc'),
             cli: document.getElementById('cli-logs'),
@@ -621,7 +616,6 @@ class TroubleshootingApp {
             emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/50'
         };
         this.dom.phaseBadge.className = `px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border ${pColors[d.phaseColor] || pColors.amber}`;
-        this.dom.stepNumberBadge.textContent = `Bước ${d.step}/${TIMELINE.length}`;
 
         // Texts
         this.dom.title.textContent = d.title;
@@ -699,7 +693,7 @@ class TroubleshootingApp {
                 <li class="flex items-start gap-2.5 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/40 text-xs text-red-700 dark:text-red-300 font-semibold border border-red-200 dark:border-red-800">
                     <i class="fas fa-circle-exclamation text-red-500 mt-0.5 shrink-0"></i>
                     <span>${h.text}</span>
-                    <span class="ml-auto text-[9px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 shrink-0">Xác nhận ⚠️</span>
+                    <span class="ml-auto text-[9px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 shrink-0">Xác nhận</span>
                 </li>`;
             } else {
                 return `
