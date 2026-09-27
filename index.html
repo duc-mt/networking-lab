@@ -126,10 +126,7 @@
                         <input id="project-search" type="text" placeholder="Tìm theo tên, tag hoặc định dạng..."
                             class="w-full pl-10 pr-4 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all-fast">
                     </div>
-                    <select id="project-topic" title="Topic"
-                        class="shrink-0 pl-3 pr-8 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all-fast">
-                        <option value="All">Tất cả chủ đề</option>
-                    </select>
+
                     <select id="project-sort" title="Sort"
                         class="shrink-0 pl-3 pr-8 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all-fast">
                         <option value="newest">Mới nhất</option>
@@ -187,18 +184,12 @@
         const countEl = document.getElementById('project-count');
         const searchInput = document.getElementById('project-search');
         const sortSelect = document.getElementById('project-sort');
-        const topicSelect = document.getElementById('project-topic');
+
         const filterBar = document.getElementById('category-filters');
 
         let activeType = 'All';
 
-        function buildTopicOptions() {
-            // Free-text, unlike the fixed 6 types — whatever `topic` values exist in
-            // PROJECTS just show up here. No taxonomy file to maintain for this one.
-            const topics = [...new Set(ALL_PROJECTS.map(p => p.topic).filter(Boolean))].sort();
-            topicSelect.innerHTML = '<option value="All">Tất cả chủ đề</option>' +
-                topics.map(t => `<option value="${t}">${t}</option>`).join('');
-        }
+
 
         function typeMeta(key) {
             return TYPES[key] || { label: key, short: key, icon: 'fa-diagram-project', accent: 'from-slate-400 to-slate-600' };
@@ -239,7 +230,7 @@
 
         function matchesSearch(p, query) {
             if (!query) return true;
-            const haystack = [p.title, p.description, p.topic, typeMeta(p.type).label, ...(p.tags || [])].join(' ').toLowerCase();
+            const haystack = [p.title, p.description, typeMeta(p.type).label, ...(p.tags || [])].join(' ').toLowerCase();
             return haystack.includes(query);
         }
 
@@ -256,10 +247,8 @@
 
         function renderProjects() {
             const query = searchInput.value.trim().toLowerCase();
-            const activeTopic = topicSelect.value;
             const filtered = sortProjects(ALL_PROJECTS.filter(p =>
                 (activeType === 'All' || p.type === activeType) &&
-                (activeTopic === 'All' || p.topic === activeTopic) &&
                 matchesSearch(p, query)
             ));
 
@@ -285,7 +274,6 @@
                         </span>
                     </div>
                     <div class="flex-1">
-                        ${p.topic ? `<span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">${p.topic}</span>` : ''}
                         <h4 class="font-bold text-slate-900 dark:text-white mb-1">${p.title}</h4>
                         <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">${p.description}</p>
                     </div>
@@ -300,9 +288,7 @@
 
         searchInput.addEventListener('input', renderProjects);
         sortSelect.addEventListener('change', renderProjects);
-        topicSelect.addEventListener('change', renderProjects);
         buildFilterChips();
-        buildTopicOptions();
         renderProjects();
 
         document.getElementById('year').textContent = new Date().getFullYear();

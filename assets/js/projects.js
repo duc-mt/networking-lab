@@ -20,14 +20,6 @@
 //                           This is the UI FORMAT (state machine, logic tree,
 //                           pipeline, etc) — it drives the folder, icon, color,
 //                           and the fixed filter chips.
-//   topic        string   — the SUBJECT DOMAIN (e.g. "Routing", "Switching",
-//                           "Security", "Automation"). Independent of `type` —
-//                           two labs can share a type but cover different
-//                           topics (STP and VLAN are both `protocol`-type but
-//                           both happen to be "Switching" topic; OSPF is
-//                           `protocol`-type but "Routing" topic). Free text —
-//                           the "Topic" dropdown on the homepage is built from
-//                           whatever values show up here, no fixed list to edit.
 //   tags         string[] — searchable keywords
 //   href         string   — "projects/<type>/<slug>.html"
 //   status       "live" | "soon"
@@ -98,7 +90,6 @@ const PROJECTS = [
     {
         id: 'clusterxl-patching',
         title: 'ClusterXL Zero-Downtime Patching',
-        topic: 'Security',
         category: 'failover',
         type: 'failover',
         status: 'live',
@@ -113,7 +104,6 @@ const PROJECTS = [
     {
         id: 'port-security-errdisable',
         title: 'Port Security — Err-Disabled Incident',
-        topic: 'Switching',
         category: 'troubleshooting',
         type: 'troubleshooting',
         status: 'live',
@@ -128,7 +118,6 @@ const PROJECTS = [
     {
         id: 'stp-convergence',
         title: 'STP Link Failure & Convergence',
-        topic: 'Network Services',
         category: 'protocol',
         type: 'protocol',
         status: 'live',
@@ -143,7 +132,6 @@ const PROJECTS = [
     {
         id: 'stp-visual-compare',
         title: 'STP Variants in Action',
-        topic: 'Network Services',
         category: 'protocol',
         type: 'protocol',
         status: 'live',
@@ -158,7 +146,6 @@ const PROJECTS = [
     {
         id: 'stp-election',
         title: 'STP Root Election',
-        topic: 'Network Services',
         category: 'protocol',
         type: 'protocol',
         status: 'live',
@@ -173,7 +160,6 @@ const PROJECTS = [
     {
         id: 'dhcp-master-fsm',
         title: 'DHCP Protocol Suite',
-        topic: 'Network Services',
         category: 'protocol',
         type: 'protocol',
         status: 'live',
@@ -187,7 +173,6 @@ const PROJECTS = [
 
     {
         title: 'Network Bắt Bệnh #06 — DNS Resolution',
-        topic: 'DNS',
         description:
             'Ping by IP works fine, but hostnames fail — 8 KB cases of DNS resolution breaking on a flat LAN, same topology, one tab per failure mode.',
         type: 'diagnostic-playbook',
@@ -198,7 +183,6 @@ const PROJECTS = [
     },
     {
         title: 'OSPF Neighbor Adjacency',
-        topic: 'Routing',
         description:
             'Step through OSPF forming a Full adjacency between two routers — Hello packets, DBD exchange, and LSDB sync.',
         type: 'protocol',
@@ -209,7 +193,6 @@ const PROJECTS = [
     },
     {
         title: 'VLAN Trunking',
-        topic: 'Switching',
         description: 'Walk through 802.1Q tagging across a trunk link between two switches.',
         type: 'protocol',
         tags: ['VLAN', '802.1Q', 'Trunking', 'Switching'],
@@ -219,7 +202,6 @@ const PROJECTS = [
     },
     {
         title: 'Branch Site Outage — Root Cause Hunt',
-        topic: 'Routing',
         description:
             "A branch can't reach the file server. Walk the hypothesis list down to the real cause and the fix.",
         type: 'troubleshooting',
@@ -230,7 +212,6 @@ const PROJECTS = [
     },
     {
         title: 'Packet Walk Through a Firewall',
-        topic: 'Security',
         description:
             'Trace one packet through ingress, NAT, security policy, and IPS to its final Accept/Deny verdict.',
         type: 'packet-walk',
@@ -241,7 +222,6 @@ const PROJECTS = [
     },
     {
         title: 'Core Switch Cutover',
-        topic: 'Switching',
         description:
             'A full MOP for replacing a core switch — pre-checks, execution, post-checks, and rollback if it fails.',
         type: 'change-mop',
@@ -252,7 +232,6 @@ const PROJECTS = [
     },
     {
         title: 'Netmiko Push With Retry Logic',
-        topic: 'Automation',
         description:
             'Pushing config to 3 switches via SSH — what the script does when one of them times out.',
         type: 'automation',
@@ -263,7 +242,6 @@ const PROJECTS = [
     },
     {
         title: 'HSRP Failover Drill',
-        topic: 'Routing',
         description:
             'Trigger an outage on the active router and watch HSRP timers count down to convergence.',
         type: 'failover',
@@ -274,7 +252,6 @@ const PROJECTS = [
     },
     {
         title: 'Check Point: Optimize Cluster Sync',
-        topic: 'Security',
         description:
             'MOP chuyển đổi ClusterXL sang chế độ Optimized Sync zero-downtime để giảm tải CPU.',
         type: 'change-mop',
@@ -285,7 +262,6 @@ const PROJECTS = [
     },
     {
         title: 'Check Point: Enable VMAC',
-        topic: 'Security',
         description:
             'MOP kích hoạt Virtual MAC trên ClusterXL giúp loại bỏ hoàn toàn gián đoạn ARP trong quá trình Failover.',
         type: 'change-mop',
@@ -296,7 +272,6 @@ const PROJECTS = [
     },
     {
         title: 'Check Point: ISP Redundancy',
-        topic: 'Routing',
         description:
             'MOP triển khai Dual ISP (Primary/Backup) qua SmartConsole cho ClusterXL, giữ vững SecureXL acceleration.',
         type: 'change-mop',
@@ -307,7 +282,6 @@ const PROJECTS = [
     },
     {
         title: 'Hybrid Cloud Transit Topology (VyOS / OSPF)',
-        topic: 'Architecture',
         description:
             'Bản đồ Topology tĩnh mô phỏng kiến trúc Hybrid Cloud qua VPN Tunnel và OSPF định tuyến động.',
         type: 'topology-design',
@@ -318,7 +292,6 @@ const PROJECTS = [
     },
     {
         title: 'BGP Peering FSM & Technical Traps',
-        topic: 'Routing',
         description:
             'Phân tích quá trình thiết lập trạng thái (FSM) và 3 cái bẫy kỹ thuật kinh điển của BGP.',
         type: 'protocol',
