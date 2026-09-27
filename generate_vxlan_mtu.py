@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+html_content = r"""<!DOCTYPE html>
 <html lang="vi" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -126,18 +126,16 @@
 
         <!-- Left: Topology Canvas + CLI -->
         <div class="xl:col-span-2 flex flex-col gap-6">
-            <!-- Golden Standard Wrapper -->
-            <div class="w-full overflow-x-auto">
-                <section id="topology-canvas" style="min-width: 900px;" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[500px] md:min-h-[580px]">
+            <section id="topology-canvas" style="min-width: 900px;" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[500px] md:min-h-[580px]">
                 
                 <!-- Zones -->
-                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-blue-500 bg-blue-500/5" style="left: 4%; top: 4%; width: 22%; height: 92%;">
+                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-blue-500 bg-blue-500/5" style="left: 4%; top: 6%; width: 22%; height: 85%;">
                     <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-blue-500">ON-PREMISES</div>
                 </div>
-                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-amber-500 bg-amber-500/5" style="left: 28%; top: 4%; width: 44%; height: 92%;">
+                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-amber-500 bg-amber-500/5" style="left: 28%; top: 6%; width: 44%; height: 85%;">
                     <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-amber-500">MPLS TRANSIT (WAN)</div>
                 </div>
-                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-purple-500 bg-purple-500/5" style="left: 74%; top: 4%; width: 22%; height: 92%;">
+                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-purple-500 bg-purple-500/5" style="left: 74%; top: 6%; width: 22%; height: 85%;">
                     <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-purple-500">CLOUD REGION</div>
                 </div>
 
@@ -220,7 +218,6 @@
                 </div>
 
             </section>
-            </div>
 
             <!-- Console Terminal -->
             <section class="bg-[#1e1e1e] rounded-2xl overflow-hidden border border-slate-700 shadow-xl flex flex-col font-mono text-sm h-[320px]">
@@ -621,27 +618,12 @@ Ping statistics for 10.1.100.20:
                     this.dom.labels.appendChild(badge);
                 }
 
-                // Dynamically calculate ratio to ensure labels fall outside the nodes (approx 85px offset from center)
-                let dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-                let t_src = dist > 0 ? Math.min(0.4, 85 / dist) : 0.22;
-                let t_dst = 1 - t_src;
-                
-                // Calculate Normal Vector (perpendicular shift) to dodge node badges (Top/Bottom badges)
-                let nx = dist > 0 ? -(y2 - y1) / dist : 0;
-                let ny = dist > 0 ? (x2 - x1) / dist : 0;
-                let shiftPx = 18; // shift 18px perpendicularly
-
                 // Port Labels
                 if (lDef.srcPort) {
                     const spBadge = document.createElement('div');
                     spBadge.className = 'absolute z-20 text-[8px] font-mono font-bold px-1 py-px rounded bg-white/90 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 whitespace-nowrap transition-opacity duration-500 backdrop-blur-sm';
-                    let px = lDef.curve ? this.getBezierPoint(t_src, x1, mx, x2) : x1 + (x2 - x1)*t_src;
-                    let py = lDef.curve ? this.getBezierPoint(t_src, y1, my, y2) : y1 + (y2 - y1)*t_src;
-                    
-                    // Apply perpendicular shift
-                    px += nx * shiftPx;
-                    py += ny * shiftPx;
-                    
+                    let px = lDef.curve ? this.getBezierPoint(0.18, x1, mx, x2) : x1 + (x2 - x1)*0.22;
+                    let py = lDef.curve ? this.getBezierPoint(0.18, y1, my, y2) : y1 + (y2 - y1)*0.22;
                     spBadge.style.left = px + 'px';
                     spBadge.style.top = py + 'px';
                     spBadge.style.transform = 'translate(-50%, -50%)';
@@ -652,13 +634,8 @@ Ping statistics for 10.1.100.20:
                 if (lDef.dstPort) {
                     const dpBadge = document.createElement('div');
                     dpBadge.className = 'absolute z-20 text-[8px] font-mono font-bold px-1 py-px rounded bg-white/90 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 whitespace-nowrap transition-opacity duration-500 backdrop-blur-sm';
-                    let px = lDef.curve ? this.getBezierPoint(t_dst, x1, mx, x2) : x1 + (x2 - x1)*t_dst;
-                    let py = lDef.curve ? this.getBezierPoint(t_dst, y1, my, y2) : y1 + (y2 - y1)*t_dst;
-                    
-                    // Apply perpendicular shift
-                    px += nx * shiftPx;
-                    py += ny * shiftPx;
-                    
+                    let px = lDef.curve ? this.getBezierPoint(0.82, x1, mx, x2) : x1 + (x2 - x1)*0.78;
+                    let py = lDef.curve ? this.getBezierPoint(0.82, y1, my, y2) : y1 + (y2 - y1)*0.78;
                     dpBadge.style.left = px + 'px';
                     dpBadge.style.top = py + 'px';
                     dpBadge.style.transform = 'translate(-50%, -50%)';
@@ -903,3 +880,7 @@ Ping statistics for 10.1.100.20:
 </script>
 </body>
 </html>
+"""
+
+with open('projects/troubleshooting/vxlan-mtu-blackhole.html', 'w') as f:
+    f.write(html_content)
