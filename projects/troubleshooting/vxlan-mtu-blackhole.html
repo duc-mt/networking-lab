@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVPN-VXLAN MTU Blackhole — Antigravity Portfolio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    },
+                    colors: { slate: { 850: '#151e2e' } }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Apply the saved theme before first paint -->
+    <script src="../../assets/js/theme-init.js"></script>
+    <!-- Shared theme CSS -->
+    <link rel="stylesheet" href="../../assets/css/theme.css" />
+
+    <style>
+        .topology-node { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .link-line { 
+            fill: none; 
+            stroke-width: 2.5; 
+            transition: all 0.5s ease;
+            stroke-linecap: round;
+        }
+        .link-line.type-normal { stroke: #94a3b8; }
+        .dark .link-line.type-normal { stroke: #475569; }
+        
+        .link-line.type-mpls { stroke: #f59e0b; stroke-dasharray: 6 4; }
+        .dark .link-line.type-mpls { stroke: #d97706; }
+        
+        .link-line.type-overlay { stroke: #8b5cf6; stroke-width: 3; stroke-dasharray: 8 6; }
+        .dark .link-line.type-overlay { stroke: #7c3aed; }
+        
+        .link-line.type-trunk { stroke: #10b981; stroke-dasharray: 4 2; }
+        .dark .link-line.type-trunk { stroke: #059669; }
+
+        .link-line.type-error { stroke: #ef4444; stroke-width: 3; stroke-dasharray: 4 4; }
+        
+        @keyframes dash { to { stroke-dashoffset: -20; } }
+        .animate-dash { animation: dash 1.5s linear infinite; }
+        
+        @keyframes pulse-error {
+            0%, 100% { filter: drop-shadow(0 0 2px rgba(239,68,68,0)); }
+            50% { filter: drop-shadow(0 0 8px rgba(239,68,68,0.8)); }
+        }
+        .animate-error-pulse { animation: pulse-error 1.5s infinite; }
+        
+        /* Smooth state transitions for badges */
+        .badge-transition { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 flex flex-col min-h-screen transition-colors duration-300">
+
+<!-- Header -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
+    <div class="max-w-[1600px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <a href="../../index.html" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded bg-gradient-to-br from-rose-500 to-orange-600 flex items-center justify-center text-white shadow-sm">
+                    <i class="fas fa-stethoscope text-sm"></i>
+                </div>
+                <h1 class="font-bold text-sm md:text-base hidden sm:block">EVPN-VXLAN MTU Blackhole</h1>
+            </div>
+        </div>
+        
+        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner">
+            <button onclick="app.prevStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i class="fas fa-backward-step"></i></button>
+            <div id="play-pause-btn" onclick="app.togglePlay()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast cursor-pointer"><i class="fas fa-play"></i></div>
+            <button onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i class="fas fa-forward-step"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i id="theme-icon" class="fas fa-sun"></i></button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
+
+    <!-- Symptom Banner -->
+    <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl px-6 py-4 flex items-start gap-4">
+        <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fas fa-triangle-exclamation text-red-600 dark:text-red-400 text-lg"></i>
+        </div>
+        <div>
+            <div class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">Ticket #INC-2024-1205 — Mức độ: HIGH</div>
+            <div class="font-bold text-red-800 dark:text-red-300 text-sm md:text-base leading-snug">
+                Triệu chứng: Người dùng On-prem than phiền ứng dụng trên Cloud (chung subnet Stretched L2) thỉnh thoảng bị "treo". Ping từ Host-A tới Host-B vẫn mượt (0% packet loss), nhưng tải file hay truy cập web (TCP) thì xoay vòng vô tận rồi Timeout.
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Stepper -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
+        <div class="min-w-[700px]">
+            <div class="relative flex justify-between items-center w-full">
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
+                <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-amber-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out" style="width:0%"></div>
+                <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-2"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        <!-- Left: Topology Canvas + CLI -->
+        <div class="xl:col-span-2 flex flex-col gap-6">
+            <section id="topology-canvas" style="min-width: 900px;" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[500px] md:min-h-[580px]">
+                
+                <!-- Zones -->
+                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-blue-500 bg-blue-500/5" style="left: 4%; top: 6%; width: 22%; height: 85%;">
+                    <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-blue-500">ON-PREMISES</div>
+                </div>
+                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-amber-500 bg-amber-500/5" style="left: 28%; top: 6%; width: 44%; height: 85%;">
+                    <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-amber-500">MPLS TRANSIT (WAN)</div>
+                </div>
+                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-purple-500 bg-purple-500/5" style="left: 74%; top: 6%; width: 22%; height: 85%;">
+                    <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-purple-500">CLOUD REGION</div>
+                </div>
+
+                <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
+
+                <!-- Dynamic Labels Layer -->
+                <div id="labels-layer"></div>
+
+                <!-- Nodes -->
+                <!-- Host A -->
+                <div id="node-host-a" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:15%;top:80%;transform:translate(-50%,-50%)">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">Compute</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-server text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Host-A</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">10.1.100.10/24</div>
+                    <span id="state-host-a" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
+                </div>
+
+                <!-- VTEP On-Prem -->
+                <div id="node-vtep-onprem" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:15%;top:30%;transform:translate(-50%,-50%)">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">VTEP / L2 GW</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-network-wired text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">VTEP-OnPrem</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">Lo0: 10.255.0.1</div>
+                    <span id="state-vtep-onprem" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">BGP UP</span>
+                </div>
+
+                <!-- PE On-Prem -->
+                <div id="node-pe-onprem" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:37%;top:50%;transform:translate(-50%,-50%)">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">PE Router</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-route text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">PE-OnPrem</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">VRF: CORP</div>
+                    <span id="state-pe-onprem" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
+                </div>
+
+                <!-- PE Cloud -->
+                <div id="node-pe-cloud" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:63%;top:50%;transform:translate(-50%,-50%)">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">PE Router</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-route text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">PE-Cloud</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">VRF: CORP</div>
+                    <span id="state-pe-cloud" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
+                </div>
+
+                <!-- VTEP Cloud -->
+                <div id="node-vtep-cloud" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:85%;top:30%;transform:translate(-50%,-50%)">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">VTEP / L2 GW</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-network-wired text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">VTEP-Cloud</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">Lo0: 10.255.0.2</div>
+                    <span id="state-vtep-cloud" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">BGP UP</span>
+                </div>
+
+                <!-- Host B -->
+                <div id="node-host-b" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:85%;top:80%;transform:translate(-50%,-50%)">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">Compute</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-server text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Host-B</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">10.1.100.20/24</div>
+                    <span id="state-host-b" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
+                </div>
+
+                <!-- Animated Dropped Packet -->
+                <div id="animated-packet" class="absolute w-6 h-6 -ml-3 -mt-3 flex items-center justify-center z-30 transition-all duration-700 ease-in-out opacity-0" style="left:0; top:0;">
+                    <i id="packet-icon" class="fas fa-envelope text-red-500 text-lg filter drop-shadow-md"></i>
+                    <div id="packet-label" class="absolute -bottom-5 whitespace-nowrap text-[8px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/60 px-1 rounded border border-red-200 dark:border-red-700 hidden">DF set, length 1500</div>
+                </div>
+
+            </section>
+
+            <!-- Console Terminal -->
+            <section class="bg-[#1e1e1e] rounded-2xl overflow-hidden border border-slate-700 shadow-xl flex flex-col font-mono text-sm h-[320px]">
+                <div class="bg-[#2d2d2d] px-4 py-2 flex justify-between items-center border-b border-black/50">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <div id="terminal-title" class="text-slate-400 text-xs font-bold tracking-wider">Host-A > cmd.exe</div>
+                    <div class="flex space-x-2">
+                        <i class="fas fa-terminal text-slate-500"></i>
+                    </div>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1 text-green-400" id="terminal-content">
+                    <!-- Logs injected by JS -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Right: Diagnostic Panels -->
+        <div class="flex flex-col gap-6">
+            <!-- Action / Explanation Card -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 md:p-6 transition-colors">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <span id="stage-badge" class="inline-flex self-start items-center px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border border-blue-300 dark:border-blue-700 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 shrink-0">
+                        <i class="fas fa-search mr-1.5"></i> TRIAGE
+                    </span>
+                </div>
+                <h2 id="stage-title" class="text-lg font-bold text-slate-800 dark:text-white mt-4 mb-2">Tiếp nhận sự cố & Mô phỏng</h2>
+                <div id="stage-desc" class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                    Ping gói tin ICMP nhỏ (mặc định) vẫn thông suốt giữa 2 vùng. Nhưng khi truyền file lớn, TCP đẩy MSS lên tối đa khiến gói tin phình to. 
+                </div>
+            </div>
+
+            <!-- Hypothesis List -->
+            <div id="hypothesis-panel" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 md:p-6 transition-colors flex-1 flex flex-col">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-widest mb-4 flex items-center">
+                    <i class="fas fa-list-check text-slate-400 mr-2"></i> Danh sách Giả thuyết
+                </h3>
+                <ul id="hypothesis-list" class="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                    <!-- Injected by JS -->
+                </ul>
+            </div>
+
+            <!-- Root Cause (Hidden initially) -->
+            <div id="root-cause-panel" class="hidden bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 shadow-sm rounded-2xl p-5 md:p-6">
+                <h3 class="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest mb-3 flex items-center">
+                    <i class="fas fa-bullseye text-amber-500 mr-2"></i> Nguyên nhân gốc rễ
+                </h3>
+                <div id="root-cause-text" class="text-sm text-amber-900 dark:text-amber-200 leading-relaxed font-medium">
+                </div>
+            </div>
+
+            <!-- Fix (Hidden initially) -->
+            <div id="fix-panel" class="hidden bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 shadow-sm rounded-2xl p-5 md:p-6">
+                <h3 class="text-sm font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-3 flex items-center">
+                    <i class="fas fa-wrench text-emerald-500 mr-2"></i> Biện pháp Khắc phục
+                </h3>
+                <div id="fix-text" class="text-sm text-emerald-900 dark:text-emerald-200 leading-relaxed font-medium mb-4">
+                </div>
+                <div id="rollback-text" class="text-xs bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700 p-3 rounded-lg text-emerald-800 dark:text-emerald-300 font-mono">
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Topology Nodes & Paths Config
+    const NODES = {
+        'host-a': { id: 'node-host-a', stateId: 'state-host-a' },
+        'vtep-onprem': { id: 'node-vtep-onprem', stateId: 'state-vtep-onprem' },
+        'pe-onprem': { id: 'node-pe-onprem', stateId: 'state-pe-onprem' },
+        'pe-cloud': { id: 'node-pe-cloud', stateId: 'state-pe-cloud' },
+        'vtep-cloud': { id: 'node-vtep-cloud', stateId: 'state-vtep-cloud' },
+        'host-b': { id: 'node-host-b', stateId: 'state-host-b' }
+    };
+
+    const LINKS_DEF = [
+        { id: 'l1', from: 'node-host-a', to: 'node-vtep-onprem', type: 'trunk', srcPort: 'eth0', dstPort: 'Gi1/0/1', curve: 0 },
+        { id: 'l2', from: 'node-vtep-onprem', to: 'node-pe-onprem', type: 'normal', srcPort: 'Gi1/0/48', dstPort: 'Gi0/0/1', curve: 0 },
+        { id: 'l3', from: 'node-pe-onprem', to: 'node-pe-cloud', type: 'mpls', srcPort: 'Te0/0/0', dstPort: 'Te0/0/0', curve: 80 },
+        { id: 'l4', from: 'node-pe-cloud', to: 'node-vtep-cloud', type: 'normal', srcPort: 'Gi0/0/1', dstPort: 'Gi1/0/48', curve: 0 },
+        { id: 'l5', from: 'node-vtep-cloud', to: 'node-host-b', type: 'trunk', srcPort: 'Gi1/0/1', dstPort: 'eth0', curve: 0 },
+        { id: 'vxlan', from: 'node-vtep-onprem', to: 'node-vtep-cloud', type: 'overlay', srcPort: 'Tu0', dstPort: 'Tu0', curve: -150, label: 'VXLAN VNI 10100 (Logical)' }
+    ];
+
+    const TIMELINE = [
+        {
+            step: 1, phase: 'TRIAGE',
+            title: 'Tiếp nhận sự cố & Kiểm tra Ping',
+            desc: 'Ping các gói tin ICMP nhỏ (kích thước mặc định) giữa Host-A và Host-B. ARP đã được phân giải qua EVPN (Control-plane), nên ping phản hồi thành công ngay lập tức.',
+            terminalTitle: 'Host-A > cmd.exe',
+            cli: `C:\\> ping 10.1.100.20
+
+Pinging 10.1.100.20 with 32 bytes of data:
+Reply from 10.1.100.20: bytes=32 time=45ms TTL=64
+Reply from 10.1.100.20: bytes=32 time=46ms TTL=64
+
+Ping statistics for 10.1.100.20:
+    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss)
+→ Cảnh báo: Kết nối L2 qua VXLAN Tunnel cơ bản hoạt động.`,
+            hypotheses: [
+                { id: 1, text: 'Mất định tuyến BGP EVPN (Route Type-2 chưa học được MAC/IP)', status: 'ruled_out' },
+                { id: 2, text: 'VTEP Tunnel bị down (UDP 4789 bị block ở Firewall)', status: 'ruled_out' },
+                { id: 3, text: 'Lỗi MTU Overhead do đóng gói VXLAN qua MPLS', status: 'investigating' },
+                { id: 4, text: 'MPLS Core thiếu route tới Loopback của VTEP', status: 'investigating' }
+            ],
+            nodes: {
+                'vtep-onprem': { health: 'green', state: 'BGP UP' },
+                'vtep-cloud': { health: 'green', state: 'BGP UP' },
+                'pe-onprem': { health: 'green', state: 'ONLINE' },
+                'pe-cloud': { health: 'green', state: 'ONLINE' }
+            },
+            links: { 'l1': 'trunk', 'l2': 'normal', 'l3': 'mpls', 'l4': 'normal', 'l5': 'trunk', 'vxlan': 'overlay animate-dash' },
+            packet: null
+        },
+        {
+            step: 2, phase: 'ISOLATE',
+            title: 'Kiểm tra MTU với gói tin lớn (DF Bit = 1)',
+            desc: 'Sử dụng lệnh Ping với gói tin lớn 1500 byte và cờ DF (Don\'t Fragment) để ép gói tin đi nguyên vẹn (mô phỏng tải file lớn TCP). Gói tin đi tới CE/PE router thì bị rớt.',
+            terminalTitle: 'Host-A > cmd.exe',
+            cli: `C:\\> ping 10.1.100.20 -l 1500 -f
+
+Pinging 10.1.100.20 with 1500 bytes of data:
+Request timed out.
+Request timed out.
+
+! Gói tin 1500 byte + Header VXLAN (50 bytes) = 1550 bytes. 
+! Gói này bị rớt khi đi vào mạng WAN.`,
+            hypotheses: [
+                { id: 1, text: 'Mất định tuyến BGP EVPN (Route Type-2 chưa học được MAC/IP)', status: 'ruled_out' },
+                { id: 2, text: 'VTEP Tunnel bị down (UDP 4789 bị block ở Firewall)', status: 'ruled_out' },
+                { id: 3, text: 'Lỗi MTU Overhead do đóng gói VXLAN qua MPLS', status: 'investigating' },
+                { id: 4, text: 'MPLS Core thiếu route tới Loopback của VTEP', status: 'ruled_out' }
+            ],
+            nodes: {
+                'pe-onprem': { health: 'red', state: 'DROPPING PACKET' },
+                'pe-cloud': { health: 'green', state: 'ONLINE' }
+            },
+            links: { 'l1': 'trunk animate-dash', 'l2': 'normal animate-dash', 'l3': 'error animate-error-pulse', 'l4': 'normal', 'l5': 'trunk', 'vxlan': 'overlay' },
+            packet: {
+                from: 'node-vtep-onprem', to: 'node-pe-onprem', 
+                icon: 'fa-envelope text-red-500', label: 'DF set, length 1550'
+            }
+        },
+        {
+            step: 3, phase: 'ROOT CAUSE',
+            title: 'Xác định Nút thắt MTU trên MPLS Core',
+            desc: 'Kiểm tra thông số MTU trên các thiết bị. Frame Ethernet tiêu chuẩn là 1514 byte. VXLAN cộng thêm ~50 byte Header (Outer MAC, Outer IP, UDP, VXLAN header). Do đó MTU yêu cầu cho Underlay phải ít nhất là 1550 (khuyến nghị 1600 hoặc 9000).',
+            terminalTitle: 'PE-OnPrem# show interfaces Te0/0/0',
+            cli: `PE-OnPrem# show interfaces Te0/0/0
+TenGigabitEthernet0/0/0 is up, line protocol is up
+  Hardware is Ten Gigabit Ethernet, address is 001a.2b3c.4d50
+  MTU 1500 bytes, BW 10000000 Kbit/sec, DLY 10 usec
+  Encapsulation 802.1Q Virtual LAN, Vlan ID 1.
+  
+! LỖI: MTU cổng Uplink WAN đang để cấu hình mặc định (1500 bytes).
+! Gói tin VXLAN 1550 bytes mang cờ DF tới đây sẽ bị loại bỏ lập tức.`,
+            hypotheses: [
+                { id: 1, text: 'Mất định tuyến BGP EVPN (Route Type-2 chưa học được MAC/IP)', status: 'ruled_out' },
+                { id: 2, text: 'VTEP Tunnel bị down (UDP 4789 bị block ở Firewall)', status: 'ruled_out' },
+                { id: 3, text: 'Lỗi MTU Overhead do đóng gói VXLAN qua MPLS', status: 'confirmed' },
+                { id: 4, text: 'MPLS Core thiếu route tới Loopback của VTEP', status: 'ruled_out' }
+            ],
+            nodes: {
+                'pe-onprem': { health: 'red', state: 'MTU MISMATCH' },
+                'vtep-onprem': { health: 'yellow', state: 'OVERHEAD' }
+            },
+            links: { 'l3': 'error animate-error-pulse' },
+            packet: null,
+            rootCause: 'Đường hầm VXLAN tạo ra overhead khoảng 50 bytes. Do cổng Uplink trên PE Router (vào MPLS Core) vẫn giữ MTU mặc định là 1500, các gói tin lớn (mang theo Payload TCP tối đa) sau khi bọc VXLAN sẽ vượt quá 1500 bytes. Do cờ DF (Don\'t Fragment) được kích hoạt bởi TCP, gói bị Drop gây "treo" truyền tải file.',
+            fix: null
+        },
+        {
+            step: 4, phase: 'FIX',
+            title: 'Khắc phục: Tăng Jumbo MTU cho Underlay',
+            desc: 'Thực hiện tăng MTU (Jumbo Frame) trên toàn bộ các cổng vật lý của Underlay (từ VTEP lên PE, xuyên qua MPLS Core) lên mức 9000 bytes (hoặc tối thiểu 1600 bytes) để chứa vừa Overhead của VXLAN.',
+            terminalTitle: 'PE-OnPrem(config)# interface Te0/0/0',
+            cli: `PE-OnPrem# conf t
+Enter configuration commands, one per line. End with CNTL/Z.
+PE-OnPrem(config)# interface TenGigabitEthernet 0/0/0
+PE-OnPrem(config-if)# mtu 9216
+PE-OnPrem(config-if)# end
+PE-OnPrem# write memory
+Building configuration...
+[OK]
+
+! (Lặp lại thao tác tăng MTU trên tất cả các Router P/PE trong MPLS Core)
+! Khuyến nghị: Bật Jumbo Frame toàn mạng Underlay cho mô hình Overlay.`,
+            hypotheses: [
+                { id: 1, text: 'Mất định tuyến BGP EVPN (Route Type-2 chưa học được MAC/IP)', status: 'ruled_out' },
+                { id: 2, text: 'VTEP Tunnel bị down (UDP 4789 bị block ở Firewall)', status: 'ruled_out' },
+                { id: 3, text: 'Lỗi MTU Overhead do đóng gói VXLAN qua MPLS', status: 'confirmed' },
+                { id: 4, text: 'MPLS Core thiếu route tới Loopback của VTEP', status: 'ruled_out' }
+            ],
+            nodes: {
+                'pe-onprem': { health: 'yellow', state: 'RECONFIGURING' },
+                'pe-cloud': { health: 'yellow', state: 'RECONFIGURING' }
+            },
+            links: { 'l3': 'mpls' },
+            packet: null,
+            rootCause: 'Đường hầm VXLAN tạo ra overhead khoảng 50 bytes. Do cổng Uplink trên PE Router (vào MPLS Core) vẫn giữ MTU mặc định là 1500, các gói tin lớn (mang theo Payload TCP tối đa) sau khi bọc VXLAN sẽ vượt quá 1500 bytes. Do cờ DF (Don\'t Fragment) được kích hoạt bởi TCP, gói bị Drop gây "treo" truyền tải file.',
+            fix: 'Tăng giá trị MTU vật lý (System MTU / Interface MTU) lên 9000 bytes (Jumbo frames) trên TẤT CẢ các liên kết Underlay (từ Access Switch lên Spine, và xuyên suốt Core MPLS) để đủ không gian chứa Overhead của VXLAN mà không cần phân mảnh.',
+            rollback: 'Rollback: `interface Te0/0/0` → `mtu 1500`'
+        },
+        {
+            step: 5, phase: 'VERIFY',
+            title: 'Xác nhận xử lý sự cố hoàn tất',
+            desc: 'Sau khi tăng MTU trên Underlay, tiến hành Ping lại với gói tin kích thước lớn và cờ DF. Gói tin VXLAN 1550 bytes hiện đã lọt thỏm an toàn vào đường ống 9216 bytes của MPLS. Truyền tải file qua TCP hoạt động mượt mà.',
+            terminalTitle: 'Host-A > cmd.exe',
+            cli: `C:\\> ping 10.1.100.20 -l 1500 -f
+
+Pinging 10.1.100.20 with 1500 bytes of data:
+Reply from 10.1.100.20: bytes=1500 time=46ms TTL=64
+Reply from 10.1.100.20: bytes=1500 time=45ms TTL=64
+
+Ping statistics for 10.1.100.20:
+    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss)
+
+→ Tuyệt vời! Jumbo Frame đã giải quyết dứt điểm rớt gói TCP lớn qua VXLAN.`,
+            hypotheses: [
+                { id: 1, text: 'Mất định tuyến BGP EVPN (Route Type-2 chưa học được MAC/IP)', status: 'ruled_out' },
+                { id: 2, text: 'VTEP Tunnel bị down (UDP 4789 bị block ở Firewall)', status: 'ruled_out' },
+                { id: 3, text: 'Lỗi MTU Overhead do đóng gói VXLAN qua MPLS', status: 'confirmed' },
+                { id: 4, text: 'MPLS Core thiếu route tới Loopback của VTEP', status: 'ruled_out' }
+            ],
+            nodes: {
+                'vtep-onprem': { health: 'green', state: 'FORWARDING' },
+                'pe-onprem': { health: 'green', state: 'JUMBO ENABLED' },
+                'pe-cloud': { health: 'green', state: 'JUMBO ENABLED' },
+                'vtep-cloud': { health: 'green', state: 'FORWARDING' }
+            },
+            links: { 'l1': 'trunk animate-dash', 'l2': 'normal animate-dash', 'l3': 'mpls animate-dash', 'l4': 'normal animate-dash', 'l5': 'trunk animate-dash', 'vxlan': 'overlay' },
+            packet: {
+                from: 'node-pe-onprem', to: 'node-pe-cloud', 
+                icon: 'fa-envelope text-green-400', label: '1550 bytes (OK)'
+            },
+            rootCause: 'Đường hầm VXLAN tạo ra overhead khoảng 50 bytes. Do cổng Uplink trên PE Router (vào MPLS Core) vẫn giữ MTU mặc định là 1500, các gói tin lớn (mang theo Payload TCP tối đa) sau khi bọc VXLAN sẽ vượt quá 1500 bytes. Do cờ DF (Don\'t Fragment) được kích hoạt bởi TCP, gói bị Drop gây "treo" truyền tải file.',
+            fix: 'Tăng giá trị MTU vật lý (System MTU / Interface MTU) lên 9000 bytes (Jumbo frames) trên TẤT CẢ các liên kết Underlay (từ Access Switch lên Spine, và xuyên suốt Core MPLS) để đủ không gian chứa Overhead của VXLAN mà không cần phân mảnh.',
+            rollback: 'Rollback: `interface Te0/0/0` → `mtu 1500`'
+        }
+    ];
+
+    class App {
+        constructor() {
+            this.idx = 0;
+            this.isPlaying = false;
+            this.interval = null;
+            this.dom = {
+                svg: document.getElementById('links-svg'),
+                labels: document.getElementById('labels-layer'),
+                stepper: document.getElementById('stepper-container'),
+                progress: document.getElementById('timeline-progress'),
+                stageBadge: document.getElementById('stage-badge'),
+                title: document.getElementById('stage-title'),
+                desc: document.getElementById('stage-desc'),
+                termTitle: document.getElementById('terminal-title'),
+                termContent: document.getElementById('terminal-content'),
+                hypoList: document.getElementById('hypothesis-list'),
+                rootPanel: document.getElementById('root-cause-panel'),
+                rootText: document.getElementById('root-cause-text'),
+                fixPanel: document.getElementById('fix-panel'),
+                fixText: document.getElementById('fix-text'),
+                rollbackText: document.getElementById('rollback-text'),
+                packet: document.getElementById('animated-packet'),
+                packetIcon: document.getElementById('packet-icon'),
+                packetLabel: document.getElementById('packet-label'),
+                themeIcon: document.getElementById('theme-icon')
+            };
+
+            window.addEventListener('resize', () => {
+                this.clampNodes();
+                this.drawLinks(TIMELINE[this.idx].links);
+            });
+
+            this.init();
+        }
+
+        init() {
+            let dark = false;
+            try {
+                const s = localStorage.getItem('portfolio-theme');
+                dark = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+            } catch(e){}
+            document.documentElement.classList.toggle('dark', dark);
+            if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+
+            this.buildStepper();
+            
+            // Wait for fonts & layout
+            setTimeout(() => {
+                this.clampNodes();
+                this.render(0);
+            }, 100);
+        }
+
+        toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch(e){}
+            if (this.dom.themeIcon) this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        clampNodes() {
+            const canvas = document.getElementById('topology-canvas');
+            if (!canvas) return;
+            const cr = canvas.getBoundingClientRect();
+            const wPx = cr.width / 100, hPx = cr.height / 100;
+            const EDGE = 15; // padding
+
+            Object.values(NODES).forEach(n => {
+                const node = document.getElementById(n.id);
+                if (!node) return;
+                
+                // Read inline percent styles
+                let top = parseFloat(node.style.top);
+                let left = parseFloat(node.style.left);
+                
+                const nr = node.getBoundingClientRect();
+                
+                // Math limits to keep it in box
+                const topClip = (cr.top + EDGE) - nr.top;      if(topClip > 0) top += topClip / hPx;
+                const botClip = nr.bottom - (cr.bottom - EDGE); if(botClip > 0) top -= botClip / hPx;
+                const lClip   = (cr.left + EDGE) - nr.left;     if(lClip > 0) left += lClip / wPx;
+                const rClip   = nr.right - (cr.right - EDGE);   if(rClip > 0) left -= rClip / wPx;
+
+                node.style.top = top + '%';
+                node.style.left = left + '%';
+            });
+        }
+
+        buildStepper() {
+            this.dom.stepper.innerHTML = '';
+            TIMELINE.forEach((d, i) => {
+                const btn = document.createElement('button');
+                btn.className = `w-8 h-8 md:w-auto md:px-4 md:h-10 rounded-full font-bold text-xs md:text-sm transition-all duration-300 z-10 flex items-center justify-center whitespace-nowrap shadow-sm border-2 ${
+                    i === 0 ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-amber-400'
+                }`;
+                btn.innerHTML = `<span class="hidden md:block">${d.step}. ${d.phase}</span><span class="md:hidden">${d.step}</span>`;
+                btn.onclick = () => this.goTo(i);
+                btn.id = `step-btn-${i}`;
+                this.dom.stepper.appendChild(btn);
+            });
+        }
+
+        getBezierPoint(t, p0, p1, p2) {
+            return (1-t)*(1-t)*p0 + 2*(1-t)*t*p1 + t*t*p2;
+        }
+
+        drawLinks(linkStates) {
+            this.dom.svg.innerHTML = '';
+            this.dom.labels.innerHTML = '';
+            const canvasRect = document.getElementById('topology-canvas').getBoundingClientRect();
+
+            LINKS_DEF.forEach(lDef => {
+                const srcEl = document.getElementById(lDef.from);
+                const dstEl = document.getElementById(lDef.to);
+                if (!srcEl || !dstEl) return;
+
+                const sr = srcEl.getBoundingClientRect();
+                const dr = dstEl.getBoundingClientRect();
+
+                // Coordinates relative to canvas
+                const x1 = sr.left + sr.width/2 - canvasRect.left;
+                const y1 = sr.top + sr.height/2 - canvasRect.top;
+                const x2 = dr.left + dr.width/2 - canvasRect.left;
+                const y2 = dr.top + dr.height/2 - canvasRect.top;
+
+                const stateClass = linkStates[lDef.id] || 'normal';
+                let d = '';
+                
+                const mx = (x1 + x2) / 2;
+                const my = ((y1 + y2) / 2) + lDef.curve;
+
+                if (lDef.curve !== 0) {
+                    d = `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;
+                } else {
+                    d = `M ${x1} ${y1} L ${x2} ${y2}`;
+                }
+
+                // Draw Path
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', d);
+                path.setAttribute('class', `link-line type-${stateClass}`);
+                path.id = `path-${lDef.id}`;
+                this.dom.svg.appendChild(path);
+
+                // Tech Label (Overlay only for vxlan)
+                if (lDef.label) {
+                    const badge = document.createElement('div');
+                    badge.className = 'absolute z-20 text-[9px] font-mono font-bold px-2 py-0.5 rounded transition-opacity duration-500 whitespace-nowrap border bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 border-purple-200 dark:border-purple-700';
+                    const ly = lDef.curve ? (my - Math.abs(lDef.curve)*0.25) : my; // approximate midpoint
+                    badge.style.left = mx + 'px';
+                    badge.style.top = ly + 'px';
+                    badge.style.transform = 'translate(-50%, -50%)';
+                    badge.innerText = lDef.label;
+                    this.dom.labels.appendChild(badge);
+                }
+
+                // Port Labels
+                if (lDef.srcPort) {
+                    const spBadge = document.createElement('div');
+                    spBadge.className = 'absolute z-20 text-[8px] font-mono font-bold px-1 py-px rounded bg-white/90 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 whitespace-nowrap transition-opacity duration-500 backdrop-blur-sm';
+                    let px = lDef.curve ? this.getBezierPoint(0.18, x1, mx, x2) : x1 + (x2 - x1)*0.22;
+                    let py = lDef.curve ? this.getBezierPoint(0.18, y1, my, y2) : y1 + (y2 - y1)*0.22;
+                    spBadge.style.left = px + 'px';
+                    spBadge.style.top = py + 'px';
+                    spBadge.style.transform = 'translate(-50%, -50%)';
+                    spBadge.innerText = lDef.srcPort;
+                    this.dom.labels.appendChild(spBadge);
+                }
+
+                if (lDef.dstPort) {
+                    const dpBadge = document.createElement('div');
+                    dpBadge.className = 'absolute z-20 text-[8px] font-mono font-bold px-1 py-px rounded bg-white/90 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 whitespace-nowrap transition-opacity duration-500 backdrop-blur-sm';
+                    let px = lDef.curve ? this.getBezierPoint(0.82, x1, mx, x2) : x1 + (x2 - x1)*0.78;
+                    let py = lDef.curve ? this.getBezierPoint(0.82, y1, my, y2) : y1 + (y2 - y1)*0.78;
+                    dpBadge.style.left = px + 'px';
+                    dpBadge.style.top = py + 'px';
+                    dpBadge.style.transform = 'translate(-50%, -50%)';
+                    dpBadge.innerText = lDef.dstPort;
+                    this.dom.labels.appendChild(dpBadge);
+                }
+            });
+        }
+
+        render(index) {
+            this.idx = index;
+            const step = TIMELINE[this.idx];
+
+            // 1. Update Stepper & Progress
+            this.dom.progress.style.width = (this.idx / (TIMELINE.length - 1)) * 100 + '%';
+            
+            for (let i = 0; i < TIMELINE.length; i++) {
+                const btn = document.getElementById(`step-btn-${i}`);
+                if (i < this.idx) {
+                    btn.className = 'w-8 h-8 md:w-auto md:px-4 md:h-10 rounded-full font-bold text-xs md:text-sm transition-all duration-300 z-10 flex items-center justify-center whitespace-nowrap shadow-sm border-2 bg-amber-500 border-amber-500 text-white';
+                } else if (i === this.idx) {
+                    btn.className = 'w-8 h-8 md:w-auto md:px-4 md:h-10 rounded-full font-bold text-xs md:text-sm transition-all duration-300 z-10 flex items-center justify-center whitespace-nowrap shadow-md border-2 bg-amber-500 border-amber-500 text-white ring-4 ring-amber-500/30 scale-110';
+                } else {
+                    btn.className = 'w-8 h-8 md:w-auto md:px-4 md:h-10 rounded-full font-bold text-xs md:text-sm transition-all duration-300 z-10 flex items-center justify-center whitespace-nowrap shadow-sm border-2 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-amber-400 hover:scale-105';
+                }
+            }
+
+            // 2. Info Card
+            const colors = {
+                'TRIAGE': 'bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700',
+                'ISOLATE': 'bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700',
+                'ROOT CAUSE': 'bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-700',
+                'FIX': 'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700',
+                'VERIFY': 'bg-teal-50 text-teal-700 border-teal-300 dark:bg-teal-900/40 dark:text-teal-300 dark:border-teal-700'
+            };
+            const icons = {
+                'TRIAGE': 'fa-search', 'ISOLATE': 'fa-filter', 'ROOT CAUSE': 'fa-bullseye', 'FIX': 'fa-wrench', 'VERIFY': 'fa-check-double'
+            };
+
+            this.dom.stageBadge.className = `inline-flex self-start items-center px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border shrink-0 ${colors[step.phase]}`;
+            this.dom.stageBadge.innerHTML = `<i class="fas ${icons[step.phase]} mr-1.5"></i> ${step.phase}`;
+            this.dom.title.innerText = step.title;
+            this.dom.desc.innerHTML = step.desc;
+
+            // 3. CLI Terminal
+            this.dom.termTitle.innerText = step.terminalTitle;
+            this.dom.termContent.innerHTML = '';
+            
+            let i = 0;
+            const lines = step.cli.split('\n');
+            const typeLine = () => {
+                if (i < lines.length) {
+                    const line = lines[i];
+                    const el = document.createElement('div');
+                    if (line.startsWith('!')) el.className = 'text-yellow-400 opacity-80';
+                    else if (line.startsWith('→')) el.className = 'text-cyan-400 font-bold';
+                    else if (line.includes('Timeout') || line.includes('timed out')) el.className = 'text-red-400';
+                    el.innerText = line || ' '; // preserve blank lines
+                    this.dom.termContent.appendChild(el);
+                    this.dom.termContent.scrollTop = this.dom.termContent.scrollHeight;
+                    i++;
+                    setTimeout(typeLine, line.trim() === '' ? 10 : 30);
+                }
+            };
+            typeLine();
+
+            // 4. Hypotheses List
+            this.dom.hypoList.innerHTML = '';
+            step.hypotheses.forEach(h => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-3 p-2.5 rounded transition-colors';
+                if (h.status === 'ruled_out') {
+                    li.classList.add('opacity-50', 'bg-slate-50', 'dark:bg-slate-800/50');
+                    li.innerHTML = `<i class="fas fa-times-circle text-slate-400 mt-0.5"></i> <span class="line-through">${h.text}</span>`;
+                } else if (h.status === 'confirmed') {
+                    li.classList.add('bg-red-50', 'dark:bg-red-900/20', 'border', 'border-red-100', 'dark:border-red-800');
+                    li.innerHTML = `<i class="fas fa-exclamation-circle text-red-500 mt-0.5 animate-pulse"></i> <span class="font-bold text-red-700 dark:text-red-400">${h.text}</span>`;
+                } else {
+                    li.innerHTML = `<i class="fas fa-circle-notch fa-spin text-amber-500 mt-0.5"></i> <span>${h.text}</span>`;
+                }
+                this.dom.hypoList.appendChild(li);
+            });
+
+            // 5. Root Cause & Fix Panels
+            if (step.rootCause) {
+                this.dom.rootPanel.classList.remove('hidden');
+                this.dom.rootText.innerHTML = step.rootCause;
+            } else {
+                this.dom.rootPanel.classList.add('hidden');
+            }
+
+            if (step.fix) {
+                this.dom.fixPanel.classList.remove('hidden');
+                this.dom.fixText.innerHTML = step.fix;
+                this.dom.rollbackText.innerHTML = step.rollback;
+            } else {
+                this.dom.fixPanel.classList.add('hidden');
+            }
+
+            // 6. Update Topology Nodes
+            Object.keys(NODES).forEach(nodeKey => {
+                const nodeData = NODES[nodeKey];
+                const el = document.getElementById(nodeData.id);
+                const stateEl = document.getElementById(nodeData.stateId);
+                
+                // Reset styles
+                el.classList.remove(
+                    'border-emerald-400','dark:border-emerald-500','shadow-[0_0_15px_rgba(16,185,129,0.3)]',
+                    'border-red-400','dark:border-red-500','shadow-[0_0_15px_rgba(239,68,68,0.4)]',
+                    'border-amber-400','dark:border-amber-500','shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                );
+                stateEl.className = 'badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border';
+
+                const stepConfig = step.nodes[nodeKey];
+                if (stepConfig) {
+                    if (stepConfig.health === 'green') {
+                        el.classList.add('border-emerald-400','dark:border-emerald-500','shadow-[0_0_15px_rgba(16,185,129,0.3)]');
+                        stateEl.classList.add('bg-emerald-50', 'text-emerald-600', 'dark:bg-emerald-900/40', 'dark:text-emerald-400', 'border-emerald-200', 'dark:border-emerald-800/50');
+                    } else if (stepConfig.health === 'red') {
+                        el.classList.add('border-red-400','dark:border-red-500','shadow-[0_0_15px_rgba(239,68,68,0.4)]');
+                        stateEl.classList.add('bg-red-50', 'text-red-600', 'dark:bg-red-900/40', 'dark:text-red-400', 'border-red-200', 'dark:border-red-800/50');
+                    } else if (stepConfig.health === 'yellow') {
+                        el.classList.add('border-amber-400','dark:border-amber-500','shadow-[0_0_15px_rgba(245,158,11,0.3)]');
+                        stateEl.classList.add('bg-amber-50', 'text-amber-600', 'dark:bg-amber-900/40', 'dark:text-amber-400', 'border-amber-200', 'dark:border-amber-800/50');
+                    }
+                    stateEl.innerText = stepConfig.state;
+                } else {
+                    // Default idle
+                    el.classList.add('border-slate-300', 'dark:border-slate-600');
+                    stateEl.classList.add('bg-slate-100', 'text-slate-500', 'border-slate-200', 'dark:bg-slate-800', 'dark:border-slate-700');
+                    stateEl.innerText = 'IDLE';
+                }
+            });
+
+            // 7. Update Links (Needs slight delay for CSS transitions)
+            setTimeout(() => {
+                this.clampNodes();
+                this.drawLinks(step.links);
+                this.animatePacket(step.packet);
+            }, 50);
+        }
+
+        animatePacket(pktConfig) {
+            if (!pktConfig) {
+                this.dom.packet.style.opacity = '0';
+                return;
+            }
+
+            const fromEl = document.getElementById(pktConfig.from);
+            const toEl = document.getElementById(pktConfig.to);
+            const canvasRect = document.getElementById('topology-canvas').getBoundingClientRect();
+            
+            if (!fromEl || !toEl) return;
+
+            const fr = fromEl.getBoundingClientRect();
+            const tr = toEl.getBoundingClientRect();
+
+            const x1 = fr.left + fr.width/2 - canvasRect.left;
+            const y1 = fr.top + fr.height/2 - canvasRect.top;
+            const x2 = tr.left + tr.width/2 - canvasRect.left;
+            const y2 = tr.top + tr.height/2 - canvasRect.top;
+
+            this.dom.packetIcon.className = 'fas ' + pktConfig.icon + ' text-xl filter drop-shadow-md';
+            this.dom.packetLabel.className = 'absolute -bottom-5 whitespace-nowrap text-[8px] font-bold ' + 
+                (pktConfig.icon.includes('red') ? 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/60 border border-red-200 dark:border-red-700' : 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/60 border border-green-200 dark:border-green-700') + 
+                ' px-1 rounded';
+            this.dom.packetLabel.innerText = pktConfig.label;
+            this.dom.packetLabel.classList.remove('hidden');
+
+            // Reset to start
+            this.dom.packet.style.transition = 'none';
+            this.dom.packet.style.left = x1 + 'px';
+            this.dom.packet.style.top = y1 + 'px';
+            this.dom.packet.style.opacity = '1';
+
+            // Animate to middle
+            setTimeout(() => {
+                this.dom.packet.style.transition = 'all 1s ease-out';
+                const mx = (x1 + x2) / 2;
+                const my = (y1 + y2) / 2; // ignoring curve for simplicity in packet
+                this.dom.packet.style.left = mx + 'px';
+                this.dom.packet.style.top = my + 'px';
+                
+                // If it's red (dropped), fade it out halfway
+                if (pktConfig.icon.includes('red')) {
+                    setTimeout(() => {
+                        this.dom.packet.style.opacity = '0';
+                        this.dom.packet.style.transform = 'scale(2)';
+                        setTimeout(() => { this.dom.packet.style.transform = 'scale(1)'; }, 500);
+                    }, 1000);
+                } else {
+                    // Go all the way
+                    setTimeout(() => {
+                        this.dom.packet.style.transition = 'all 1s ease-in';
+                        this.dom.packet.style.left = x2 + 'px';
+                        this.dom.packet.style.top = y2 + 'px';
+                        setTimeout(() => { this.dom.packet.style.opacity = '0'; }, 1000);
+                    }, 1100);
+                }
+            }, 50);
+        }
+
+        nextStep() {
+            if (this.idx < TIMELINE.length - 1) this.render(this.idx + 1);
+            else { this.pause(); this.render(0); } // loop
+        }
+        
+        prevStep() {
+            if (this.idx > 0) this.render(this.idx - 1);
+        }
+        
+        goTo(i) {
+            this.render(i);
+        }
+
+        reset() {
+            this.pause();
+            this.render(0);
+        }
+
+        togglePlay() {
+            if (this.isPlaying) this.pause();
+            else this.play();
+        }
+
+        play() {
+            this.isPlaying = true;
+            document.getElementById('play-pause-btn').innerHTML = '<i class="fas fa-pause"></i>';
+            if (this.idx === TIMELINE.length - 1) this.render(0);
+            this.nextStep();
+            this.interval = setInterval(() => this.nextStep(), 7000);
+        }
+
+        pause() {
+            this.isPlaying = false;
+            document.getElementById('play-pause-btn').innerHTML = '<i class="fas fa-play"></i>';
+            clearInterval(this.interval);
+        }
+    }
+
+    const app = new App();
+</script>
+</body>
+</html>
