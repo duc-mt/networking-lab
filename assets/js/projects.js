@@ -96,6 +96,21 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        id: 'clusterxl-patching',
+        title: 'ClusterXL Zero-Downtime Patching',
+        topic: 'Security',
+        category: 'failover',
+        type: 'failover',
+        status: 'live',
+        dateAdded: '2026-09-27',
+        image: 'assets/images/protocol-placeholder.jpg',
+        description:
+            'Mô phỏng quy trình patch Check Point ClusterXL R81.20 Jumbo Hotfix không gián đoạn dịch vụ: patch Standby trước, trigger Manual Failover, patch Active sau.',
+        tags: ['Check Point', 'ClusterXL', 'HA', 'Zero Downtime', 'Patching', 'Failover'],
+        href: 'projects/failover/clusterxl-patching.html',
+    },
+
+    {
         id: 'port-security-errdisable',
         title: 'Port Security — Err-Disabled Incident',
         topic: 'Switching',
