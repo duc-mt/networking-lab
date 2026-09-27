@@ -1,18 +1,18 @@
 # Network Engineering Portfolio
 
 <!--
-  Placeholders below (GH_USERNAME/REPO) — fill in once this is pushed to a
+  Placeholders below (duc-mt/network-portfolio) — fill in once this is pushed to a
   real GitHub repo. See "Placeholders to fill in before publishing" at the
   bottom of this file for the full list.
 -->
 
-[![CI](https://github.com/GH_USERNAME/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/GH_USERNAME/REPO/actions/workflows/ci.yml)
-[![Deploy](https://github.com/GH_USERNAME/REPO/actions/workflows/deploy.yml/badge.svg)](https://github.com/GH_USERNAME/REPO/actions/workflows/deploy.yml)
-[![Live Demo](https://img.shields.io/badge/demo-live-2ea44f)](https://GH_USERNAME.github.io/REPO/)
+[![CI](https://github.com/duc-mt/network-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/duc-mt/network-portfolio/actions/workflows/ci.yml)
+[![Deploy](https://github.com/duc-mt/network-portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/duc-mt/network-portfolio/actions/workflows/deploy.yml)
+[![Live Demo](https://img.shields.io/badge/demo-live-2ea44f)](https://duc-mt.github.io/network-portfolio/)
 
 Static portfolio of interactive networking labs. No build step — plain HTML/CSS/JS, deployed as-is to GitHub Pages.
 
-**Live demo:** `https://GH_USERNAME.github.io/REPO/` _(placeholder — update once pushed)_
+**Live demo:** `https://duc-mt.github.io/network-portfolio/` _(placeholder — update once pushed)_
 
 ## Structure
 
@@ -144,6 +144,6 @@ Dark/light mode is stored in `localStorage` under the key `portfolio-theme`. Eve
 
 ## Placeholders to fill in before publishing
 
--   `README.md` (this file) — badge URLs and the Live Demo link at the top use `GH_USERNAME`/`REPO` placeholders; replace both once this is pushed to a real repo.
+-   `README.md` (this file) — badge URLs and the Live Demo link at the top use `duc-mt`/`network-portfolio` placeholders; replace both once this is pushed to a real repo.
 -   `index.html` — GitHub, LinkedIn, and email links in the Contact section currently point to generic placeholders.
 -   Any lab's CLI output, IPs, or hostnames — the prompts in `docs/prompt-templates.md` generate realistic but fictional data by default; swap in real details only if you want a lab to reflect an actual environment (and scrub anything sensitive first).
