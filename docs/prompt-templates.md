@@ -72,9 +72,10 @@ e.g. "OSPF Neighbor Adjacency between 2 Cisco routers, DOWN to FULL, 7 steps")
 Requirements:
 1. Core engine: a Javascript array `labTimeline`, one object per step:
    { step, time, phase, title, description, cli_logs,
-     nodes: { <DeviceName>: { state, role, color } , ... },
-     link_state,
-     animated_packet: { from, to, label, color, icon, packet_decode: { field: value } | null } | null }
+     nodes: { <DeviceID>: { label, state, role, color } , ... },
+     links: [ { source: "R1", target: "R2", state: "UP" } ], // List active links
+     link_state: "Global topology status text",
+     animated_packet: { from: "R1", to: "R2", label, color, icon, packet_decode: { field: value } | null } | null }
    CRITICAL: You MUST use ES6 Template Literals (backticks `) instead of standard quotes (" or ') for ANY multi-line string properties (specifically `description` and `cli_logs`) to prevent JS syntax errors from unescaped newlines.
 
 2. Header: sticky at the top, containing the logo badge + "← Portfolio" link back to
@@ -82,8 +83,11 @@ Requirements:
    + theme toggle (🌓) grouped together on the right side of the header. Do NOT put
    playback controls in the main body/stepper area.
 
-3. Visual topology: device cards connected by a link line, with an animated
-   packet element that moves along the link per `animated_packet`.
+3. Multi-Node Visual topology Engine (CRITICAL):
+   - The topology area must be a `relative` canvas container (e.g. `min-h-[450px] w-full`).
+   - Nodes (cards) must be `absolute` positioned. Set their `left` and `top` coordinates (e.g. using percentages) so they form a proper layout (e.g. triangle for 3 nodes, diamond for 4).
+   - Links: Draw SVG lines `<svg>` in the background connecting the nodes based on the `links` array. Update link colors dynamically if their state changes.
+   - Dynamic Packet Animation: Do NOT use hardcoded CSS `@keyframes` (like `animate-lr`). Use the JavaScript Web Animations API (`element.animate()`) inside `handlePacketAnimation(packetData)`. Dynamically calculate the center (X, Y) of the `from` node and the `to` node, and animate the packet moving from start X,Y to end X,Y.
 
 4. Interactive timeline stepper: must be located inside the main body container
    (NOT in the header). It should be a horizontal bar with a progress line behind it,
