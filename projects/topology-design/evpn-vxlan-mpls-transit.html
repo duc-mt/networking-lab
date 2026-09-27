@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WAN & Multi-Cloud Transit | EVPN-VXLAN over MPLS</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['Fira Code', 'monospace']
+          },
+          colors: {
+            slate: {
+              850: '#151e2e',
+              900: '#0f172a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Shared Includes -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <script src="../../assets/js/theme-init.js"></script>
+
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; }
+    
+    /* Topology Map Styles */
+    #topology-container {
+      position: relative;
+      width: 1000px;
+      height: 500px;
+      background-color: #151e2e;
+      border: 1px solid #334155;
+      border-radius: 1rem;
+      overflow: hidden;
+      margin: 0 auto;
+    }
+    
+    .zone {
+      position: absolute;
+      border: 2px dashed;
+      border-radius: 0.75rem;
+      background-color: rgba(255, 255, 255, 0.02);
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    .zone-title {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+    
+    .node {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      transform: translate(-50%, -50%);
+      background-color: #1e293b;
+      border: 2px solid #475569;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 10;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .node:hover, .node.selected {
+      border-color: #3b82f6;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    }
+    
+    .node i {
+      font-size: 1.5rem;
+      color: #94a3b8;
+      transition: color 0.2s;
+    }
+    .node:hover i, .node.selected i {
+      color: #3b82f6;
+    }
+    
+    .node-label {
+      position: absolute;
+      top: 70px;
+      white-space: nowrap;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background-color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #334155;
+    }
+
+    svg.links {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .link-line {
+      stroke-width: 2.5;
+      fill: none;
+      transition: stroke 0.3s, opacity 0.5s;
+    }
+    
+    .link-line.type-trunk { stroke: #10b981; stroke-dasharray: 4; }
+    .link-line.type-routed { stroke: #64748b; }
+    .link-line.type-overlay { stroke: #a855f7; stroke-width: 3; stroke-dasharray: 8; }
+    
+    .link-line.highlight {
+      stroke: #3b82f6;
+      stroke-width: 4;
+      filter: drop-shadow(0 0 4px rgba(59,130,246,0.8));
+    }
+    
+    .link-label-group {
+      transition: opacity 0.5s;
+    }
+    
+    .link-label-bg {
+      fill: #1e293b;
+      rx: 4;
+    }
+    
+    .link-label-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      fill: #cbd5e1;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+    
+    /* View Toggle Fade */
+    .view-fade { opacity: 0.1; }
+    
+    /* Code Tables */
+    .cli-table th, .cli-table td {
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #334155;
+    }
+    .cli-table th {
+      color: #94a3b8;
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+    .cli-table tr:last-child td { border-bottom: none; }
+  </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="../../index.html" class="text-slate-400 hover:text-white transition-colors text-sm font-medium">
+          <i class="fa-solid fa-arrow-left mr-2"></i>Portfolio
+        </a>
+        <div class="h-6 w-px bg-slate-700"></div>
+        <h1 class="text-lg font-semibold text-white flex items-center gap-3">
+          WAN & Multi-Cloud Transit
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30">EVPN-VXLAN STRETCHED L2</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">MPLS UNDERLAY</span>
+        </h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <div id="theme-toggle" class="cursor-pointer text-slate-400 hover:text-white">
+          <i class="fa-solid fa-moon"></i>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col gap-8">
+    
+    <!-- Design Note Callout -->
+    <div class="bg-amber-950/30 border border-amber-900/50 rounded-xl p-4 flex gap-4 items-start">
+      <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-1 text-xl shrink-0"></i>
+      <div>
+        <h4 class="text-amber-400 font-semibold mb-1">Crucial Design Note: MTU & Overhead Warning</h4>
+        <p class="text-slate-300 text-sm leading-relaxed">
+          VXLAN encapsulation adds <strong>~50-54 bytes</strong> of overhead (Outer IP 20B + UDP 8B + VXLAN 8B + Outer Ethernet 14-18B). 
+          Đường truyền MPLS Underlay bắt buộc phải cấu hình Path MTU đủ lớn (thường 1554-1600 bytes, hoặc cấu hình Jumbo Frames 9000 bytes) trên toàn tuyến từ đầu đến cuối. 
+          Nếu cấu hình MTU sai, các gói tin nhỏ như `ping` (ICMP 64 bytes) vẫn phản hồi bình thường, nhưng các gói TCP/UDP kích thước lớn sẽ bị drop im lặng (do cờ DF-bit không cho phép phân mảnh), dẫn đến tình trạng "Ping thông nhưng App không chạy".
+        </p>
+      </div>
+    </div>
+
+    <!-- Toolbar: View Toggles & Tracer -->
+    <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+      
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-medium text-slate-400 shrink-0">Architecture View:</span>
+        <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700">
+          <button id="btn-view-underlay" class="px-4 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-white transition-colors shadow" onclick="switchView('underlay')">
+            <i class="fa-solid fa-layer-group mr-2"></i>Physical / Underlay
+          </button>
+          <button id="btn-view-overlay" class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick="switchView('overlay')">
+            <i class="fa-solid fa-cloud mr-2"></i>Overlay (EVPN)
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 border-l border-slate-700 pl-4 flex-1 justify-end">
+        <span class="text-sm font-medium text-slate-400 shrink-0"><i class="fa-solid fa-route mr-2"></i>Path Tracer:</span>
+        <select id="trace-src" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-blue-500">
+          <option value="host-a">Host-A (On-Prem)</option>
+          <option value="host-b">Host-B (Cloud)</option>
+        </select>
+        <span class="text-slate-500"><i class="fa-solid fa-arrow-right"></i></span>
+        <select id="trace-dst" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-blue-500">
+          <option value="host-b">Host-B (Cloud)</option>
+          <option value="host-a">Host-A (On-Prem)</option>
+        </select>
+        <button onclick="traceFlow()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors shadow">
+          Trace Flow
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Topology Canvas -->
+    <div id="topology-container" class="shadow-2xl">
+      <!-- Zones -->
+      <div id="zones-layer"></div>
+      
+      <!-- SVG Links -->
+      <svg class="links" id="links-layer"></svg>
+      
+      <!-- Nodes -->
+      <div id="nodes-layer"></div>
+    </div>
+
+    <!-- Lower Section: Device Inspector & Tracer Output -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Panel: Device Inspector -->
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl flex flex-col h-[350px]">
+        <div class="p-4 border-b border-slate-700 bg-slate-800/50 rounded-t-2xl flex items-center gap-3">
+          <i class="fa-solid fa-microchip text-slate-400"></i>
+          <h3 class="font-semibold text-white">Device Inspector</h3>
+          <span id="inspector-badge" class="ml-auto px-2 py-0.5 rounded text-xs font-medium bg-slate-700 text-slate-300">NO DEVICE SELECTED</span>
+        </div>
+        <div id="inspector-content" class="p-4 flex-1 overflow-y-auto">
+          <div class="text-slate-400 text-sm text-center mt-10">Click on any node in the topology map to inspect its configuration and state.</div>
+        </div>
+      </div>
+
+      <!-- Panel: Path Tracer Results -->
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl flex flex-col h-[350px]">
+        <div class="p-4 border-b border-slate-700 bg-slate-800/50 rounded-t-2xl flex items-center gap-3">
+          <i class="fa-solid fa-list-ol text-slate-400"></i>
+          <h3 class="font-semibold text-white">Flow Analysis</h3>
+          <span id="flow-view-badge" class="ml-auto px-2 py-0.5 rounded text-xs font-medium bg-blue-900/50 text-blue-400 border border-blue-800/50">UNDERLAY MODE</span>
+        </div>
+        <div id="flow-content" class="p-4 flex-1 overflow-y-auto font-mono text-sm space-y-3">
+          <div class="text-slate-400 font-sans text-sm text-center mt-10">Select Source and Destination, then click "Trace Flow" to analyze end-to-end forwarding decisions.</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // --- 1. Data Schema ---
+    const data = {
+      zones: [
+        { id: "on-prem", label: "On-Premises Site", color: "#3b82f6", bounds: { left: 40, top: 40, width: 260, height: 420 } },
+        { id: "mpls", label: "MPLS Transit (WAN Underlay)", color: "#9ca3af", bounds: { left: 340, top: 40, width: 320, height: 420 } },
+        { id: "cloud", label: "Cloud Region", color: "#8b5cf6", bounds: { left: 700, top: 40, width: 260, height: 420 } }
+      ],
+      nodes: [
+        { id: "vtep-onprem", name: "VTEP-OnPrem", role: "VTEP / L2 Gateway", zone: "on-prem", icon: "fa-network-wired", x: 170, y: 150,
+          specs: { "Loopback (VTEP IP)": "10.255.0.1/32", "BGP ASN": "65100" },
+          tableType: "bgp",
+          tableData: [
+            { peer: "10.255.0.2 (Cloud)", type: "EVPN L2VPN", state: "ESTABLISHED", rcv: "Type-2, Type-3" },
+            { peer: "10.0.1.2 (PE-OnPrem)", type: "IPv4 Unicast", state: "ESTABLISHED", rcv: "Underlay Routes" }
+          ]
+        },
+        { id: "pe-onprem", name: "PE-OnPrem", role: "PE Router", zone: "mpls", icon: "fa-route", x: 420, y: 250,
+          specs: { "VRF": "CORP", "Routing": "OSPF / LDP / MP-BGP" },
+          tableType: "routing",
+          tableData: [
+            { prefix: "10.255.0.1/32", nextHop: "10.0.1.1 (VTEP-OnPrem)", proto: "eBGP", vrf: "CORP" },
+            { prefix: "10.255.0.2/32", nextHop: "10.0.2.2 (PE-Cloud)", proto: "MPLS / iBGP", vrf: "CORP" }
+          ]
+        },
+        { id: "pe-cloud", name: "PE-Cloud", role: "PE Router", zone: "mpls", icon: "fa-route", x: 580, y: 250,
+          specs: { "VRF": "CORP", "Routing": "OSPF / LDP / MP-BGP" },
+          tableType: "routing",
+          tableData: [
+            { prefix: "10.255.0.2/32", nextHop: "10.0.3.2 (VTEP-Cloud)", proto: "eBGP", vrf: "CORP" },
+            { prefix: "10.255.0.1/32", nextHop: "10.0.2.1 (PE-OnPrem)", proto: "MPLS / iBGP", vrf: "CORP" }
+          ]
+        },
+        { id: "vtep-cloud", name: "VTEP-Cloud", role: "VTEP / L2 Gateway", zone: "cloud", icon: "fa-network-wired", x: 830, y: 150,
+          specs: { "Loopback (VTEP IP)": "10.255.0.2/32", "BGP ASN": "65200" },
+          tableType: "bgp",
+          tableData: [
+            { peer: "10.255.0.1 (OnPrem)", type: "EVPN L2VPN", state: "ESTABLISHED", rcv: "Type-2, Type-3" },
+            { peer: "10.0.3.1 (PE-Cloud)", type: "IPv4 Unicast", state: "ESTABLISHED", rcv: "Underlay Routes" }
+          ]
+        },
+        { id: "host-a", name: "Host-A", role: "Compute", zone: "on-prem", icon: "fa-server", x: 170, y: 350,
+          specs: { "IP Address": "10.1.100.10/24", "VLAN": "100" },
+          tableType: "interfaces",
+          tableData: [ { intf: "eth0", ip: "10.1.100.10", mac: "00:50:56:AA:AA:AA" } ]
+        },
+        { id: "host-b", name: "Host-B", role: "Compute", zone: "cloud", icon: "fa-server", x: 830, y: 350,
+          specs: { "IP Address": "10.1.100.20/24", "VLAN": "100 (Stretched)" },
+          tableType: "interfaces",
+          tableData: [ { intf: "eth0", ip: "10.1.100.20", mac: "00:50:56:BB:BB:BB" } ]
+        }
+      ],
+      links: [
+        { id: "l1", from: "host-a", to: "vtep-onprem", type: "trunk", label: "VLAN 100", view: "both" },
+        { id: "l2", from: "vtep-onprem", to: "pe-onprem", type: "routed", label: "Underlay IPv4", view: "underlay" },
+        { id: "l3", from: "pe-onprem", to: "pe-cloud", type: "routed", label: "MPLS L3VPN, VRF CORP", view: "underlay" },
+        { id: "l4", from: "pe-cloud", to: "vtep-cloud", type: "routed", label: "Underlay IPv4", view: "underlay" },
+        { id: "l5", from: "host-b", to: "vtep-cloud", type: "trunk", label: "VLAN 100", view: "both" },
+        { id: "l6", from: "vtep-onprem", to: "vtep-cloud", type: "overlay", label: "VXLAN VNI 10100 (EVPN control-plane, ARP suppressed)", view: "overlay", curve: -50 }
+      ]
+    };
+
+    const flowData = {
+      "host-a_host-b": {
+        overlay: [
+          { hop: "Host-A ➔ VTEP-OnPrem", action: "L2 Forwarding", desc: "Tra cứu MAC nội bộ VLAN 100. Chuyển tiếp L2 tới L2 Gateway (VTEP)." },
+          { hop: "VTEP-OnPrem ➔ VTEP-Cloud", action: "EVPN Lookup & VXLAN Encap", desc: "Đã học MAC/IP của Host-B qua bản tin EVPN Type-2 (không cần broadcast ARP). Đóng gói VXLAN (VNI 10100) đẩy qua tunnel." },
+          { hop: "VTEP-Cloud ➔ Host-B", action: "VXLAN Decap", desc: "Gỡ header VXLAN, map VNI 10100 về VLAN 100 nội bộ và đẩy trực tiếp xuống Host-B." }
+        ],
+        underlay: [
+          { hop: "Host-A ➔ VTEP-OnPrem", action: "L2 Forwarding", desc: "Khung Ethernet (VLAN 100) nguyên bản gửi lên switch/VTEP." },
+          { hop: "VTEP-OnPrem", action: "VXLAN Encap", desc: "Bọc gói L2 vào UDP/VXLAN. Outer IP Src: 10.255.0.1, Dst: 10.255.0.2." },
+          { hop: "VTEP-OnPrem ➔ PE-OnPrem", action: "Underlay Routing", desc: "Tra bảng định tuyến IPv4, đẩy gói tin VXLAN tới PE-OnPrem qua đường truyền vật lý." },
+          { hop: "PE-OnPrem ➔ PE-Cloud", action: "MPLS L3VPN Transit", desc: "PE gắn nhãn MPLS (Transport Label + VPN Label cho VRF CORP) truyền tải gói tin VXLAN qua mạng lõi." },
+          { hop: "PE-Cloud ➔ VTEP-Cloud", action: "Underlay Routing", desc: "PE-Cloud gỡ nhãn MPLS cuối cùng, định tuyến gói IPv4 (chứa payload VXLAN) tới đích VTEP-Cloud." },
+          { hop: "VTEP-Cloud ➔ Host-B", action: "VXLAN Decap", desc: "Nhận gói UDP 4789. Gỡ vỏ bọc VXLAN (~50 bytes overhead), lấy payload L2 gốc đẩy ra port Access/Trunk VLAN 100 tới Host-B." }
+        ],
+        pathNodes: ["host-a", "vtep-onprem", "pe-onprem", "pe-cloud", "vtep-cloud", "host-b"],
+        pathLinks: { underlay: ["l1", "l2", "l3", "l4", "l5"], overlay: ["l1", "l6", "l5"] }
+      },
+      "host-b_host-a": {
+        overlay: [
+          { hop: "Host-B ➔ VTEP-Cloud", action: "L2 Forwarding", desc: "Tra cứu MAC nội bộ VLAN 100. Chuyển tiếp L2 tới L2 Gateway (VTEP)." },
+          { hop: "VTEP-Cloud ➔ VTEP-OnPrem", action: "EVPN Lookup & VXLAN Encap", desc: "Đã học MAC/IP của Host-A qua bản tin EVPN Type-2. Đóng gói VXLAN (VNI 10100) đẩy qua tunnel chiều về." },
+          { hop: "VTEP-OnPrem ➔ Host-A", action: "VXLAN Decap", desc: "Gỡ header VXLAN, map VNI 10100 về VLAN 100 nội bộ và đẩy trực tiếp xuống Host-A." }
+        ],
+        underlay: [
+          { hop: "Host-B ➔ VTEP-Cloud", action: "L2 Forwarding", desc: "Khung Ethernet (VLAN 100) gửi lên VTEP-Cloud." },
+          { hop: "VTEP-Cloud", action: "VXLAN Encap", desc: "Bọc gói L2 vào UDP/VXLAN. Outer IP Src: 10.255.0.2, Dst: 10.255.0.1." },
+          { hop: "VTEP-Cloud ➔ PE-Cloud", action: "Underlay Routing", desc: "Tra bảng định tuyến IPv4 chiều về, đẩy gói VXLAN tới PE-Cloud." },
+          { hop: "PE-Cloud ➔ PE-OnPrem", action: "MPLS L3VPN Transit", desc: "PE gắn nhãn MPLS đẩy qua mạng lõi chiều về." },
+          { hop: "PE-OnPrem ➔ VTEP-OnPrem", action: "Underlay Routing", desc: "PE-OnPrem gỡ nhãn MPLS, định tuyến gói IPv4 tới VTEP-OnPrem." },
+          { hop: "VTEP-OnPrem ➔ Host-A", action: "VXLAN Decap", desc: "Gỡ vỏ bọc VXLAN, lấy payload L2 gốc đẩy ra port VLAN 100 tới Host-A." }
+        ],
+        pathNodes: ["host-b", "vtep-cloud", "pe-cloud", "pe-onprem", "vtep-onprem", "host-a"],
+        pathLinks: { underlay: ["l5", "l4", "l3", "l2", "l1"], overlay: ["l5", "l6", "l1"] }
+      }
+    };
+
+    let currentView = 'underlay'; // 'underlay' or 'overlay'
+    let selectedNodeId = null;
+
+    // --- 2. Render Topology ---
+    function renderTopology() {
+      // Render Zones
+      const zonesLayer = document.getElementById('zones-layer');
+      zonesLayer.innerHTML = '';
+      data.zones.forEach(z => {
+        const el = document.createElement('div');
+        el.className = `zone zone-${z.id}`;
+        el.style.borderColor = z.color;
+        el.style.left = z.bounds.left + 'px';
+        el.style.top = z.bounds.top + 'px';
+        el.style.width = z.bounds.width + 'px';
+        el.style.height = z.bounds.height + 'px';
+        
+        const title = document.createElement('div');
+        title.className = 'zone-title';
+        title.style.color = z.color;
+        title.innerText = z.label;
+        el.appendChild(title);
+        
+        zonesLayer.appendChild(el);
+      });
+
+      // Render Nodes
+      const nodesLayer = document.getElementById('nodes-layer');
+      nodesLayer.innerHTML = '';
+      data.nodes.forEach(n => {
+        const el = document.createElement('div');
+        el.id = `node-${n.id}`;
+        el.className = `node node-${n.zone}`;
+        el.style.left = n.x + 'px';
+        el.style.top = n.y + 'px';
+        el.onclick = () => selectNode(n.id);
+        
+        el.innerHTML = `
+          <i class="fa-solid ${n.icon}"></i>
+          <div class="node-label">${n.name}</div>
+        `;
+        nodesLayer.appendChild(el);
+      });
+
+      drawLinks();
+    }
+
+    function drawLinks() {
+      const svg = document.getElementById('links-layer');
+      svg.innerHTML = '';
+      
+      data.links.forEach(l => {
+        if (l.view !== 'both' && l.view !== currentView) return;
+        
+        const src = data.nodes.find(n => n.id === l.from);
+        const dst = data.nodes.find(n => n.id === l.to);
+        
+        // Calculate path
+        let d = '';
+        const mx = (src.x + dst.x) / 2;
+        const my = (src.y + dst.y) / 2;
+        
+        if (l.curve) {
+          d = `M ${src.x} ${src.y} Q ${mx} ${my + l.curve} ${dst.x} ${dst.y}`;
+        } else {
+          d = `M ${src.x} ${src.y} L ${dst.x} ${dst.y}`;
+        }
+        
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.id = `link-${l.id}`;
+        path.setAttribute('class', `link-line type-${l.type}`);
+        svg.appendChild(path);
+        
+        // Label Group
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'link-label-group');
+        const ly = l.curve ? (my + l.curve/2) : my;
+        g.setAttribute('transform', `translate(${mx}, ${ly - 10})`);
+        
+        // Label text to measure
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('class', 'link-label-text');
+        text.textContent = l.label;
+        
+        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bg.setAttribute('class', 'link-label-bg');
+        
+        g.appendChild(bg);
+        g.appendChild(text);
+        svg.appendChild(g);
+        
+        // Adjust bg rect based on text width
+        setTimeout(() => {
+          const bbox = text.getBBox();
+          bg.setAttribute('x', bbox.x - 6);
+          bg.setAttribute('y', bbox.y - 4);
+          bg.setAttribute('width', bbox.width + 12);
+          bg.setAttribute('height', bbox.height + 8);
+        }, 0);
+      });
+      
+      applyViewFades();
+    }
+
+    function applyViewFades() {
+      // Dim PE routers and MPLS zone if Overlay view
+      const mplsNodes = document.querySelectorAll('.node-mpls');
+      const mplsZone = document.querySelector('.zone-mpls');
+      
+      if (currentView === 'overlay') {
+        mplsNodes.forEach(n => n.classList.add('view-fade'));
+        if (mplsZone) mplsZone.classList.add('view-fade');
+      } else {
+        mplsNodes.forEach(n => n.classList.remove('view-fade'));
+        if (mplsZone) mplsZone.classList.remove('view-fade');
+      }
+    }
+
+    function switchView(view) {
+      currentView = view;
+      
+      const btnU = document.getElementById('btn-view-underlay');
+      const btnO = document.getElementById('btn-view-overlay');
+      const badge = document.getElementById('flow-view-badge');
+      
+      if (view === 'underlay') {
+        btnU.className = "px-4 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-white transition-colors shadow";
+        btnO.className = "px-4 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors";
+        badge.className = "ml-auto px-2 py-0.5 rounded text-xs font-bold bg-blue-900/50 text-blue-400 border border-blue-800/50";
+        badge.innerText = "UNDERLAY MODE";
+      } else {
+        btnO.className = "px-4 py-1.5 rounded-md text-sm font-medium bg-purple-600 text-white transition-colors shadow";
+        btnU.className = "px-4 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors";
+        badge.className = "ml-auto px-2 py-0.5 rounded text-xs font-bold bg-purple-900/50 text-purple-400 border border-purple-800/50";
+        badge.innerText = "OVERLAY MODE";
+      }
+      
+      // Clear tracing states
+      clearHighlights();
+      document.getElementById('flow-content').innerHTML = '<div class="text-slate-400 font-sans text-sm text-center mt-10">View switched. Run "Trace Flow" again to see the path in this layer.</div>';
+      
+      drawLinks();
+    }
+
+    // --- 3. Interaction & Inspector ---
+    function selectNode(id) {
+      selectedNodeId = id;
+      
+      // Update Selection UI
+      document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+      document.getElementById(`node-${id}`).classList.add('selected');
+      
+      const node = data.nodes.find(n => n.id === id);
+      
+      // Update Inspector UI
+      const badge = document.getElementById('inspector-badge');
+      badge.className = "ml-auto px-2 py-0.5 rounded text-xs font-bold bg-emerald-900/50 text-emerald-400 border border-emerald-800/50";
+      badge.innerText = node.role.toUpperCase();
+      
+      let html = `
+        <div class="mb-4">
+          <h4 class="text-lg font-bold text-white">${node.name}</h4>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 mb-6">
+      `;
+      
+      // Specs
+      for (const [key, val] of Object.entries(node.specs)) {
+        html += `
+          <div class="bg-slate-900 rounded p-2 border border-slate-700 min-w-[140px] flex-1">
+            <div class="text-slate-400 text-xs font-medium uppercase shrink-0">${key}</div>
+            <div class="text-slate-200 text-sm mt-1 font-mono">${val}</div>
+          </div>
+        `;
+      }
+      html += `</div>`;
+      
+      // Table
+      let tableTitle = "Configuration Table";
+      if(node.tableType === 'bgp') tableTitle = "BGP / EVPN Sessions";
+      if(node.tableType === 'routing') tableTitle = "VRF Routing Table";
+      if(node.tableType === 'interfaces') tableTitle = "Network Interfaces";
+      
+      html += `
+        <h5 class="text-sm font-semibold text-slate-300 mb-2">${tableTitle}</h5>
+        <div class="overflow-x-auto border border-slate-700 rounded-lg">
+          <table class="w-full text-sm cli-table">
+            <thead class="bg-slate-900">
+      `;
+      
+      if(node.tableData.length > 0) {
+        const keys = Object.keys(node.tableData[0]);
+        html += `<tr>${keys.map(k => `<th>${k}</th>`).join('')}</tr></thead><tbody class="bg-slate-800/50">`;
+        node.tableData.forEach(row => {
+          html += `<tr>${keys.map(k => `<td class="font-mono text-slate-300 whitespace-nowrap">${row[k]}</td>`).join('')}</tr>`;
+        });
+      }
+      
+      html += `</tbody></table></div>`;
+      
+      document.getElementById('inspector-content').innerHTML = html;
+    }
+
+    // --- 4. Flow Tracer ---
+    function clearHighlights() {
+      document.querySelectorAll('.link-line').forEach(l => l.classList.remove('highlight'));
+    }
+
+    function traceFlow() {
+      clearHighlights();
+      const src = document.getElementById('trace-src').value;
+      const dst = document.getElementById('trace-dst').value;
+      
+      if (src === dst) {
+        document.getElementById('flow-content').innerHTML = '<div class="text-amber-400 p-4">Source and Destination cannot be the same.</div>';
+        return;
+      }
+      
+      const routeKey = `${src}_${dst}`;
+      const routeInfo = flowData[routeKey];
+      
+      if (!routeInfo) {
+        document.getElementById('flow-content').innerHTML = '<div class="text-amber-400 p-4">No predefined flow data for this path.</div>';
+        return;
+      }
+      
+      const steps = currentView === 'overlay' ? routeInfo.overlay : routeInfo.underlay;
+      const linksToHighlight = currentView === 'overlay' ? routeInfo.pathLinks.overlay : routeInfo.pathLinks.underlay;
+      
+      // Highlight Links
+      linksToHighlight.forEach(lid => {
+        const el = document.getElementById(`link-${lid}`);
+        if(el) el.classList.add('highlight');
+      });
+      
+      // Render Output
+      let html = `<div class="space-y-4">`;
+      steps.forEach((step, idx) => {
+        html += `
+          <div class="flex gap-4">
+            <div class="flex flex-col items-center">
+              <div class="w-6 h-6 rounded-full bg-blue-900 border border-blue-500 flex items-center justify-center text-xs font-bold text-blue-300 shrink-0">${idx + 1}</div>
+              ${idx < steps.length - 1 ? '<div class="w-px h-full bg-slate-700 mt-1"></div>' : ''}
+            </div>
+            <div class="bg-slate-900 border border-slate-700 rounded-lg p-3 flex-1 mb-2">
+              <div class="flex flex-wrap items-center gap-2 mb-2 border-b border-slate-800 pb-2">
+                <span class="font-semibold text-slate-200">${step.hop}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300 ml-auto">${step.action.toUpperCase()}</span>
+              </div>
+              <div class="text-slate-400 font-sans leading-relaxed text-[13px]">${step.desc}</div>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+      
+      document.getElementById('flow-content').innerHTML = html;
+    }
+
+    // Initialize
+    window.onload = () => {
+      renderTopology();
+    };
+
+  </script>
+</body>
+</html>
