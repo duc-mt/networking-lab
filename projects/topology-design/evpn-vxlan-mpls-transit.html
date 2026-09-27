@@ -33,6 +33,9 @@
   <script src="../../assets/js/theme-init.js"></script>
 
     <style>
+    @keyframes dash { to { stroke-dashoffset: -20; } }
+    .animate-dash { animation: dash 1s linear infinite; }
+
     /* Topology Map Styles */
     
     
@@ -56,12 +59,12 @@
       transition: stroke 0.3s, opacity 0.5s;
     }
     
-    .link-line.type-trunk { stroke: #10b981; stroke-dasharray: 4; }
-    .link-line.type-routed { stroke: #3b82f6; stroke-dasharray: 2; }
+    .link-line.type-routed { stroke: #3b82f6; stroke-dasharray: 6 4; }
     .dark .link-line.type-routed { stroke: #2563eb; }
-    .link-line.type-mpls { stroke: #f59e0b; stroke-width: 3; }
+    .link-line.type-mpls { stroke: #f59e0b; stroke-width: 3; stroke-dasharray: 8 6; }
     .dark .link-line.type-mpls { stroke: #d97706; }
-    .link-line.type-overlay { stroke: #a855f7; stroke-width: 3; stroke-dasharray: 8; }
+    .link-line.type-overlay { stroke: #a855f7; stroke-width: 3; stroke-dasharray: 10 5; }
+    .link-line.type-trunk { stroke: #10b981; stroke-dasharray: 5 3; }
     
     .link-line.highlight {
       stroke: #3b82f6 !important;
@@ -417,7 +420,7 @@
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', d);
         path.id = `link-${l.id}`;
-        path.setAttribute('class', `link-line type-${l.type}`);
+        path.setAttribute('class', `link-line type-${l.type} animate-dash`);
         svg.appendChild(path);
         
         // HTML Badge Label
