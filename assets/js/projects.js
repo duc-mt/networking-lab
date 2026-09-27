@@ -96,6 +96,21 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        id: 'stp-election',
+        title: 'STP Root Election',
+        topic: 'Network Services',
+        category: 'protocol',
+        type: 'protocol',
+        status: 'live',
+        dateAdded: '2026-09-27',
+        image: 'assets/images/protocol-placeholder.jpg',
+        description:
+            'Mô phỏng cơ chế chống Loop mạng L2 của Spanning Tree Protocol: quá trình bầu chọn Root Bridge, Root Port và ngắt kết nối (Blocking/Alternate).',
+        tags: ['STP', 'Loop Prevention', 'Root Bridge', 'BPDU', 'Layer 2'],
+        href: 'projects/protocol/stp-election.html',
+    },
+
+    {
         id: 'dhcp-master-fsm',
         title: 'DHCP Protocol Suite',
         topic: 'Network Services',
