@@ -80,28 +80,13 @@
       filter: drop-shadow(0 0 4px rgba(59,130,246,0.8)) !important;
     }
     
-    .link-label-group {
-      transition: opacity 0.5s;
-    }
     
-    .link-label-bg {
-      fill: #f1f5f9;
-      rx: 4;
-    }
-    .dark .link-label-bg {
-      fill: #1e293b;
-    }
     
-    .link-label-text {
-      font-family: 'Inter', sans-serif;
-      font-size: 10px;
-      fill: #475569;
-      text-anchor: middle;
-      dominant-baseline: central;
-    }
-    .dark .link-label-text {
-      fill: #cbd5e1;
-    }
+    
+    .dark 
+    
+    
+    .dark 
     
     /* View Toggle Fade */
     .view-fade { opacity: 0.1; }
@@ -209,6 +194,7 @@
       
       <!-- SVG Links -->
       <svg class="links" id="links-layer"></svg>
+      <div id="links-labels-layer"></div>
       
       <!-- Nodes -->
       <div id="nodes-layer"></div>
@@ -390,18 +376,27 @@
       data.nodes.forEach(n => {
                 const el = document.createElement('div');
         el.id = `node-${n.id}`;
-        el.className = `absolute w-16 h-16 bg-white dark:bg-slate-800 rounded-full border-2 border-slate-300 dark:border-slate-600 shadow-md flex flex-col items-center justify-center cursor-pointer transition-all duration-300 z-10 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)] group`;
+        el.className = `absolute w-32 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 border-slate-300 dark:border-slate-600 shadow-lg flex flex-col items-center cursor-pointer transition-all duration-300 z-10 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)] group`;
         el.style.left = n.x + 'px';
         el.style.top = n.y + 'px';
         el.style.transform = 'translate(-50%, -50%)';
         el.onclick = () => selectNode(n.id);
         
-        // Dim if MPLS node in overlay view
         if (currentView === 'overlay' && n.zone === 'mpls') el.classList.add('opacity-20');
         
+        let badgeColor = "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-200 dark:border-blue-700";
+        if (n.zone === 'mpls') badgeColor = "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600";
+        if (n.zone === 'cloud') badgeColor = "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 border-purple-200 dark:border-purple-700";
+        
+        let primarySpec = Object.values(n.specs)[0];
+
         el.innerHTML = `
-          <i class="fa-solid ${n.icon} text-xl text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-500"></i>
-          <div class="absolute top-[70px] whitespace-nowrap text-[11px] font-semibold bg-white dark:bg-slate-900 px-2 py-0.5 border border-slate-200 dark:border-slate-700 rounded text-slate-700 dark:text-slate-300 shadow-sm">${n.name}</div>
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap ${badgeColor}">${n.role}</div>
+          <div class="w-10 h-10 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner group-hover:border-blue-400 transition-colors">
+              <i class="fa-solid ${n.icon} text-lg text-slate-600 dark:text-slate-300 group-hover:text-blue-500"></i>
+          </div>
+          <h3 class="text-xs font-extrabold text-slate-800 dark:text-white text-center">${n.name}</h3>
+          <div class="text-[9px] font-mono text-slate-500 mt-1 text-center truncate w-full">${primarySpec}</div>
         `;
         nodesLayer.appendChild(el);
       });
@@ -412,6 +407,7 @@
     function drawLinks() {
       const svg = document.getElementById('links-layer');
       svg.innerHTML = '';
+      document.getElementById('links-labels-layer').innerHTML = '';
       
       data.links.forEach(l => {
         if (l.view !== 'both' && l.view !== currentView) return;
@@ -436,32 +432,19 @@
         path.setAttribute('class', `link-line type-${l.type}`);
         svg.appendChild(path);
         
-        // Label Group
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('class', 'link-label-group');
+        // HTML Badge Label
         const ly = l.curve ? (my + l.curve/2) : my;
-        g.setAttribute('transform', `translate(${mx}, ${ly - 10})`);
+        const badge = document.createElement('div');
+        let badgeStyle = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700";
+        if (l.type === 'overlay') badgeStyle = "bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 border-purple-200 dark:border-purple-700";
+        if (l.type === 'trunk') badgeStyle = "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700";
         
-        // Label text to measure
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('class', 'link-label-text');
-        text.textContent = l.label;
-        
-        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        bg.setAttribute('class', 'link-label-bg');
-        
-        g.appendChild(bg);
-        g.appendChild(text);
-        svg.appendChild(g);
-        
-        // Adjust bg rect based on text width
-        setTimeout(() => {
-          const bbox = text.getBBox();
-          bg.setAttribute('x', bbox.x - 6);
-          bg.setAttribute('y', bbox.y - 4);
-          bg.setAttribute('width', bbox.width + 12);
-          bg.setAttribute('height', bbox.height + 8);
-        }, 0);
+        badge.className = `absolute z-20 text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${badgeStyle} transition-opacity duration-500 whitespace-nowrap`;
+        badge.style.left = mx + 'px';
+        badge.style.top = (ly - 10) + 'px';
+        badge.style.transform = 'translate(-50%, -50%)';
+        badge.innerText = l.label;
+        document.getElementById('links-labels-layer').appendChild(badge);
       });
     }
 
