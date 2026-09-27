@@ -92,10 +92,23 @@
                         <li><strong>VIP:</strong> 10.10.10.254</li>
                     </ul>
                 </div>
-                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 shadow-inner font-mono text-sm flex flex-col justify-center">
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-sans">Thay đổi Firmware</h3>
-                    <div class="text-red-400 line-through">- R82.00.10 build 998002279</div>
-                    <div class="text-emerald-400">+ 1800_R82.00.10_998002325</div>
+                <div class="bg-[#1e1e1e] rounded-xl border border-slate-700 shadow-xl overflow-hidden flex flex-col">
+                    <div class="bg-[#2d2d2d] px-4 py-2 border-b border-black/50 text-xs font-bold tracking-widest text-slate-400 uppercase flex justify-between">
+                        <span>Baseline (Known-Good)</span>
+                        <span>Target Version</span>
+                    </div>
+                    <div class="flex flex-row w-full divide-x divide-slate-700/50 text-[13px] font-mono leading-relaxed">
+                        <div class="w-1/2 bg-red-950/20 p-4 text-red-400 flex flex-col gap-1">
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">-</span><span>FW-CORE Model: 1800</span></div>
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">-</span><span>OS: R82.00.10</span></div>
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">-</span><span class="font-bold bg-red-900/40 px-1 rounded">Build: 998002279</span></div>
+                        </div>
+                        <div class="w-1/2 bg-emerald-950/20 p-4 text-emerald-400 flex flex-col gap-1">
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">+</span><span>FW-CORE Model: 1800</span></div>
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">+</span><span>OS: R82.00.10</span></div>
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">+</span><span class="font-bold bg-emerald-900/40 px-1 rounded">Build: 1800_R82.00.10_998002325</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -145,10 +158,10 @@
                 { id: "p3", description: "Tải firmware vào thiết bị", command: "WebUI > Device > Firmware", expected_result: "File 1800_R82.00.10_998002325 sẵn sàng", status: "pending" }
             ],
             execution: [
-                { id: "e1", description: "Upgrade Member Standby (FW-CORE-02)", command: "WebUI > Device > Firmware > Upgrade", output: "Rebooting (10-15 mins). Rejoined as Standby at 998002325.", risk_flag: "SPOF trong quá trình reboot", status: "pending" },
-                { id: "e2", description: "Failover chủ động", command: "clusterXL_admin down (trên FW-CORE-01)", output: "FW-CORE-01 changes to DOWN.\nFW-CORE-02 promotes to ACTIVE.\nTraffic failovers in < 2s.", risk_flag: null, status: "pending" },
-                { id: "e3", description: "Upgrade Member Active cũ (FW-CORE-01)", command: "WebUI > Device > Firmware > Upgrade", output: "Rebooting (10-15 mins). Rejoined as Standby at 998002325.", risk_flag: "SPOF trong quá trình reboot", status: "pending" },
-                { id: "e4", description: "Normalize (Tuỳ chọn)", command: "clusterXL_admin up (trên FW-CORE-01)", output: "FW-CORE-01 is UP.", risk_flag: null, status: "pending" }
+                { id: "e1", description: "Upgrade Member Standby (FW-CORE-02)", command: "WebUI > Device > Firmware > Upgrade", output: "Rebooting (10-15 mins). Rejoined as Standby at 998002325.", risk_flag: "SPOF trong quá trình reboot", estimated_duration_mins: 15, status: "pending" },
+                { id: "e2", description: "Failover chủ động", command: "clusterXL_admin down (trên FW-CORE-01)", output: "FW-CORE-01 changes to DOWN.\nFW-CORE-02 promotes to ACTIVE.\nTraffic failovers in < 2s.", risk_flag: null, estimated_duration_mins: 2, status: "pending" },
+                { id: "e3", description: "Upgrade Member Active cũ (FW-CORE-01)", command: "WebUI > Device > Firmware > Upgrade", output: "Rebooting (10-15 mins). Rejoined as Standby at 998002325.", risk_flag: "SPOF trong quá trình reboot", estimated_duration_mins: 15, status: "pending" },
+                { id: "e4", description: "Normalize (Tuỳ chọn)", command: "clusterXL_admin up (trên FW-CORE-01)", output: "FW-CORE-01 is UP.", risk_flag: null, estimated_duration_mins: 5, status: "pending" }
             ],
             postChecks: [
                 { id: "po1", description: "Kiểm tra Cluster Healthy & Role", command: "cphaprob stat", expected_result: "Cả 2 Healthy, đúng Active/Standby", actual_result: "", status: "pending" },
@@ -274,6 +287,7 @@
                 }
 
                 const riskBadge = item.risk_flag ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-[10px] uppercase font-bold tracking-widest rounded ml-2"><i class="fas fa-exclamation-triangle"></i> ${item.risk_flag}</span>` : '';
+                const timeBadge = item.estimated_duration_mins ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] uppercase font-bold tracking-widest rounded ml-2"><i class="far fa-clock"></i> ${item.estimated_duration_mins} PHÚT</span>` : '';
                 
                 const cmdOutput = item.output ? `
                     <div class="mt-2 text-xs font-mono text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
@@ -285,7 +299,7 @@
                     <div class="flex-1">
                         <div class="flex items-center mb-1">
                             <span class="w-6 h-6 rounded bg-slate-100 dark:bg-slate-900 text-slate-400 flex items-center justify-center text-xs font-bold mr-3">${idx + 1}</span>
-                            <h4 class="font-bold text-slate-800 dark:text-white">${item.description}${riskBadge}</h4>
+                            <h4 class="font-bold text-slate-800 dark:text-white">${item.description}${riskBadge}${timeBadge}</h4>
                         </div>
                         <div class="ml-9">
                             <div class="font-mono text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded inline-block mb-2">
