@@ -258,7 +258,7 @@ const PROJECTS = [
         tags: ['Check Point', 'ClusterXL', 'Optimization', 'Zero Downtime'],
         href: 'projects/change-mop/checkpoint-optimized-sync.html',
         status: 'live',
-        dateAdded: '2026-10-01',
+        dateAdded: '2026-09-20',
     },
     {
         title: 'Check Point: Enable VMAC',
@@ -268,7 +268,7 @@ const PROJECTS = [
         tags: ['Check Point', 'ClusterXL', 'VMAC', 'Layer 2', 'Failover'],
         href: 'projects/change-mop/checkpoint-vmac-enable.html',
         status: 'live',
-        dateAdded: '2026-10-02',
+        dateAdded: '2026-09-20',
     },
     {
         title: 'Check Point: ISP Redundancy',
@@ -278,7 +278,7 @@ const PROJECTS = [
         tags: ['Check Point', 'ClusterXL', 'ISP', 'Redundancy', 'Routing'],
         href: 'projects/change-mop/checkpoint-isp-redundancy.html',
         status: 'live',
-        dateAdded: '2026-10-03',
+        dateAdded: '2026-09-20',
     },
     {
         title: 'Hybrid Cloud Transit Topology (VyOS / OSPF)',
@@ -288,7 +288,7 @@ const PROJECTS = [
         tags: ['Cloud', 'VyOS', 'OSPF', 'GRE Tunnel', 'Topology'],
         href: 'projects/topology-design/hybrid-cloud-transit.html',
         status: 'live',
-        dateAdded: '2026-10-05',
+        dateAdded: '2026-09-20',
     },
     {
         title: 'BGP Peering FSM & Technical Traps',
@@ -298,6 +298,6 @@ const PROJECTS = [
         tags: ['BGP', 'Routing', 'FSM', 'Troubleshooting', 'Split-Horizon'],
         href: 'projects/protocol/bgp-peering.html',
         status: 'live',
-        dateAdded: '2026-10-06',
+        dateAdded: '2026-09-20',
     },
 ];
