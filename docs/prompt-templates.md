@@ -447,18 +447,25 @@ convergence sequence for the given mechanism and trigger event.
 
 ## 7. Topology design reference
 
-Use this one when there's no time dimension at all — you're documenting a network _design_, not a process or an event. The dashboard shows the whole topology, every device's routing table, and a path-lookup tool, all at once. No playback controls, because nothing changes over time here.
+Use this format when documenting a complete network **Architecture Blueprint / High-Level Design (HLD)** rather than a timeline of events. There is no time axis or playback controls (⏮ ▶ ⏭). Instead, it's an interactive reference dashboard showcasing the full topology, logical zones, per-device configurations/tables, and end-to-end traffic flow analysis.
+
+### Broad use cases (Tổng quát hóa cho mọi kiến trúc mạng):
+- **Enterprise Campus & L2/L3 Switching:** Core/Agg/Access layers, vPC/MLAG, Port-Channels, STP root bridges, FHRP (HSRP/VRRP VIPs), VLANs & Trunks.
+- **Data Center Fabric (Spine-Leaf):** Underlay (eBGP/IS-IS) & Overlay (EVPN-VXLAN, VNIs, Distributed Anycast Gateways, Multi-Homing).
+- **WAN & Multi-Cloud Transit:** SD-WAN Hub-and-Spoke, Full-Mesh Overlays (IPsec/WireGuard), BGP ASNs, Route Reflectors, AWS Transit Gateway / Azure vWAN.
+- **Security & Micro-Segmentation:** Perimeter Firewalls, DMZ, Internal Trust, PCI-DSS Isolated Zones, Inspection Choke Points.
+- **Dynamic Routing Architectures:** Multi-Area OSPF, BGP EVPN, IS-IS, Hybrid Redistribution.
 
 ```
 Act as a Principal Network Architect and Senior UI/UX Frontend Engineer.
 
-Build a single-file "Interactive Topology Design Reference" — a static (non-
-animated) dashboard for exploring a fully-designed OSPF network: the topology
-map, per-device routing tables, area structure, and a path lookup tool, all
-viewable at once rather than as a time-based animation. Match the visual
-style of my other project pages (Tailwind CDN darkMode:'class', Inter + Fira
-Code, Font Awesome CSS build, slate/blue/indigo palette, rounded-2xl cards)
-and include the two shared includes used across the site:
+Build a single-file "Interactive Topology Design Reference" — an interactive
+architectural dashboard for exploring a fully-designed network: the topology
+map, logical zones/layers, per-device configuration tables, and an end-to-end
+path tracer tool, all viewable in an integrated view. Match the visual style
+of my other project pages (Tailwind CDN darkMode:'class', Inter + Fira Code,
+Font Awesome CSS build, slate/blue/indigo palette, rounded-2xl cards) and
+include the two shared includes used across the site:
 
     <link rel="stylesheet" href="../../assets/css/theme.css">
     <script src="../../assets/js/theme-init.js"></script>
@@ -470,51 +477,45 @@ Output: ONE self-contained HTML file, inline CSS + vanilla JS only (aside
 from the two shared includes above).
 
 ==================================================
-Network design:
-- Routers: (hostname, Router ID/loopback, OSPF area membership — e.g.
-  "R1 (1.1.1.1) - Area 0", "R2 (2.2.2.2) - Area 0", "R3 (3.3.3.3) - Area 1 (stub)")
-- Links: (connected routers, interface, cost/bandwidth, network type — e.g.
-  "R1 Gi0/0 <-> R2 Gi0/0, 10.1.1.0/30, cost 1, point-to-point")
-- Areas: (area ID, type — backbone/standard/stub/NSSA/totally-stubby — and
-  which routers belong to each)
-- Redistribution/default routes, if any (e.g. "R3 is an ABR injecting a
-  default route into Area 1")
+Network Design Scope:
+- Architecture Type: (e.g. "Enterprise Campus 3-Tier", "Data Center Spine-Leaf EVPN-VXLAN", "SD-WAN Multi-Cloud Transit", "Security Micro-Segmentation Zone")
+- Zones / Areas / VPCs: (list logical grouping zones with boundary definitions)
+- Devices / Nodes: (hostname, role, layer, loopback/management IP, specific features like vPC, HSRP, BGP ASN, VNI)
+- Interconnects & Links: (connected interfaces, link type — Trunk, Routed, Overlay, Port-Channel, Bandwidth, Metric)
+- Device Configuration Tables: (Routing tables, VLAN/Trunk database, BGP Neighbor peering, or Security policy list)
 ==================================================
 
 Requirements:
-1. Core data — no timeline; structure this as topology data, not steps:
-   `topology`: { nodes: [{ id, name, routerId, area, role }],
-                 links: [{ from, to, cost, bandwidth, type, network }] }
-   `areas`: [{ id, label, type, color }]
-   `routingTables`: { <nodeId>: [{ network, mask, type: "O"|"O IA"|"C"|"D"|"S", nextHop, metric }] }
+1. Core Data Model — structured as topological and architectural data:
+   `zones`: Array of architectural zones/layers/areas/VPCs:
+     [{ id, label, type, color, bounds: { top, left, width, height } }]
+   `nodes`: Array of devices:
+     [{ id, name, role, zone, icon, x, y, specs: { ip, loopback, asn, vlans, fhrp, ... },
+        tableType: "routing" | "vlans" | "bgp" | "interfaces" | "policies",
+        tableData: [...] }]
+   `links`: Array of connections:
+     [{ from, to, label, type: "trunk" | "routed" | "overlay" | "peer", metric, vlan, bandwidth }]
 
-2. Header: logo + "← Portfolio" back-link + theme toggle only (no playback
-   controls). Optional: a small legend showing each area's color.
+2. Header: logo + "← Portfolio" back-link + theme toggle only (no playback controls).
+   Include architectural badges / indicators (e.g. "Campus LAN", "Spine-Leaf", "Hybrid Cloud").
 
-3. Topology map (centerpiece): all routers as an interactive diagram, links
-   labeled with cost, OSPF areas visually grouped (colored zone per area,
-   the backbone Area 0 visually distinct). Clicking a router opens an
-   inspector panel; clicking a link shows its cost/bandwidth/network type.
+3. Topology Map Canvas (centerpiece):
+   - All devices positioned with clear layer hierarchy (e.g. Spine on top, Leaf in middle, Compute below; or Core ➔ Distribution ➔ Access).
+   - SVG links layer displaying link labels, speeds, and status.
+   - Background zones visually grouping components with distinct colors and borders.
+   - Interactive Node Clicks: Clicking any device opens its Inspector Panel.
 
-4. Device inspector panel: on selecting a router, show its Router ID, area,
-   interfaces, and full routing table — styled like the dark, monospace
-   CLI panels used elsewhere on the site.
+4. Multi-Layer Perspective / View Toggle (Recommended):
+   - Allow toggling views between Physical/L2 (VLANs, Trunks, LACP) and Logical/L3 (IPs, Subnets, Routing Protocols) or Security Zones.
 
-5. Path lookup tool: two dropdowns (source, destination) + a "Trace Path"
-   button. On click, compute the lowest-cost path across the topology
-   (implement a simple Dijkstra over the `links` cost data in vanilla JS),
-   highlight it on the map, and list the ordered hops with cumulative cost.
-   This is what keeps a static dashboard interactive rather than a picture.
+5. Device Inspector Panel:
+   - On selecting a device, show its role, hostname, IP/specs, and its contextual operational table (Routing Table, VLAN Table, BGP Peers, or Security Rules) styled as a dark monospace terminal card.
 
-6. Area legend/filter: let the viewer dim or hide areas, so a larger
-   multi-area design stays readable.
+6. Path / Traffic Flow Tracer:
+   - Two dropdowns (Source, Destination) + "Trace Flow" button.
+   - Trace end-to-end traffic path across hops, highlight active links on the canvas, and list the hop-by-hop forwarding decisions (e.g. LACP ➔ SVI ➔ Route Lookup ➔ Tunnel Encap ➔ Destination).
 
-7. All visible UI text in Vietnamese.
-
-Populate `topology`, `areas`, and `routingTables` with data that's actually
-consistent with the design given above — routing tables should reflect real
-OSPF behavior (e.g. a router in Area 1 shows "O IA" for prefixes learned
-from outside its own area, not "O").
+7. All visible UI text in Vietnamese, adhering to the Bilingual Standards (Section 11).
 ```
 
 ---
