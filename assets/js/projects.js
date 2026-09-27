@@ -88,6 +88,20 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        id: 'evpn-vxlan-mpls-transit',
+        title: 'EVPN-VXLAN Multi-Cloud Transit',
+        category: 'topology-design',
+        type: 'topology-design',
+        status: 'live',
+        dateAdded: '2026-09-27',
+        image: 'assets/images/protocol-placeholder.jpg',
+        description:
+            'Tài liệu thiết kế kiến trúc và mô phỏng luồng traffic: Căng Overlay L2 (EVPN-VXLAN) qua mạng WAN Underlay (MPLS L3VPN).',
+        tags: ['EVPN', 'VXLAN', 'MPLS', 'WAN Transit', 'Topology Design', 'BGP'],
+        href: 'projects/topology-design/evpn-vxlan-mpls-transit.html',
+    },
+
+    {
         id: 'wireguard-pfsense-walk',
         title: 'WireGuard Packet Walk on pfSense',
         category: 'packet-walk',
