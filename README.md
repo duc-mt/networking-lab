@@ -1,6 +1,5 @@
 # Network Engineering Portfolio
 
-
 [![CI](https://github.com/duc-mt/network-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/duc-mt/network-portfolio/actions/workflows/ci.yml)
 [![Deploy](https://github.com/duc-mt/network-portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/duc-mt/network-portfolio/actions/workflows/deploy.yml)
 [![Live Demo](https://img.shields.io/badge/demo-live-2ea44f)](https://duc-mt.github.io/network-portfolio/)
@@ -136,4 +135,3 @@ Dark/light mode is stored in `localStorage` under the key `portfolio-theme`. Eve
 
 - **Tailwind CDN console warning** ("should not be used in production") — expected. The Play CDN isn't optimized for production traffic, but for a static portfolio like this it's fine; ignore the warning.
 - **Font Awesome icons may show as empty boxes when previewed inside Claude's chat UI.** Claude's in-app HTML preview only allows external stylesheets from `fonts.googleapis.com`; Font Awesome's CSS comes from `cdnjs.cloudflare.com`, so the preview silently blocks it. This is a preview-sandbox limitation only — a real browser (and GitHub Pages) has no such restriction. **Do not** "fix" this by switching Font Awesome to its JS/SVG build — that build permanently replaces `<i class="fas fa-x">` with a static `<svg>` on load, which breaks every place these labs swap icons at runtime via `.className` reassignment (theme toggle, play/pause, per-step packet icons). Verify icons in an actual browser or the deployed Pages URL, not the in-chat preview.
-
