@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DHCP DORA Process Simulator</title>
+
+    <!-- Theme Initialization -->
+    <script src="../../assets/js/theme-init.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+
+    <style>
+        .timeline-track { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background-color: #e2e8f0; transform: translateY(-50%); z-index: 0; }
+        .dark .timeline-track { background-color: #334155; }
+        
+        #timeline-progress { position: absolute; top: 50%; left: 0; height: 2px; background-color: #3b82f6; transform: translateY(-50%); z-index: 1; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .dark #timeline-progress { background-color: #60a5fa; }
+
+        @keyframes moveLeftToRight {
+            0% { left: 20%; transform: translateX(-50%) scale(0.9); opacity: 0; }
+            15% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+            85% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+            100% { left: 80%; transform: translateX(-50%) scale(0.9); opacity: 0; }
+        }
+        @keyframes moveRightToLeft {
+            0% { left: 80%; transform: translateX(-50%) scale(0.9); opacity: 0; }
+            15% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+            85% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+            100% { left: 20%; transform: translateX(-50%) scale(0.9); opacity: 0; }
+        }
+        
+        .animate-lr { animation: moveLeftToRight 2s cubic-bezier(0.4, 0, 0.2, 1) forwards; position: absolute; z-index: 20; }
+        .animate-rl { animation: moveRightToLeft 2s cubic-bezier(0.4, 0, 0.2, 1) forwards; position: absolute; z-index: 20; }
+
+        @keyframes emeraldPulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .sync-pulse { animation: emeraldPulse 2s infinite; border-color: #10b981 !important; }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <!-- Title -->
+            <div class="flex items-center gap-3">
+                <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0" title="Về trang chủ Portfolio">
+                    <i class="fas fa-network-wired"></i>
+                </a>
+                <div>
+                    <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                        <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                    </a>
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">DHCP DORA Process Simulator</h1>
+                </div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+                <button id="btn-prev" onclick="app.prevStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast" title="Lùi lại">
+                    <i class="fas fa-step-backward"></i>
+                </button>
+                <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/30 transition-all-fast" title="Phát / Tạm dừng">
+                    <i id="icon-play" class="fas fa-play ml-1"></i>
+                </button>
+                <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast" title="Tiếp theo">
+                    <i class="fas fa-step-forward"></i>
+                </button>
+                <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast" title="Khôi phục trạng thái đầu">
+                    <i class="fas fa-undo"></i>
+                </button>
+                <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" title="Đổi giao diện Sáng/Tối">
+                    <i id="theme-icon" class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-8">
+        
+        <!-- Timeline Stepper -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors relative overflow-hidden">
+            <h2 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Trình tự D.O.R.A (4 Bước)</h2>
+            <div class="relative flex justify-between items-center w-full">
+                <!-- Background Line -->
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
+                <!-- Progress Line -->
+                <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out"></div>
+                
+                <!-- Stepper Buttons (Injected by JS) -->
+                <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-2"></div>
+            </div>
+        </section>
+
+        <!-- Topology & State Visualization -->
+        <section class="bg-slate-50 dark:bg-[#0f172a] rounded-2xl p-6 md:p-12 border border-slate-200 dark:border-slate-800 shadow-inner relative overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
+            <!-- Visual Link (SVG or Div line) -->
+            <div id="link-line" class="absolute top-1/2 left-0 w-full h-1 bg-slate-300 dark:bg-slate-700 -translate-y-1/2 z-0 hidden md:block"></div>
+            <div class="md:hidden absolute top-0 bottom-0 left-1/2 w-1 bg-gradient-to-b from-transparent via-slate-400 to-transparent dark:via-slate-600 -translate-x-1/2 z-0"></div>
+            
+            <div class="relative w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-12 md:gap-4 z-10">
+                
+                <!-- Animated Packet Container -->
+                <div id="animated-packet" class="hidden flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap">
+                    <i id="packet-icon" class="fas fa-envelope"></i>
+                    <span id="packet-label">DHCP Message</span>
+                </div>
+
+                <!-- Client Card -->
+                <div id="r1-card" class="relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 border-slate-200 dark:border-slate-700 shadow-xl flex flex-col items-center transition-all duration-300">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 px-3 py-0.5 rounded-full text-xs font-bold border border-blue-200 dark:border-blue-700/50">Client Node</div>
+                    
+                    <div class="w-20 h-20 mb-3 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-laptop text-4xl text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    
+                    <h3 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">PC Client</h3>
+                    <p class="text-xs font-mono text-slate-500 dark:text-slate-400 mb-4 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-700">MAC: <span id="r1-mac">AA:AA:AA:AA:AA:AA</span></p>
+                    
+                    <div class="w-full space-y-2 mt-2">
+                        <div class="flex justify-between text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
+                            <span class="text-slate-500 dark:text-slate-400">Current IP</span>
+                            <span id="r1-ip" class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">0.0.0.0</span>
+                        </div>
+                        <div class="flex justify-between text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
+                            <span class="text-slate-500 dark:text-slate-400">Role</span>
+                            <span id="r1-role" class="font-bold text-slate-700 dark:text-slate-300">-</span>
+                        </div>
+                        <div class="flex flex-col mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-center gap-1">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider font-bold">DHCP State</span>
+                            <span id="r1-state" class="text-lg font-black tracking-widest px-3 py-1 rounded">INIT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Badge (Center) -->
+                <div id="link-status" class="relative z-10 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 px-4 py-2 rounded-lg shadow text-center hidden md:block min-w-[160px]">
+                    <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Network Comm</span>
+                    <span id="link-status-text" class="text-xs font-bold text-slate-600 dark:text-slate-300 font-mono"></span>
+                </div>
+
+                <!-- Server Card -->
+                <div id="r2-card" class="relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 border-slate-200 dark:border-slate-700 shadow-xl flex flex-col items-center transition-all duration-300">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 px-3 py-0.5 rounded-full text-xs font-bold border border-purple-200 dark:border-purple-700/50">Server Node</div>
+                    
+                    <div class="w-20 h-20 mb-3 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-server text-4xl text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    
+                    <h3 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">DHCP Server</h3>
+                    <p class="text-xs font-mono text-slate-500 dark:text-slate-400 mb-4 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-700">MAC: <span id="r2-mac">BB:BB:BB:BB:BB:BB</span></p>
+                    
+                    <div class="w-full space-y-2 mt-2">
+                        <div class="flex justify-between text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
+                            <span class="text-slate-500 dark:text-slate-400">Server IP</span>
+                            <span id="r2-ip" class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">10.0.0.100</span>
+                        </div>
+                        <div class="flex justify-between text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
+                            <span class="text-slate-500 dark:text-slate-400">Role</span>
+                            <span id="r2-role" class="font-bold text-slate-700 dark:text-slate-300">-</span>
+                        </div>
+                        <div class="flex flex-col mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-center gap-1">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider font-bold">Service State</span>
+                            <span id="r2-state" class="text-lg font-black tracking-widest px-3 py-1 rounded">LISTEN</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Details & CLI Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            
+            <!-- Context / Description -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center">
+                <div class="flex items-center gap-3 mb-4">
+                    <span id="phase-badge" class="px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded text-xs font-bold uppercase tracking-widest border border-amber-200 dark:border-amber-700/50">Giai đoạn</span>
+                    <span id="time-badge" class="text-sm font-mono text-slate-500 dark:text-slate-400"><i class="far fa-clock mr-1"></i>00:00:01</span>
+                </div>
+                
+                <h3 id="step-title" class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">DHCP DISCOVER</h3>
+                
+                <div class="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
+                    <p id="step-desc" class="text-base md:text-lg leading-relaxed"></p>
+                </div>
+            </section>
+
+            <!-- Right Column: CLI & Decode -->
+            <div class="flex flex-col gap-6">
+                <!-- Real-time CLI / Terminal -->
+                <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-64 md:h-72">
+                <div class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">Client/Server Logs</span>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1 font-mono text-xs md:text-sm text-emerald-400 whitespace-pre-wrap leading-relaxed shadow-inner" id="cli-logs"></div>
+                </section>
+
+                <!-- Packet Decode Panel -->
+                <section id="decode-panel" class="hidden bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow flex-1 overflow-hidden transition-all duration-300">
+                    <div class="bg-slate-50 dark:bg-slate-900/50 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-bold text-sm">
+                            <i class="fas fa-microscope text-blue-500"></i> Bóc tách Nội dung Gói tin
+                        </div>
+                        <span class="text-[10px] font-mono bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">WireShark View</span>
+                    </div>
+                    <div class="p-0 overflow-x-auto">
+                        <table class="w-full text-left text-xs font-mono">
+                            <tbody id="decode-body" class="divide-y divide-slate-100 dark:divide-slate-700/50 bg-slate-50 dark:bg-[#1e1e1e]/50 [&>tr:nth-child(even)]:bg-white dark:[&>tr:nth-child(even)]:bg-slate-800/30 px-4 block">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const labTimeline = [
+            {
+                step: 1,
+                time: "00:00:01",
+                phase: "D (DISCOVER)",
+                title: "Khám phá (DISCOVER)",
+                description: "Client (PC) vừa được bật hoặc kết nối mạng. Do chưa có địa chỉ IP, nó sử dụng IP nguồn 0.0.0.0 và gửi một gói tin Broadcast (đích 255.255.255.255, MAC FF:FF:FF:FF:FF:FF) tới UDP Port 67 để tìm kiếm DHCP Server trên mạng nội bộ.",
+                cli_logs: "C:\\> ipconfig /renew\n\nWindows IP Configuration\n\nEthernet adapter LAN:\n  Connection-specific DNS Suffix  . :\n  IPv4 Address. . . . . . . . . . . : 0.0.0.0\n  Subnet Mask . . . . . . . . . . . : 0.0.0.0\n\n*Sending DHCP DISCOVER...",
+                nodes: {
+                    R1: { state: "INIT", role: "DHCP Client", color: "slate", ip: "0.0.0.0" },
+                    R2: { state: "LISTEN", role: "DHCP Server", color: "purple", ip: "10.0.0.100" }
+                },
+                link_state: "Broadcast L2/L3",
+                animated_packet: { from: "R1", to: "R2", label: "DISCOVER", color: "bg-blue-500", icon: "fa-search", packet_decode: { "Layer 2": "Src MAC: AA:AA:..., Dst MAC: FF:FF:... (Bcast)", "Layer 3": "Src IP: 0.0.0.0, Dst IP: 255.255.255.255", "Layer 4": "UDP Src Port: 68, Dst Port: 67", "Message Type": "1 (Discover)", "Client MAC (CHADDR)": "AA:AA:AA:AA:AA:AA" } }
+            },
+            {
+                step: 2,
+                time: "00:00:02",
+                phase: "O (OFFER)",
+                title: "Đề nghị (OFFER)",
+                description: "DHCP Server nhận được DISCOVER, nó trích xuất một IP khả dụng từ Pool (vd: 10.0.0.50), gắn kèm Subnet Mask, Gateway, DNS và Lease Time để gửi phản hồi OFFER lại cho Client. IP đề xuất nằm trong trường YIADDR.",
+                cli_logs: "dhcpd: DHCPDISCOVER from aa:aa:aa:aa:aa:aa via eth0\ndhcpd: DHCPOFFER on 10.0.0.50 to aa:aa:aa:aa:aa:aa via eth0\n\nC:\\> *Received DHCP OFFER from 10.0.0.100...",
+                nodes: {
+                    R1: { state: "SELECTING", role: "DHCP Client", color: "amber", ip: "0.0.0.0" },
+                    R2: { state: "OFFERING", role: "DHCP Server", color: "indigo", ip: "10.0.0.100" }
+                },
+                link_state: "Unicast/Broadcast",
+                animated_packet: { from: "R2", to: "R1", label: "OFFER", color: "bg-amber-500", icon: "fa-gift", packet_decode: { "Layer 3": "Src IP: 10.0.0.100, Dst IP: 255.255.255.255", "Message Type": "2 (Offer)", "YIADDR (Your IP)": "10.0.0.50", "Option 1 (Subnet)": "255.255.255.0", "Option 3 (Router)": "10.0.0.1", "Option 51 (Lease)": "86400s (1 Day)" } }
+            },
+            {
+                step: 3,
+                time: "00:00:03",
+                phase: "R (REQUEST)",
+                title: "Yêu cầu (REQUEST)",
+                description: "Client có thể nhận nhiều OFFER từ nhiều Server khác nhau. Nó chọn OFFER đầu tiên, sau đó gửi Broadcast gói tin REQUEST. Mục đích Broadcast ở bước này để thông báo cho Server đã chọn là 'Tôi lấy IP này', đồng thời ngầm báo cho các Server khác thu hồi lại IP mà chúng đã chào.",
+                cli_logs: "C:\\> *Selected OFFER from 10.0.0.100\nC:\\> *Sending DHCP REQUEST (Broadcast)...",
+                nodes: {
+                    R1: { state: "REQUESTING", role: "DHCP Client", color: "indigo", ip: "0.0.0.0" },
+                    R2: { state: "WAIT_ACK", role: "DHCP Server", color: "amber", ip: "10.0.0.100" }
+                },
+                link_state: "Broadcast L2/L3",
+                animated_packet: { from: "R1", to: "R2", label: "REQUEST", color: "bg-indigo-500", icon: "fa-handshake", packet_decode: { "Layer 2": "Dst MAC: FF:FF:FF:FF:FF:FF", "Message Type": "3 (Request)", "Requested IP (Option 50)": "10.0.0.50", "Server ID (Option 54)": "10.0.0.100" } }
+            },
+            {
+                step: 4,
+                time: "00:00:04",
+                phase: "A (ACK)",
+                title: "Xác nhận (ACK)",
+                description: "Server chốt cấu hình, ghi nhận IP 10.0.0.50 thuộc về địa chỉ MAC của Client vào bảng Binding (Trạng thái: Leased). Gói tin ACK được gửi trả về để hoàn tất quá trình D.O.R.A. Client chính thức sử dụng IP này và khởi động Timer T1, T2.",
+                cli_logs: "dhcpd: DHCPREQUEST for 10.0.0.50 (10.0.0.100) from aa:aa:aa:aa:aa:aa via eth0\ndhcpd: DHCPACK on 10.0.0.50 to aa:aa:aa:aa:aa:aa via eth0\n\nC:\\> IPv4 Address. . . . . . . . . . . : 10.0.0.50\n  Subnet Mask . . . . . . . . . . . : 255.255.255.0\n  Default Gateway . . . . . . . . . : 10.0.0.1",
+                nodes: {
+                    R1: { state: "BOUND", role: "DHCP Client", color: "emerald", ip: "10.0.0.50" },
+                    R2: { state: "BOUND", role: "DHCP Server", color: "emerald", ip: "10.0.0.100" }
+                },
+                link_state: "Phiên hoàn tất",
+                animated_packet: { from: "R2", to: "R1", label: "ACK", color: "bg-emerald-500", icon: "fa-check-circle", packet_decode: { "Message Type": "5 (ACK)", "YIADDR (Your IP)": "10.0.0.50", "Option 51 (Lease)": "86400s", "Option 6 (DNS)": "8.8.8.8, 8.8.4.4" } }
+            }
+        ];
+
+        class DHCPSimulator {
+            constructor() {
+                this.currentIndex = 0;
+                this.isPlaying = false;
+                this.intervalId = null;
+                
+                // DOM Elements
+                this.dom = {
+                    timelineContainer: document.getElementById('stepper-container'),
+                    timelineProgress: document.getElementById('timeline-progress'),
+                    btnPrev: document.getElementById('btn-prev'),
+                    btnNext: document.getElementById('btn-next'),
+                    btnPlay: document.getElementById('btn-play'),
+                    iconPlay: document.getElementById('icon-play'),
+                    themeIcon: document.getElementById('theme-icon'),
+                    
+                    phaseBadge: document.getElementById('phase-badge'),
+                    timeBadge: document.getElementById('time-badge'),
+                    stepTitle: document.getElementById('step-title'),
+                    stepDesc: document.getElementById('step-desc'),
+                    cliLogs: document.getElementById('cli-logs'),
+                    
+                    r1Card: document.getElementById('r1-card'),
+                    r1Role: document.getElementById('r1-role'),
+                    r1State: document.getElementById('r1-state'),
+                    r1Ip: document.getElementById('r1-ip'),
+                    r2Card: document.getElementById('r2-card'),
+                    r2Role: document.getElementById('r2-role'),
+                    r2State: document.getElementById('r2-state'),
+                    r2Ip: document.getElementById('r2-ip'),
+                    
+                    linkStatusText: document.getElementById('link-status-text'),
+                    animatedPacket: document.getElementById('animated-packet'),
+                    packetIcon: document.getElementById('packet-icon'),
+                    packetLabel: document.getElementById('packet-label'),
+                    
+                    decodePanel: document.getElementById('decode-panel'),
+                    decodeBody: document.getElementById('decode-body')
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.buildStepper();
+                
+                let isDark = false;
+                try {
+                    const saved = localStorage.getItem('portfolio-theme');
+                    isDark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                } catch (e) {}
+                document.documentElement.classList.toggle('dark', isDark);
+                if (this.dom.themeIcon) this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+
+                this.renderStep(0);
+            }
+
+            toggleTheme() {
+                const isDark = !document.documentElement.classList.contains('dark');
+                document.documentElement.classList.toggle('dark', isDark);
+                if (this.dom.themeIcon) this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+            }
+
+            getColorClasses(colorName, type = 'bg') {
+                const colors = {
+                    slate: { bg: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600' },
+                    amber: { bg: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50' },
+                    blue: { bg: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-700/50' },
+                    purple: { bg: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border border-purple-300 dark:border-purple-700/50' },
+                    indigo: { bg: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-700/50' },
+                    orange: { bg: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-300 dark:border-orange-700/50' },
+                    emerald: { bg: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/50' }
+                };
+                return colors[colorName] ? colors[colorName][type] : colors.slate[type];
+            }
+
+            buildStepper() {
+                this.dom.timelineContainer.innerHTML = '';
+                labTimeline.forEach((data, index) => {
+                    const btn = document.createElement('button');
+                    btn.id = `step-btn-${index}`;
+                    btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm hover:scale-105`;
+                    btn.innerHTML = `<span class="hidden md:block">${data.step}. ${data.title.replace('Trạng thái ', '')}</span><span class="md:hidden">${data.step}</span>`;
+                    btn.onclick = () => { this.pause(); this.renderStep(index); };
+                    this.dom.timelineContainer.appendChild(btn);
+                });
+            }
+
+            renderStep(index) {
+                this.currentIndex = index;
+                const data = labTimeline[index];
+
+                for (let i = 0; i < labTimeline.length; i++) {
+                    const btn = document.getElementById(`step-btn-${i}`);
+                    if (!btn) continue;
+                    if (i < index) {
+                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-500 text-white border-blue-500 cursor-pointer shadow hover:bg-blue-600`;
+                    } else if (i === index) {
+                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-500 border-blue-300 dark:border-blue-700 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/50`;
+                    } else {
+                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700`;
+                    }
+                }
+                
+                const progressPercentage = (index / (labTimeline.length - 1)) * 100;
+                this.dom.timelineProgress.style.width = `${progressPercentage}%`;
+
+                this.dom.phaseBadge.textContent = data.phase;
+                this.dom.timeBadge.innerHTML = `<i class="far fa-clock mr-1"></i>${data.time}`;
+                this.dom.stepTitle.textContent = data.title;
+                this.dom.stepDesc.innerHTML = `<strong>Tiến trình:</strong> ${data.description}`;
+                this.dom.cliLogs.textContent = data.cli_logs;
+
+                this.dom.r1Role.textContent = data.nodes.R1.role;
+                this.dom.r1State.textContent = data.nodes.R1.state;
+                this.dom.r1Ip.textContent = data.nodes.R1.ip;
+                this.dom.r1State.className = `text-lg font-black tracking-widest px-3 py-1 rounded transition-colors ${this.getColorClasses(data.nodes.R1.color, 'bg')}`;
+                this.dom.r1Card.className = `relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 shadow-xl flex flex-col items-center transition-all duration-300 ${index === labTimeline.length - 1 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
+
+                this.dom.r2Role.textContent = data.nodes.R2.role;
+                this.dom.r2State.textContent = data.nodes.R2.state;
+                this.dom.r2Ip.textContent = data.nodes.R2.ip;
+                this.dom.r2State.className = `text-lg font-black tracking-widest px-3 py-1 rounded transition-colors ${this.getColorClasses(data.nodes.R2.color, 'bg')}`;
+                this.dom.r2Card.className = `relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 shadow-xl flex flex-col items-center transition-all duration-300 ${index === labTimeline.length - 1 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
+
+                if (this.dom.linkStatusText) this.dom.linkStatusText.textContent = data.link_state;
+
+                this.handlePacketAnimation(data.animated_packet);
+
+                if (this.dom.btnPrev) this.dom.btnPrev.disabled = index === 0;
+                if (this.dom.btnNext) this.dom.btnNext.disabled = index === labTimeline.length - 1;
+                
+                if (index === labTimeline.length - 1 && this.isPlaying) {
+                    this.pause();
+                }
+            }
+
+            handlePacketAnimation(packetData) {
+                this.dom.animatedPacket.classList.remove('animate-lr', 'animate-rl');
+                this.dom.animatedPacket.style.animation = 'none';
+                void this.dom.animatedPacket.offsetWidth;
+                
+                if (!packetData) {
+                    this.dom.animatedPacket.classList.add('hidden');
+                    if (this.dom.decodePanel) this.dom.decodePanel.classList.add('hidden');
+                    return;
+                }
+                
+                if (packetData.packet_decode && this.dom.decodePanel) {
+                    this.dom.decodePanel.classList.remove('hidden');
+                    this.dom.decodeBody.innerHTML = Object.entries(packetData.packet_decode).map(([key, val]) => `
+                        <tr class="w-full flex">
+                            <td class="py-2 px-4 font-semibold text-slate-400 w-1/3 min-w-[120px] whitespace-nowrap">${key}</td>
+                            <td class="py-2 pr-4 text-emerald-400 w-2/3 break-words">${val}</td>
+                        </tr>
+                    `).join('');
+                } else if (this.dom.decodePanel) {
+                    this.dom.decodePanel.classList.add('hidden');
+                }
+
+                this.dom.packetLabel.textContent = packetData.label;
+                this.dom.packetIcon.className = `fas ${packetData.icon}`;
+                
+                this.dom.animatedPacket.className = `hidden flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap ${packetData.color} shadow-lg`;
+                this.dom.animatedPacket.classList.remove('hidden');
+
+                if (packetData.from === "R1") {
+                    this.dom.animatedPacket.style.animation = '';
+                    this.dom.animatedPacket.classList.add('animate-lr');
+                } else if (packetData.from === "R2") {
+                    this.dom.animatedPacket.style.animation = '';
+                    this.dom.animatedPacket.classList.add('animate-rl');
+                }
+            }
+
+            nextStep() {
+                if (this.currentIndex < labTimeline.length - 1) {
+                    this.renderStep(this.currentIndex + 1);
+                }
+            }
+
+            prevStep() {
+                if (this.currentIndex > 0) {
+                    this.renderStep(this.currentIndex - 1);
+                }
+            }
+
+            togglePlay() {
+                if (this.isPlaying) {
+                    this.pause();
+                } else {
+                    this.play();
+                }
+            }
+
+            play() {
+                if (this.currentIndex === labTimeline.length - 1) {
+                    this.renderStep(0);
+                }
+                
+                this.isPlaying = true;
+                if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-pause';
+                if (this.dom.btnPlay) {
+                    this.dom.btnPlay.classList.replace('bg-blue-600', 'bg-amber-500');
+                    this.dom.btnPlay.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
+                    this.dom.btnPlay.classList.replace('shadow-blue-500/30', 'shadow-amber-500/30');
+                }
+
+                this.intervalId = setInterval(() => {
+                    if (this.currentIndex < labTimeline.length - 1) {
+                        this.nextStep();
+                    }
+                }, 4000);
+            }
+
+            pause() {
+                this.isPlaying = false;
+                clearInterval(this.intervalId);
+                if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-play ml-1';
+                if (this.dom.btnPlay) {
+                    this.dom.btnPlay.classList.replace('bg-amber-500', 'bg-blue-600');
+                    this.dom.btnPlay.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
+                    this.dom.btnPlay.classList.replace('shadow-amber-500/30', 'shadow-blue-500/30');
+                }
+            }
+
+            reset() {
+                this.pause();
+                this.renderStep(0);
+            }
+        }
+
+        let app;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new DHCPSimulator();
+        });
+    </script>
+</body>
+</html>
