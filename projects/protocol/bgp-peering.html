@@ -355,23 +355,22 @@
 
             init() {
                 this.buildStepper();
+                
                 let isDark = false;
                 try {
                     const saved = localStorage.getItem('portfolio-theme');
                     isDark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 } catch (e) {}
                 document.documentElement.classList.toggle('dark', isDark);
-                this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                if (this.dom.themeIcon) this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
 
                 this.renderStep(0);
             }
 
-
-
             toggleTheme() {
                 const isDark = !document.documentElement.classList.contains('dark');
                 document.documentElement.classList.toggle('dark', isDark);
-                this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                if (this.dom.themeIcon) this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
                 try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch (e) {}
             }
 
@@ -406,14 +405,7 @@
 
                 for (let i = 0; i < labTimeline.length; i++) {
                     const btn = document.getElementById(`step-btn-${i}`);
-                    if (i < index) {
-                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-500 text-white border-blue-500 cursor-pointer shadow hover:bg-blue-600`;
-                    } else if (i === index) {
-                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-500 border-blue-300 dark:border-blue-700 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/50`;
-                    } else {
-                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700`;
-                    }
-                }`);
+                    if (!btn) continue;
                     if (i < index) {
                         btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-500 text-white border-blue-500 cursor-pointer shadow hover:bg-blue-600`;
                     } else if (i === index) {
@@ -435,19 +427,19 @@
                 this.dom.r1Role.textContent = data.nodes.R1.role;
                 this.dom.r1State.textContent = data.nodes.R1.state;
                 this.dom.r1State.className = `text-lg font-black tracking-widest px-3 py-1 rounded transition-colors ${this.getColorClasses(data.nodes.R1.color, 'bg')}`;
-                this.dom.r1Card.className = `relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 shadow-xl flex flex-col items-center transition-all duration-300 ${index === 3 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
+                this.dom.r1Card.className = `relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 shadow-xl flex flex-col items-center transition-all duration-300 ${index === labTimeline.length - 1 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
 
                 this.dom.r2Role.textContent = data.nodes.R2.role;
                 this.dom.r2State.textContent = data.nodes.R2.state;
                 this.dom.r2State.className = `text-lg font-black tracking-widest px-3 py-1 rounded transition-colors ${this.getColorClasses(data.nodes.R2.color, 'bg')}`;
-                this.dom.r2Card.className = `relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 shadow-xl flex flex-col items-center transition-all duration-300 ${index === 3 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
+                this.dom.r2Card.className = `relative z-10 w-full md:w-72 bg-white dark:bg-slate-800 rounded-xl p-5 border-2 shadow-xl flex flex-col items-center transition-all duration-300 ${index === labTimeline.length - 1 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
 
-                this.dom.linkStatusText.textContent = data.link_state;
+                if (this.dom.linkStatusText) this.dom.linkStatusText.textContent = data.link_state;
 
                 this.handlePacketAnimation(data.animated_packet);
 
-                this.dom.btnPrev.disabled = index === 0;
-                this.dom.btnNext.disabled = index === labTimeline.length - 1;
+                if (this.dom.btnPrev) this.dom.btnPrev.disabled = index === 0;
+                if (this.dom.btnNext) this.dom.btnNext.disabled = index === labTimeline.length - 1;
                 
                 if (index === labTimeline.length - 1 && this.isPlaying) {
                     this.pause();
@@ -461,11 +453,11 @@
                 
                 if (!packetData) {
                     this.dom.animatedPacket.classList.add('hidden');
-                    this.dom.decodePanel.classList.add('hidden');
+                    if (this.dom.decodePanel) this.dom.decodePanel.classList.add('hidden');
                     return;
                 }
                 
-                if (packetData.packet_decode) {
+                if (packetData.packet_decode && this.dom.decodePanel) {
                     this.dom.decodePanel.classList.remove('hidden');
                     this.dom.decodeBody.innerHTML = Object.entries(packetData.packet_decode).map(([key, val]) => `
                         <tr class="w-full flex">
@@ -473,7 +465,7 @@
                             <td class="py-2 pr-4 text-emerald-400 w-2/3 break-words">${val}</td>
                         </tr>
                     `).join('');
-                } else {
+                } else if (this.dom.decodePanel) {
                     this.dom.decodePanel.classList.add('hidden');
                 }
 
@@ -518,10 +510,12 @@
                 }
                 
                 this.isPlaying = true;
-                this.dom.iconPlay.className = 'fas fa-pause';
-                this.dom.btnPlay.classList.replace('bg-blue-600', 'bg-amber-500');
-                this.dom.btnPlay.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
-                this.dom.btnPlay.classList.replace('shadow-blue-500/30', 'shadow-amber-500/30');
+                if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-pause';
+                if (this.dom.btnPlay) {
+                    this.dom.btnPlay.classList.replace('bg-blue-600', 'bg-amber-500');
+                    this.dom.btnPlay.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
+                    this.dom.btnPlay.classList.replace('shadow-blue-500/30', 'shadow-amber-500/30');
+                }
 
                 this.intervalId = setInterval(() => {
                     if (this.currentIndex < labTimeline.length - 1) {
@@ -533,10 +527,12 @@
             pause() {
                 this.isPlaying = false;
                 clearInterval(this.intervalId);
-                this.dom.iconPlay.className = 'fas fa-play ml-1';
-                this.dom.btnPlay.classList.replace('bg-amber-500', 'bg-blue-600');
-                this.dom.btnPlay.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
-                this.dom.btnPlay.classList.replace('shadow-amber-500/30', 'shadow-blue-500/30');
+                if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-play ml-1';
+                if (this.dom.btnPlay) {
+                    this.dom.btnPlay.classList.replace('bg-amber-500', 'bg-blue-600');
+                    this.dom.btnPlay.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
+                    this.dom.btnPlay.classList.replace('shadow-amber-500/30', 'shadow-blue-500/30');
+                }
             }
 
             reset() {
