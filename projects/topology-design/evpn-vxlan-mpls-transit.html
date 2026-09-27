@@ -254,12 +254,12 @@
         { id: "host-b", name: "Host-B", role: "Compute", zone: "cloud", icon: "fa-server", x: 860, y: 350, health: "green", status: "ONLINE", specs: { ip: "10.1.100.20/24", gw: "10.1.100.1", mac: "00:5E:4D:3C:2B:1A" }, tableType: "interfaces", tableData: [ { iface: "eth0", status: "up", speed: "10G" } ] }
       ],
       links: [
-        { id: "l1", src: "host-a", dst: "vtep-onprem", type: "trunk", label: "VLAN 100", srcPort: "eth0", dstPort: "Gi1/0/1" },
-        { id: "l2", src: "vtep-onprem", dst: "pe-onprem", type: "routed", label: "Underlay IPv4", srcPort: "Gi1/0/48", dstPort: "Gi0/0/1" },
-        { id: "l3", src: "pe-onprem", dst: "pe-cloud", type: "mpls", label: "MPLS L3VPN, VRF CORP", curve: 100, srcPort: "Te0/0/0", dstPort: "Te0/0/0" },
-        { id: "l4", src: "vtep-cloud", dst: "pe-cloud", type: "routed", label: "Underlay IPv4", srcPort: "Gi1/0/48", dstPort: "Gi0/0/1" },
-        { id: "l5", src: "host-b", dst: "vtep-cloud", type: "trunk", label: "VLAN 100", srcPort: "eth0", dstPort: "Gi1/0/1" },
-        { id: "l6", src: "vtep-onprem", dst: "vtep-cloud", type: "overlay", label: "VXLAN VNI 10100", curve: -120, srcPort: "Tu0", dstPort: "Tu0" }
+        { id: "l1", from: "host-a", to: "vtep-onprem", type: "trunk", label: "VLAN 100", view: "both", srcPort: "eth0", dstPort: "Gi1/0/1" },
+        { id: "l2", from: "vtep-onprem", to: "pe-onprem", type: "routed", label: "Underlay IPv4", view: "underlay", srcPort: "Gi1/0/48", dstPort: "Gi0/0/1" },
+        { id: "l3", from: "pe-onprem", to: "pe-cloud", type: "mpls", label: "MPLS L3VPN, VRF CORP", curve: 100, view: "underlay", srcPort: "Te0/0/0", dstPort: "Te0/0/0" },
+        { id: "l4", from: "vtep-cloud", to: "pe-cloud", type: "routed", label: "Underlay IPv4", view: "underlay", srcPort: "Gi1/0/48", dstPort: "Gi0/0/1" },
+        { id: "l5", from: "host-b", to: "vtep-cloud", type: "trunk", label: "VLAN 100", view: "both", srcPort: "eth0", dstPort: "Gi1/0/1" },
+        { id: "l6", from: "vtep-onprem", to: "vtep-cloud", type: "overlay", label: "VXLAN VNI 10100", curve: -120, view: "overlay", srcPort: "Tu0", dstPort: "Tu0" }
       ]
     };
 
@@ -310,7 +310,7 @@
       zonesLayer.innerHTML = '';
       data.zones.forEach(z => {
         const title = document.createElement('div');
-        title.className = 'absolute top-6 font-black text-sm tracking-[0.2em] text-slate-300 dark:text-slate-600 pointer-events-none w-full text-center transition-opacity duration-500';
+        title.className = 'absolute top-6 font-black text-sm tracking-[0.2em] text-slate-400 dark:text-slate-500 pointer-events-none w-full text-center transition-opacity duration-500';
         title.style.left = z.bounds.left + 'px';
         title.style.width = z.bounds.width + 'px';
         title.innerText = z.label;
