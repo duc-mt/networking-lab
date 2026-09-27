@@ -227,4 +227,15 @@ const PROJECTS = [
         status: 'live',
         dateAdded: '2026-10-02',
     },
+    {
+        title: 'Check Point: ISP Redundancy',
+        topic: 'Routing',
+        description:
+            'MOP triển khai Dual ISP (Primary/Backup) qua SmartConsole cho ClusterXL, giữ vững SecureXL acceleration.',
+        type: 'change-mop',
+        tags: ['Check Point', 'ClusterXL', 'ISP', 'Redundancy', 'Routing'],
+        href: 'projects/change-mop/checkpoint-isp-redundancy.html',
+        status: 'live',
+        dateAdded: '2026-10-03',
+    },
 ];
