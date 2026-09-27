@@ -126,8 +126,8 @@ const PROJECTS = [
     },
 
     {
-        id: 'rstp-convergence',
-        title: 'RSTP Link Failure & Convergence',
+        id: 'stp-convergence',
+        title: 'STP Link Failure & Convergence',
         topic: 'Network Services',
         category: 'protocol',
         type: 'protocol',
@@ -135,9 +135,9 @@ const PROJECTS = [
         dateAdded: '2026-09-27',
         image: 'assets/images/protocol-placeholder.jpg',
         description:
-            'Mô phỏng kịch bản đứt cáp và phục hồi tức thì: cơ chế Proposal/Agreement của RSTP hội tụ trong < 1 giây so với 30-50 giây của STP.',
-        tags: ['RSTP', 'STP', 'Convergence', 'Failover', 'Proposal/Agreement'],
-        href: 'projects/protocol/rstp-convergence.html',
+            'So sánh cơ chế xử lý đứt cáp và thời gian hội tụ của 4 giao thức: STP (802.1D) chậm chạp vs RSTP/MSTP (< 1s với Proposal/Agreement).',
+        tags: ['STP', 'RSTP', 'PVST+', 'MSTP', 'Convergence', 'Failover'],
+        href: 'projects/protocol/stp-convergence.html',
     },
 
     {
