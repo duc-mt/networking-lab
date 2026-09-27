@@ -208,17 +208,6 @@ const PROJECTS = [
         dateAdded: '2026-09-20',
     },
     {
-        title: 'STP Convergence',
-        topic: 'Switching',
-        description:
-            'Visualize Spanning Tree electing a root bridge and moving ports from Blocking to Forwarding.',
-        type: 'protocol',
-        tags: ['STP', 'Layer 2', 'Root Bridge', 'Switching'],
-        href: '#',
-        status: 'soon',
-        dateAdded: '2026-09-26',
-    },
-    {
         title: 'VLAN Trunking',
         topic: 'Switching',
         description: 'Walk through 802.1Q tagging across a trunk link between two switches.',
