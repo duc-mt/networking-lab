@@ -112,7 +112,7 @@
         
         <!-- Timeline Stepper -->
         <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors relative overflow-hidden">
-            <h2 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Trạng thái BGP (4 Bước)</h2>
+            <h2 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">BGP FSM (5 Bước)</h2>
             <div class="relative flex justify-between items-center w-full">
                 <!-- Background Line -->
                 <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
@@ -256,59 +256,87 @@
         const labTimeline = [
             {
                 step: 1,
-                time: "00:00:01",
-                phase: "Khởi tạo",
-                title: "Trạng thái IDLE / CONNECT",
-                description: "Quản trị viên cấu hình tiến trình BGP trên R1 và chỉ định R2 làm neighbor (peer). R1 thoát khỏi trạng thái IDLE và chuyển sang CONNECT. Tiến trình TCP được gọi để thực hiện bắt tay 3 bước (3-way handshake) qua port 179. BGP không tự đảm bảo truyền dẫn mà giao phó hoàn toàn cho TCP.",
-                cli_logs: "R1(config)# router bgp 65001\nR1(config-router)# neighbor 10.0.0.2 remote-as 65002\n*Jan  1 00:00:01.000: BGP: 10.0.0.2 went from Idle to Active\n*Jan  1 00:00:01.500: TCP: sending SYN, seq 1234567, port 179",
+                time: "00:00:00",
+                phase: "IDLE",
+                title: "Trạng thái IDLE",
+                description: "Trạng thái khởi tạo. Tiến trình BGP từ chối mọi kết nối đến. Khi Quản trị viên cấu hình bật BGP (sự kiện Start), thiết bị khởi tạo các tài nguyên cần thiết, thiết lập ConnectRetryTimer, và chuẩn bị chuyển sang trạng thái Connect.",
+                cli_logs: "R1(config)# router bgp 65001
+R1(config-router)# neighbor 10.0.0.2 remote-as 65002
+*Jan  1 00:00:00.100: BGP: 10.0.0.2 state is Idle
+*Jan  1 00:00:00.200: BGP: 10.0.0.2 Event: Start
+*Jan  1 00:00:00.300: BGP: ConnectRetryTimer started",
                 nodes: {
-                    R1: { state: "CONNECT", role: "AS 65001", color: "slate" },
+                    R1: { state: "IDLE", role: "AS 65001", color: "slate" },
                     R2: { state: "IDLE", role: "AS 65002", color: "slate" }
+                },
+                link_state: "Khởi tạo (Down)",
+                animated_packet: null
+            },
+            {
+                step: 2,
+                time: "00:00:01",
+                phase: "CONNECT",
+                title: "Trạng thái CONNECT",
+                description: "Router chờ hoàn tất bắt tay TCP 3-way (TCP/179). Nếu thành công, nó gửi bản tin OPEN và chuyển sang OpenSent. Nếu thất bại, nó rơi vào trạng thái ACTIVE và đợi ConnectRetryTimer kích hoạt lại (Retry).",
+                cli_logs: "*Jan  1 00:00:01.000: BGP: 10.0.0.2 went from Idle to Connect
+*Jan  1 00:00:01.500: TCP: sending SYN, seq 1234567, port 179
+*Jan  1 00:00:01.800: TCP: connection established with 10.0.0.2",
+                nodes: {
+                    R1: { state: "CONNECT", role: "AS 65001", color: "amber" },
+                    R2: { state: "LISTEN", role: "AS 65002", color: "slate" }
                 },
                 link_state: "TCP Handshake",
                 animated_packet: { from: "R1", to: "R2", label: "TCP SYN (Port 179)", color: "bg-slate-500", icon: "fa-handshake", packet_decode: { "Layer 4": "TCP", "Source Port": "49152 (Random)", "Dest Port": "179 (BGP)", "Flags": "SYN" } }
             },
             {
-                step: 2,
+                step: 3,
                 time: "00:00:03",
-                phase: "Gửi cấu hình",
+                phase: "OPENSENT",
                 title: "Trạng thái OPENSENT",
-                description: "Bắt tay TCP 3-way thành công. R1 lập tức đóng gói và gửi bản tin BGP OPEN chứa thông số cấu hình quan trọng (Version, ASN của R1, Hold Time, và BGP Router ID). Thiết bị chuyển sang trạng thái OPENSENT, đếm ngược chờ bản tin OPEN phản hồi từ R2.",
-                cli_logs: "R1# \n*Jan  1 00:00:02.000: TCP: connection established with 10.0.0.2\n*Jan  1 00:00:03.000: BGP: 10.0.0.2 went from Active to OpenSent\n*Jan  1 00:00:03.100: BGP: 10.0.0.2 sending OPEN, version 4, my as: 65001, holdtime 180 seconds",
+                description: "R1 đã gửi bản tin OPEN. Tại đây, thiết bị chờ và validate bản tin OPEN từ Peer: Version phải là 4, ASN phải khớp (tránh AS mismatch), BGP Identifier phải hợp lệ, và đàm phán Capabilities (IPv4/IPv6). Nếu lỗi, gửi NOTIFICATION và về lại IDLE.",
+                cli_logs: "*Jan  1 00:00:03.000: BGP: 10.0.0.2 went from Connect to OpenSent
+*Jan  1 00:00:03.100: BGP: 10.0.0.2 sending OPEN, version 4, my as: 65001, holdtime 180s
+*Jan  1 00:00:03.200: BGP: Capabilities: Route Refresh, Multi-protocol",
                 nodes: {
-                    R1: { state: "OPENSENT", role: "AS 65001", color: "amber" },
-                    R2: { state: "CONNECT", role: "AS 65002", color: "slate" }
+                    R1: { state: "OPENSENT", role: "AS 65001", color: "blue" },
+                    R2: { state: "CONNECT", role: "AS 65002", color: "amber" }
                 },
-                link_state: "Trao đổi OPEN",
-                animated_packet: { from: "R1", to: "R2", label: "BGP OPEN", color: "bg-amber-500", icon: "fa-envelope-open", packet_decode: { "BGP Type": "1 (OPEN)", "Version": "4", "My AS": "65001", "Hold Time": "180s", "Router ID": "1.1.1.1" } }
+                link_state: "Gửi BGP OPEN",
+                animated_packet: { from: "R1", to: "R2", label: "BGP OPEN", color: "bg-blue-500", icon: "fa-envelope-open", packet_decode: { "BGP Type": "1 (OPEN)", "Version": "4", "My AS": "65001", "Hold Time": "180s", "BGP Identifier": "1.1.1.1", "Capabilities": "Multiprotocol Extensions" } }
             },
             {
-                step: 3,
+                step: 4,
                 time: "00:00:05",
-                phase: "Xác nhận",
+                phase: "OPENCONFIRM",
                 title: "Trạng thái OPENCONFIRM",
-                description: "R2 nhận được bản tin OPEN, kiểm tra các tham số (ASN có khớp cấu hình không, Version hợp lệ không). Nếu pass, R2 gửi lại bản tin OPEN của mình, kèm theo bản tin KEEPALIVE xác nhận. R1 cũng hồi đáp bằng KEEPALIVE. Hai bên chờ phản hồi cuối cùng.",
-                cli_logs: "R1# \n*Jan  1 00:00:04.500: BGP: 10.0.0.2 rcv OPEN, version 4, as: 65002, holdtime 180s, id 2.2.2.2\n*Jan  1 00:00:05.000: BGP: 10.0.0.2 went from OpenSent to OpenConfirm\n*Jan  1 00:00:05.100: BGP: 10.0.0.2 sending KEEPALIVE\n*Jan  1 00:00:05.200: BGP: 10.0.0.2 rcv KEEPALIVE",
+                description: "Cả hai bên đã nhận và pass các bước validate bản tin OPEN. Thiết bị gửi bản tin KEEPALIVE xác nhận và chờ KEEPALIVE từ đối phương. Trạng thái này thường trôi qua rất nhanh (chỉ vài milliseconds).",
+                cli_logs: "*Jan  1 00:00:04.500: BGP: 10.0.0.2 rcv OPEN, version 4, as: 65002, holdtime 180s, id 2.2.2.2
+*Jan  1 00:00:05.000: BGP: 10.0.0.2 went from OpenSent to OpenConfirm
+*Jan  1 00:00:05.100: BGP: 10.0.0.2 sending KEEPALIVE
+*Jan  1 00:00:05.200: BGP: 10.0.0.2 rcv KEEPALIVE",
                 nodes: {
                     R1: { state: "OPENCONFIRM", role: "AS 65001", color: "indigo" },
                     R2: { state: "OPENCONFIRM", role: "AS 65002", color: "indigo" }
                 },
-                link_state: "Gửi KEEPALIVE",
-                animated_packet: { from: "R2", to: "R1", label: "BGP KEEPALIVE", color: "bg-indigo-500", icon: "fa-heartbeat", packet_decode: { "BGP Type": "4 (KEEPALIVE)", "Length": "19 bytes", "Payload": "Rỗng (Header only)", "Chức năng": "Duy trì Session TCP" } }
+                link_state: "Đợi KEEPALIVE",
+                animated_packet: { from: "R2", to: "R1", label: "KEEPALIVE", color: "bg-indigo-500", icon: "fa-heartbeat", packet_decode: { "BGP Type": "4 (KEEPALIVE)", "Length": "19 Bytes", "Marker": "16 Bytes (All 1s)", "Message": "No Payload" } }
             },
             {
-                step: 4,
+                step: 5,
                 time: "00:00:07",
-                phase: "Đồng bộ",
+                phase: "ESTABLISHED",
                 title: "Trạng thái ESTABLISHED",
-                description: "Phiên Peering BGP chính thức thành công (UP). Trạng thái chuyển sang ESTABLISHED. Lúc này BGP mới bắt đầu trao đổi bản tin UPDATE chứa các Route mới (NLRI) hoặc các Route bị thu hồi. Quá trình chọn lọc Best Path bắt đầu.",
-                cli_logs: "R1# \n*Jan  1 00:00:07.000: %BGP-5-ADJCHANGE: neighbor 10.0.0.2 Up \n*Jan  1 00:00:07.500: BGP: 10.0.0.2 rcv UPDATE w/ attr: nexthop 10.0.0.2, origin i, path 65002\n*Jan  1 00:00:07.510: BGP: 10.0.0.2 rcv UPDATE about 192.168.200.0/24",
+                description: "Peering thành công! BGP session đã UP hoàn toàn. Router bắt đầu trao đổi bảng định tuyến qua các bản tin UPDATE. KEEPALIVE được gửi định kỳ (1/3 HoldTimer) để duy trì session. Nếu HoldTimer hết hạn, session sẽ sập (Flapping).",
+                cli_logs: "*Jan  1 00:00:07.000: BGP: 10.0.0.2 went from OpenConfirm to Established
+*Jan  1 00:00:07.100: %BGP-5-ADJCHANGE: neighbor 10.0.0.2 Up
+*Jan  1 00:00:07.500: BGP: 10.0.0.2 sending UPDATE, prefix 10.10.10.0/24
+*Jan  1 00:00:07.800: BGP: 10.0.0.2 rcv UPDATE, prefix 20.20.20.0/24",
                 nodes: {
                     R1: { state: "ESTABLISHED", role: "AS 65001", color: "emerald" },
                     R2: { state: "ESTABLISHED", role: "AS 65002", color: "emerald" }
                 },
-                link_state: "Phiên Peering UP",
-                animated_packet: { from: "R2", to: "R1", label: "BGP UPDATE", color: "bg-emerald-500", icon: "fa-route", packet_decode: { "BGP Type": "2 (UPDATE)", "Withdrawn Routes": "None", "Path Attributes": "ORIGIN: IGP, AS_PATH: 65002, NEXT_HOP: 10.0.0.2", "NLRI (Network)": "192.168.200.0/24" } }
+                link_state: "Session UP (BGP Peered)",
+                animated_packet: { from: "R1", to: "R2", label: "UPDATE", color: "bg-emerald-500", icon: "fa-exchange-alt", packet_decode: { "BGP Type": "2 (UPDATE)", "Withdrawn Routes": "Length 0", "Path Attributes": "ORIGIN, AS_PATH, NEXT_HOP", "NLRI": "10.10.10.0/24" } }
             }
         ];
 
