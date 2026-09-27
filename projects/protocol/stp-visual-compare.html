@@ -1,575 +1,1011 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STP Variants Visual Simulator</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>STP Variants in Action</title>
 
     <script src="../../assets/js/theme-init.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                        mono: ['Fira Code', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+              mono: [
+                "Fira Code",
+                "ui-monospace",
+                "SFMono-Regular",
+                "monospace",
+              ],
+            },
+          },
+        },
+      };
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/theme.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/css/theme.css" />
 
     <style>
-        @keyframes emeraldPulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+      @keyframes dash {
+        to {
+          stroke-dashoffset: -16;
         }
-        .sync-pulse { animation: emeraldPulse 2s infinite; border-color: #10b981 !important; }
-        @keyframes dash {
-            to { stroke-dashoffset: -16; }
+      }
+      .animate-dash {
+        animation: dash 1s linear infinite;
+      }
+      @keyframes packetPop {
+        0% {
+          transform: translate(-50%, -50%) scale(0.5);
+          opacity: 0;
         }
-        .animate-dash { animation: dash 1s linear infinite; }
+        15% {
+          transform: translate(-50%, -50%) scale(1.1);
+          opacity: 1;
+        }
+        85% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
     </style>
-</head>
+  </head>
 
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col">
+  <body
+    class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col"
+  >
     <!-- Header -->
-    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
-        <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0" title="Về trang chủ Portfolio">
-                    <i class="fas fa-network-wired"></i>
-                </a>
-                <div>
-                    <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                        <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
-                    </a>
-                    <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">STP Variants (Visual Simulation)</h1>
-                </div>
-            </div>
-            <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
-                <button id="btn-prev" onclick="app.prevStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-backward"></i></button>
-                <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/30 transition-all-fast"><i id="icon-play" class="fas fa-play ml-1"></i></button>
-                <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-forward"></i></button>
-                <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
-                <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
-                <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
-                <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i id="theme-icon" class="fas fa-sun"></i></button>
-            </div>
+    <header
+      class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="flex items-center gap-3">
+          <a
+            href="../../index.html"
+            class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0"
+            title="Về trang chủ Portfolio"
+          >
+            <i class="fas fa-network-wired"></i>
+          </a>
+          <div>
+            <a
+              href="../../index.html"
+              class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+            >
+              <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+            </a>
+            <h1
+              class="text-xl font-bold text-slate-900 dark:text-white leading-tight"
+            >
+              STP Variants in Action
+            </h1>
+          </div>
         </div>
+        <div
+          class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700"
+        >
+          <button
+            id="btn-prev"
+            onclick="app.prevStep()"
+            class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"
+          >
+            <i class="fas fa-step-backward"></i>
+          </button>
+          <button
+            id="btn-play"
+            onclick="app.togglePlay()"
+            class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/30 transition-all-fast"
+          >
+            <i id="icon-play" class="fas fa-play ml-1"></i>
+          </button>
+          <button
+            id="btn-next"
+            onclick="app.nextStep()"
+            class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"
+          >
+            <i class="fas fa-step-forward"></i>
+          </button>
+          <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+          <button
+            onclick="app.reset()"
+            class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"
+          >
+            <i class="fas fa-undo"></i>
+          </button>
+          <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+          <button
+            onclick="app.toggleTheme()"
+            class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"
+          >
+            <i id="theme-icon" class="fas fa-sun"></i>
+          </button>
+        </div>
+      </div>
     </header>
 
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
-        
-        <!-- Timeline Stepper -->
-        <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors relative overflow-hidden">
-            <h2 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">So sánh Mô hình Hoạt động</h2>
-            <div class="relative flex justify-between items-center w-full">
-                <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
-                <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out"></div>
-                <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-2"></div>
-            </div>
-        </section>
-
-        <!-- Topology Canvas -->
-        <section id="topology-canvas" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[450px] md:min-h-[550px] transition-all duration-500">
-            <!-- Dynamic SVG Links -->
-            <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
-
-            <!-- Node: SW1 (Core 1) -->
-            <div id="node-SW1" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left: 25%; top: 25%; transform: translate(-50%, -50%);">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-blue-200 dark:border-blue-700/50 whitespace-nowrap" id="role-SW1">Role Placeholder</div>
-                <div class="w-12 h-12 md:w-16 md:h-16 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                    <i class="fas fa-server text-2xl md:text-3xl text-slate-700 dark:text-slate-300"></i>
-                </div>
-                <h3 class="text-lg md:text-xl font-extrabold text-slate-800 dark:text-white tracking-tight">Core SW-1</h3>
-                <span id="state-SW1" class="text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded">INIT</span>
-            </div>
-
-            <!-- Node: SW2 (Core 2) -->
-            <div id="node-SW2" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left: 75%; top: 25%; transform: translate(-50%, -50%);">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-emerald-200 dark:border-emerald-700/50 whitespace-nowrap" id="role-SW2">Role Placeholder</div>
-                <div class="w-12 h-12 md:w-16 md:h-16 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                    <i class="fas fa-server text-2xl md:text-3xl text-slate-700 dark:text-slate-300"></i>
-                </div>
-                <h3 class="text-lg md:text-xl font-extrabold text-slate-800 dark:text-white tracking-tight text-center">Core SW-2</h3>
-                <span id="state-SW2" class="text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded">INIT</span>
-            </div>
-
-            <!-- Node: SW3 (Access) -->
-            <div id="node-SW3" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left: 50%; top: 75%; transform: translate(-50%, -50%);">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-amber-200 dark:border-amber-700/50 whitespace-nowrap" id="role-SW3">Role Placeholder</div>
-                <div class="w-12 h-12 md:w-16 md:h-16 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                    <i class="fas fa-layer-group text-2xl md:text-3xl text-slate-700 dark:text-slate-300"></i>
-                </div>
-                <h3 class="text-lg md:text-xl font-extrabold text-slate-800 dark:text-white tracking-tight text-center">Access SW-3</h3>
-                <span id="state-SW3" class="text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded">INIT</span>
-            </div>
-
-            <!-- Central Link Status Badge -->
-            <div id="link-status" class="absolute z-10 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded shadow text-center backdrop-blur-sm transition-all duration-500" style="left: 50%; top: 50%; transform: translate(-50%, -50%);">
-                <span class="block text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-0.5">Chiến lược Cáp</span>
-                <span id="link-status-text" class="text-xs md:text-sm font-bold text-slate-600 dark:text-slate-300 font-mono"></span>
-            </div>
-
-            <!-- Dynamic Animated Packet -->
-            <div id="animated-packet" class="absolute z-50 hidden flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap shadow-lg transition-colors duration-300" style="left: 0; top: 0; transform: translate(-50%, -50%);">
-                <i id="packet-icon" class="fas fa-envelope"></i>
-                <span id="packet-label">Packet</span>
-            </div>
-        </section>
-
-        <!-- Details & CLI Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center">
-                <div class="flex items-center gap-3 mb-4">
-                    <span id="phase-badge" class="px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded text-xs font-bold uppercase tracking-widest border border-amber-200 dark:border-amber-700/50">Giai đoạn</span>
-                    <span id="time-badge" class="text-sm font-mono text-slate-500 dark:text-slate-400"><i class="far fa-clock mr-1"></i>00:00:01</span>
-                </div>
-                <h3 id="step-title" class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Step Title</h3>
-                <div class="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
-                    <p id="step-desc" class="text-base md:text-lg leading-relaxed"></p>
-                </div>
-            </section>
-
-            <div class="flex flex-col gap-6">
-                <!-- Real-time CLI -->
-                <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-64 md:h-72">
-                    <div class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-                            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                        </div>
-                        <span class="text-xs font-mono text-slate-400">Control Plane Output</span>
-                    </div>
-                    <div class="p-4 overflow-y-auto flex-1 font-mono text-xs md:text-sm text-emerald-400 whitespace-pre-wrap leading-relaxed shadow-inner" id="cli-logs"></div>
-                </section>
-
-                <!-- Decode Panel -->
-                <section id="decode-panel" class="hidden bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow flex-1 overflow-hidden transition-all duration-300">
-                    <div class="bg-slate-50 dark:bg-slate-900/50 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-bold text-sm">
-                            <i class="fas fa-microscope text-blue-500"></i> Logic Trạng Thái
-                        </div>
-                        <span class="text-[10px] font-mono bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">State Insight</span>
-                    </div>
-                    <div class="p-0 overflow-x-auto">
-                        <table class="w-full text-left text-xs font-mono">
-                            <tbody id="decode-body" class="divide-y divide-slate-100 dark:divide-slate-700/50 bg-slate-50 dark:bg-[#1e1e1e]/50 [&>tr:nth-child(even)]:bg-white dark:[&>tr:nth-child(even)]:bg-slate-800/30 px-4 block">
-                                <!-- Populated by JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-            </div>
+    <main
+      class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6"
+    >
+      <!-- Mode Toggle (4 variants) -->
+      <div class="flex items-center justify-center">
+        <div
+          id="mode-toggle-bar"
+          class="flex flex-wrap justify-center items-center gap-1 bg-slate-200/50 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700"
+        >
+          <button
+            id="mode-btn-stp"
+            onclick="app.switchMode('stp')"
+            class="mode-btn px-4 py-2 text-sm font-bold rounded-lg transition-all"
+          >
+            <i class="fas fa-tree mr-1.5"></i>STP
+            <span class="ml-1 text-[10px] opacity-60">802.1D</span>
+          </button>
+          <button
+            id="mode-btn-pvst"
+            onclick="app.switchMode('pvst')"
+            class="mode-btn px-4 py-2 text-sm font-bold rounded-lg transition-all"
+          >
+            <i class="fas fa-layer-group mr-1.5"></i>PVST+
+            <span class="ml-1 text-[10px] opacity-60">Cisco</span>
+          </button>
+          <button
+            id="mode-btn-rstp"
+            onclick="app.switchMode('rstp')"
+            class="mode-btn px-4 py-2 text-sm font-bold rounded-lg transition-all"
+          >
+            <i class="fas fa-bolt mr-1.5"></i>RSTP
+            <span class="ml-1 text-[10px] opacity-60">802.1w</span>
+          </button>
+          <button
+            id="mode-btn-mstp"
+            onclick="app.switchMode('mstp')"
+            class="mode-btn px-4 py-2 text-sm font-bold rounded-lg transition-all"
+          >
+            <i class="fas fa-cubes mr-1.5"></i>MSTP
+            <span class="ml-1 text-[10px] opacity-60">802.1s</span>
+          </button>
         </div>
+      </div>
+
+      <!-- Timeline Stepper (per-mode steps) -->
+      <section
+        class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors"
+      >
+        <div class="relative flex justify-between items-center w-full">
+          <div
+            class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"
+          ></div>
+          <div
+            id="timeline-progress"
+            class="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out"
+          ></div>
+          <div
+            id="stepper-container"
+            class="flex justify-between w-full relative z-10 gap-2"
+          ></div>
+        </div>
+      </section>
+
+      <!-- Topology Canvas -->
+      <section
+        id="topology-canvas"
+        class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[450px] md:min-h-[520px] transition-all duration-500"
+      >
+        <svg
+          id="links-svg"
+          class="absolute inset-0 w-full h-full z-0 pointer-events-none"
+        ></svg>
+
+        <!-- Node: Core SW-1 (Top-Left) -->
+        <div
+          id="node-SW1"
+          class="absolute w-36 md:w-52 bg-white dark:bg-slate-800 rounded-xl p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10"
+          style="left: 25%; top: 25%; transform: translate(-50%, -50%)"
+        >
+          <div
+            id="role-SW1"
+            class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap"
+          >
+            Core SW-1
+          </div>
+          <div
+            class="w-12 h-12 md:w-14 md:h-14 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner"
+          >
+            <i
+              class="fas fa-server text-2xl text-slate-700 dark:text-slate-300"
+            ></i>
+          </div>
+          <h3
+            class="text-base md:text-lg font-extrabold text-slate-800 dark:text-white tracking-tight"
+          >
+            Core SW-1
+          </h3>
+          <span
+            id="state-SW1"
+            class="text-[10px] md:text-xs font-black tracking-widest px-2 py-1 mt-2 rounded"
+            >INIT</span
+          >
+        </div>
+
+        <!-- Node: Core SW-2 (Top-Right) -->
+        <div
+          id="node-SW2"
+          class="absolute w-36 md:w-52 bg-white dark:bg-slate-800 rounded-xl p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10"
+          style="left: 75%; top: 25%; transform: translate(-50%, -50%)"
+        >
+          <div
+            id="role-SW2"
+            class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap"
+          >
+            Core SW-2
+          </div>
+          <div
+            class="w-12 h-12 md:w-14 md:h-14 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner"
+          >
+            <i
+              class="fas fa-server text-2xl text-slate-700 dark:text-slate-300"
+            ></i>
+          </div>
+          <h3
+            class="text-base md:text-lg font-extrabold text-slate-800 dark:text-white tracking-tight text-center"
+          >
+            Core SW-2
+          </h3>
+          <span
+            id="state-SW2"
+            class="text-[10px] md:text-xs font-black tracking-widest px-2 py-1 mt-2 rounded"
+            >INIT</span
+          >
+        </div>
+
+        <!-- Node: Access SW-3 (Bottom-Center) -->
+        <div
+          id="node-SW3"
+          class="absolute w-36 md:w-52 bg-white dark:bg-slate-800 rounded-xl p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10"
+          style="left: 50%; top: 75%; transform: translate(-50%, -50%)"
+        >
+          <div
+            id="role-SW3"
+            class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap"
+          >
+            Access SW-3
+          </div>
+          <div
+            class="w-12 h-12 md:w-14 md:h-14 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner"
+          >
+            <i
+              class="fas fa-layer-group text-2xl text-slate-700 dark:text-slate-300"
+            ></i>
+          </div>
+          <h3
+            class="text-base md:text-lg font-extrabold text-slate-800 dark:text-white tracking-tight text-center"
+          >
+            Access SW-3
+          </h3>
+          <span
+            id="state-SW3"
+            class="text-[10px] md:text-xs font-black tracking-widest px-2 py-1 mt-2 rounded"
+            >INIT</span
+          >
+        </div>
+
+        <!-- Link Status Badge -->
+        <div
+          id="link-status"
+          class="absolute z-10 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded shadow text-center backdrop-blur-sm"
+          style="left: 50%; top: 52%; transform: translate(-50%, -50%)"
+        >
+          <span
+            class="block text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-0.5"
+            >Trạng thái Kết nối</span
+          >
+          <span
+            id="link-status-text"
+            class="text-xs font-bold text-slate-600 dark:text-slate-300 font-mono"
+          ></span>
+        </div>
+
+        <!-- Animated Packet -->
+        <div
+          id="animated-packet"
+          class="absolute z-50 hidden items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap shadow-lg"
+          style="left: 0; top: 0; transform: translate(-50%, -50%)"
+        >
+          <i id="packet-icon" class="fas fa-envelope"></i>
+          <span id="packet-label">Packet</span>
+        </div>
+      </section>
+
+      <!-- Details & CLI Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <section
+          class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center"
+        >
+          <div class="flex items-center gap-3 mb-4">
+            <span
+              id="phase-badge"
+              class="px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded text-xs font-bold uppercase tracking-widest border border-amber-200 dark:border-amber-700/50"
+            ></span>
+            <span
+              id="convergence-badge"
+              class="px-2 py-1 rounded text-xs font-bold border"
+            ></span>
+          </div>
+          <h3
+            id="step-title"
+            class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400"
+          ></h3>
+          <p
+            id="step-desc"
+            class="text-base md:text-lg leading-relaxed text-slate-600 dark:text-slate-300"
+          ></p>
+        </section>
+
+        <div class="flex flex-col gap-6">
+          <!-- CLI -->
+          <section
+            class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-56 md:h-64"
+          >
+            <div
+              class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none"
+            >
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+              </div>
+              <span class="text-xs font-mono text-slate-400"
+                >show spanning-tree</span
+              >
+            </div>
+            <div
+              class="p-4 overflow-y-auto flex-1 font-mono text-xs text-emerald-400 whitespace-pre-wrap leading-relaxed"
+              id="cli-logs"
+            ></div>
+          </section>
+
+          <!-- Decode Panel -->
+          <section
+            id="decode-panel"
+            class="hidden bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow overflow-hidden"
+          >
+            <div
+              class="bg-slate-50 dark:bg-slate-900/50 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2"
+            >
+              <i class="fas fa-info-circle text-blue-500"></i>
+              <span
+                class="text-slate-600 dark:text-slate-300 font-bold text-sm"
+                >Điểm Phân Biệt Cốt Lõi</span
+              >
+            </div>
+            <div class="p-0 overflow-x-auto">
+              <table class="w-full text-left text-xs font-mono">
+                <tbody
+                  id="decode-body"
+                  class="divide-y divide-slate-100 dark:divide-slate-700/50 block"
+                ></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
     </main>
 
     <script>
-        const labTimeline = [
+      // ─────────────────────────────────────────────────────────
+      // Data: 4 modes, each with their own step-timeline
+      // ─────────────────────────────────────────────────────────
+      const MODES = {
+        stp: {
+          label: "STP",
+          accent: "blue",
+          convergence: "30–50s",
+          convergenceColor: "red",
+          steps: [
             {
-                step: 1,
-                time: "802.1D",
-                phase: "CST",
-                title: "STP Truyền thống: 1 Cây cho Mọi VLAN",
-                description: `Tất cả VLAN (10, 20) dùng chung một cấu trúc cây duy nhất. <strong>Core 1</strong> làm Root cho toàn mạng. Đường cáp từ Access Switch sang Core 2 bị khóa (Block) hoàn toàn để chống loop. <strong>Nhược điểm:</strong> Lãng phí một nửa băng thông Uplink, không thể Load Balancing.`,
-                cli_logs: `SW3# show spanning-tree\nVLAN 10: Gi0/2 is BLOCKED\nVLAN 20: Gi0/2 is BLOCKED\n% All traffic goes through Core 1.`,
-                nodes: {
-                    SW1: { label: "Root Bridge (CST)", state: "ROOT", role: "VLAN 10 & 20", color: "indigo" },
-                    SW2: { label: "Secondary Bridge", state: "FORWARDING", role: "VLAN 10 & 20", color: "slate" },
-                    SW3: { label: "Cáp Phải Bị Khóa", state: "BLOCKING", role: "No Load-Balancing", color: "red" }
-                },
-                links: [
-                    { source: "SW3", target: "SW1", state: "ACTIVE" },
-                    { source: "SW1", target: "SW2", state: "ACTIVE" },
-                    { source: "SW3", target: "SW2", state: "BLOCKED" }
-                ],
-                link_state: "Cáp SW3 -> Core 2 bị khóa hoàn toàn",
-                animated_packet: {
-                    from: "SW3", to: "SW1", label: "VLAN 10+20 Traffic", color: "bg-blue-500", icon: "fa-layer-group",
-                    packet_decode: { "VLAN": "10, 20", "Path": "SW3 -> Core 1", "Core 2 Link": "Blocked for ALL" }
-                }
+              step: 1,
+              phase: "Root Election",
+              title: "STP: Bầu chọn Root Bridge duy nhất",
+              description: `Tất cả Switch gửi BPDU Multicast. SW1 có <strong>Priority thấp nhất (4096)</strong> giành chiến thắng. Mọi cổng của SW1 trở thành Designated Port và bắt đầu chuyển tiếp dữ liệu.`,
+              cli_logs: `SW1# show spanning-tree\nVLAN0001\n  Root ID    Priority    4096\n             Address     aaaa.aaaa.aaaa\n             This bridge is the root\n  Bridge ID  Priority    4096`,
+              nodes: {
+                SW1: { state: "ROOT BRIDGE", role: "Priority: 4096", color: "indigo" },
+                SW2: { state: "LISTENING", role: "Priority: 32768", color: "slate" },
+                SW3: { state: "LISTENING", role: "Priority: 32768", color: "slate" },
+              },
+              links: [
+                { source: "SW1", target: "SW2", state: "ACTIVE" },
+                { source: "SW1", target: "SW3", state: "ACTIVE" },
+                { source: "SW2", target: "SW3", state: "ACTIVE" },
+              ],
+              link_state: "Trao đổi BPDU để bầu Root",
+              packet: { from: "SW1", to: "SW2", label: "BPDU Multicast", color: "bg-indigo-500", icon: "fa-tower-broadcast" },
+              decode: { "Cơ chế hội tụ": "Timer cứng (50s)", "BPDU Type": "Configuration BPDU", "Root ID": "4096.AAAA" },
             },
             {
-                step: 2,
-                time: "Cisco",
-                phase: "PVST+",
-                title: "PVST+: Cân bằng tải theo VLAN",
-                description: `Mỗi VLAN sở hữu một cây STP riêng. Ta cấu hình <strong>Core 1 làm Root cho VLAN 10</strong>, và <strong>Core 2 làm Root cho VLAN 20</strong>. Kết quả: Cáp SW3-SW1 chuyển dữ liệu VLAN 10 (khóa VLAN 20), cáp SW3-SW2 chuyển dữ liệu VLAN 20 (khóa VLAN 10). Tối ưu hóa 100% Uplink!`,
-                cli_logs: `SW3# show spanning-tree vlan 10\nGi0/1 (to Core 1): FORWARDING\nGi0/2 (to Core 2): BLOCKED\n\nSW3# show spanning-tree vlan 20\nGi0/1 (to Core 1): BLOCKED\nGi0/2 (to Core 2): FORWARDING`,
-                nodes: {
-                    SW1: { label: "Root (VLAN 10)", state: "FORWARDING", role: "Block V20", color: "blue" },
-                    SW2: { label: "Root (VLAN 20)", state: "FORWARDING", role: "Block V10", color: "emerald" },
-                    SW3: { label: "Tối ưu hóa Cáp", state: "LOAD BALANCING", role: "Active/Active", color: "amber" }
-                },
-                links: [
-                    { source: "SW3", target: "SW1", state: "ACTIVE" }, 
-                    { source: "SW3", target: "SW2", state: "ACTIVE" }, 
-                    { source: "SW1", target: "SW2", state: "ACTIVE" }
-                ],
-                link_state: "Sử dụng cả 2 cáp Uplink (Load Balancing)",
-                animated_packet: {
-                    from: "SW3", to: "SW2", label: "VLAN 20 Traffic", color: "bg-emerald-500", icon: "fa-truck-fast",
-                    packet_decode: { "VLAN": "20", "Path": "SW3 -> Core 2", "Status": "Per-VLAN Load Balancing" }
-                }
+              step: 2,
+              phase: "Port Blocking",
+              title: "STP: Khóa cổng — Lãng phí Uplink",
+              description: `Sau khi bầu xong Root Port và Designated Port, cổng Access → Core 2 bị chuyển sang <strong>Blocking</strong> vì kém ưu thế hơn. Toàn bộ VLAN (10, 20, ...) đều đi chung một đường. Không thể Load-Balancing!`,
+              cli_logs: `SW3# show spanning-tree vlan 10\n  Gi0/1 (to Core 1): FORWARDING  <-- Root Port\n  Gi0/2 (to Core 2): BLOCKING    <-- Blocked\n\nSW3# show spanning-tree vlan 20\n  Gi0/1 (to Core 1): FORWARDING\n  Gi0/2 (to Core 2): BLOCKING    <-- Same!`,
+              nodes: {
+                SW1: { state: "ROOT BRIDGE", role: "DP / DP — All VLANs", color: "indigo" },
+                SW2: { state: "FORWARDING", role: "Gi0/2 Blocked đầu kia", color: "slate" },
+                SW3: { state: "BLOCKING", role: "Gi0/2 → BLOCKED ❌", color: "red" },
+              },
+              links: [
+                { source: "SW3", target: "SW1", state: "ACTIVE" },
+                { source: "SW1", target: "SW2", state: "ACTIVE" },
+                { source: "SW3", target: "SW2", state: "BLOCKED" },
+              ],
+              link_state: "Cáp SW3 → Core 2 bị BLOCK cho tất cả VLAN",
+              packet: { from: "SW3", to: "SW1", label: "VLAN 10+20 Traffic", color: "bg-red-500", icon: "fa-exclamation-triangle" },
+              decode: { "Nhược điểm": "Lãng phí 1 đường Uplink", "Load-Balancing": "Không thể!", "Failover": "30–50s nếu đứt cáp" },
+            },
+          ],
+        },
+
+        pvst: {
+          label: "PVST+",
+          accent: "blue",
+          convergence: "30–50s",
+          convergenceColor: "amber",
+          steps: [
+            {
+              step: 1,
+              phase: "Per-VLAN Instance",
+              title: "PVST+: Mỗi VLAN — Một cây STP riêng",
+              description: `Cisco tách mỗi VLAN ra chạy một tiến trình STP độc lập. Ta cấu hình <strong>SW1 làm Root cho VLAN 10</strong> và <strong>SW2 làm Root cho VLAN 20</strong>. Cả hai cổng Uplink của SW3 đều hoạt động đồng thời!`,
+              cli_logs: `SW1(config)# spanning-tree mode pvst\nSW1(config)# spanning-tree vlan 10 priority 4096\nSW1(config)# spanning-tree vlan 20 priority 32768\n\nSW2(config)# spanning-tree vlan 10 priority 32768\nSW2(config)# spanning-tree vlan 20 priority 4096`,
+              nodes: {
+                SW1: { state: "ROOT VLAN10", role: "Priority 4096 / VLAN 10", color: "blue" },
+                SW2: { state: "ROOT VLAN20", role: "Priority 4096 / VLAN 20", color: "emerald" },
+                SW3: { state: "LOAD BALANCE", role: "Active/Active Uplink", color: "amber" },
+              },
+              links: [
+                { source: "SW3", target: "SW1", state: "ACTIVE" },
+                { source: "SW3", target: "SW2", state: "ACTIVE" },
+                { source: "SW1", target: "SW2", state: "ACTIVE" },
+              ],
+              link_state: "Cả 2 Uplink đều FORWARDING — Load Balancing!",
+              packet: { from: "SW3", to: "SW1", label: "VLAN 10 Traffic", color: "bg-blue-500", icon: "fa-layer-group" },
+              decode: { "VLAN 10 Path": "SW3 → Core 1", "VLAN 20 Path": "SW3 → Core 2", "Ưu điểm": "Load Balancing per-VLAN" },
             },
             {
-                step: 3,
-                time: "802.1w",
-                phase: "RSTP",
-                title: "RSTP: Hội tụ Cực Tốc (Proposal/Agreement)",
-                description: `RSTP vẫn có kiến trúc giống hệt PVST/STP nhưng nâng cấp cơ chế đàm phán. Thay vì đếm ngược Timer 50s, cổng dự phòng được cấp vai trò <strong>Alternate Port</strong>. Khi cáp chính đứt, cổng Alternate bật lên trạng thái Forwarding chỉ qua vài gói tin bắt tay (Sync) < 1 giây.`,
-                cli_logs: `*Link SW3-Core1 goes DOWN*\nSW3# Sending Proposal to Core 2 on Gi0/2\nCore2# Sending Agreement to SW3\nSW3# Gi0/2 changes to FORWARDING (0.1s delay)`,
-                nodes: {
-                    SW1: { label: "Root Bridge", state: "DOWN", role: "Đứt cáp Uplink", color: "red" },
-                    SW2: { label: "Secondary Bridge", state: "FORWARDING", role: "New Active Root", color: "emerald" },
-                    SW3: { label: "Failover Tức thì", state: "SYNCING", role: "ALTN -> FWD", color: "indigo" }
-                },
-                links: [
-                    { source: "SW3", target: "SW1", state: "BLOCKED" }, 
-                    { source: "SW1", target: "SW2", state: "IDLE" },
-                    { source: "SW3", target: "SW2", state: "ACTIVE" } 
-                ],
-                link_state: "Chuyển hướng dự phòng trong < 1s",
-                animated_packet: {
-                    from: "SW3", to: "SW2", label: "Sync Proposal", color: "bg-indigo-500", icon: "fa-bolt",
-                    packet_decode: { "Type": "RSTP BPDU", "Flags": "Proposal = 1", "Action": "Fast Convergence Handshake" }
-                }
+              step: 2,
+              phase: "CPU Overhead",
+              title: "PVST+: Nhược điểm — Quá tải CPU",
+              description: `Khi quy mô lên đến 500 VLAN, Switch phải duy trì <strong>500 cây STP riêng biệt</strong>, xử lý 500 luồng BPDU. CPU Switch Backbone bị quá tải nghiêm trọng. Đây chính là bài toán MSTP ra đời để giải quyết.`,
+              cli_logs: `Core1# show spanning-tree summary\nSwitch is in pvst mode\nRootbridgefor: VLAN0001 VLAN0002...VLAN0500\nPortsinststate: 243 forwarding 257 blocking\n\n% CPU Usage: 78% (WARNING: High!)`,
+              nodes: {
+                SW1: { state: "CPU OVERLOAD", role: "500 Instances!", color: "red" },
+                SW2: { state: "CPU OVERLOAD", role: "500 Instances!", color: "red" },
+                SW3: { state: "OK", role: "Access Switch", color: "slate" },
+              },
+              links: [
+                { source: "SW3", target: "SW1", state: "ACTIVE" },
+                { source: "SW3", target: "SW2", state: "ACTIVE" },
+                { source: "SW1", target: "SW2", state: "ACTIVE" },
+              ],
+              link_state: "500 BPDU streams — Core Switch quá tải",
+              packet: { from: "SW1", to: "SW2", label: "x500 BPDU Floods", color: "bg-red-500", icon: "fa-fire" },
+              decode: { "Nhược điểm": "CPU hao tốn theo số VLAN", "1000 VLANs": "1000 tiến trình STP!", "Giải pháp": "→ Dùng MSTP" },
+            },
+          ],
+        },
+
+        rstp: {
+          label: "RSTP",
+          accent: "emerald",
+          convergence: "< 1s",
+          convergenceColor: "emerald",
+          steps: [
+            {
+              step: 1,
+              phase: "Alternate Port",
+              title: "RSTP: Cổng Dự Phòng (Alternate Port)",
+              description: `Thay vì bị Blocking "câm nín", cổng dự phòng trong RSTP có vai trò mới: <strong>Alternate Port</strong>. Nó vẫn lắng nghe BPDU nhưng được chuẩn bị sẵn sàng để chuyển sang Forwarding ngay lập tức, không cần chờ Timer.`,
+              cli_logs: `SW3# show spanning-tree\nGi0/1 (to Core 1): FORWARDING - Root Port\nGi0/2 (to Core 2): ALTERNATE  - Standby Ready\n\n% SW3 is ready for instant failover on Gi0/2.`,
+              nodes: {
+                SW1: { state: "ROOT BRIDGE", role: "Active Root", color: "indigo" },
+                SW2: { state: "FORWARDING", role: "Designated", color: "emerald" },
+                SW3: { state: "ALTN PORT", role: "Gi0/2 = Standby", color: "amber" },
+              },
+              links: [
+                { source: "SW3", target: "SW1", state: "ACTIVE" },
+                { source: "SW1", target: "SW2", state: "ACTIVE" },
+                { source: "SW3", target: "SW2", state: "IDLE" },
+              ],
+              link_state: "Cáp SW3→Core2 sẵn sàng dự phòng (Alternate)",
+              packet: { from: "SW3", to: "SW1", label: "Data (Normal)", color: "bg-emerald-500", icon: "fa-check-circle" },
+              decode: { "Alternate Port": "Sẵn sàng dự phòng tức thì", "vs STP Blocking": "STP Block = im lặng hoàn toàn", "Ưu điểm": "Failover < 1 giây" },
             },
             {
-                step: 4,
-                time: "802.1s",
-                phase: "MSTP",
-                title: "MSTP: Tối ưu CPU (Gom nhóm Instance)",
-                description: `PVST+ sinh ra quá nhiều cây STP (vd 100 VLAN = 100 cây gây quá tải CPU). MSTP giải quyết bằng cách "gom nhóm". <strong>Instance 1</strong> cho VLAN 1-50, <strong>Instance 2</strong> cho VLAN 51-100. Core 1 làm Root cho Instance 1, Core 2 làm Root cho Instance 2. Tiết kiệm tài nguyên tuyệt đối!`,
-                cli_logs: `SW3# show spanning-tree mst configuration\nName: REGION-1, Revision: 1\nInstance 1: VLANs 1-50\nInstance 2: VLANs 51-100\n\nSW3# MSTI 1: Gi0/1 FWD, Gi0/2 BLK\nSW3# MSTI 2: Gi0/1 BLK, Gi0/2 FWD`,
-                nodes: {
-                    SW1: { label: "Root MSTI-1", state: "FORWARDING", role: "VLANs 1-50", color: "blue" },
-                    SW2: { label: "Root MSTI-2", state: "FORWARDING", role: "VLANs 51-100", color: "emerald" },
-                    SW3: { label: "Ánh xạ Region", state: "LOAD BALANCING", role: "Map VLAN to MSTI", color: "purple" }
-                },
-                links: [
-                    { source: "SW3", target: "SW1", state: "ACTIVE" },
-                    { source: "SW3", target: "SW2", state: "ACTIVE" },
-                    { source: "SW1", target: "SW2", state: "ACTIVE" }
-                ],
-                link_state: "Quản lý hàng trăm VLAN qua 2 Instance",
-                animated_packet: {
-                    from: "SW3", to: "SW1", label: "BPDU (MSTI)", color: "bg-purple-500", icon: "fa-cubes",
-                    packet_decode: { "Region Name": "REGION-1", "MSTI 1": "Root = Core 1", "MSTI 2": "Root = Core 2" }
-                }
-            }
-        ];
+              step: 2,
+              phase: "Rapid Convergence",
+              title: "RSTP: Đứt Cáp → Hội Tụ Tức Thì!",
+              description: `Khi cáp lên Core 1 đứt, thay vì chờ Timer 50s, RSTP kích hoạt cơ chế <strong>Proposal/Agreement (Sync)</strong>. Chỉ sau 2–3 gói tin bắt tay, cổng Alternate của SW3 bật lên <strong>Forwarding</strong> trong chưa tới 1 giây!`,
+              cli_logs: `*Nov 01 08:00:01: %LINK-3-UPDOWN: Gi0/1 (Core 1) DOWN\n\nSW3# Sending RST BPDU (Proposal) on Gi0/2...\nCore2# Received Proposal. Sending Agreement.\nSW3# Gi0/2 -> FORWARDING (0.05s elapsed)\n\n%SPANTREE-5-TOPOTIE: Converged in 0.1s!`,
+              nodes: {
+                SW1: { state: "LINK DOWN", role: "Cáp đứt! ❌", color: "red" },
+                SW2: { state: "NEW ROOT?", role: "Nhận Proposal", color: "emerald" },
+                SW3: { state: "SYNCING", role: "ALTN → FWD < 1s", color: "indigo" },
+              },
+              links: [
+                { source: "SW3", target: "SW1", state: "BLOCKED" },
+                { source: "SW1", target: "SW2", state: "IDLE" },
+                { source: "SW3", target: "SW2", state: "ACTIVE" },
+              ],
+              link_state: "Đứt cáp chính → Alternate lên Forwarding < 1s",
+              packet: { from: "SW3", to: "SW2", label: "RST Proposal/Agree", color: "bg-indigo-500", icon: "fa-bolt" },
+              decode: { "Cơ chế": "Proposal / Agreement (Sync)", "Thời gian": "< 1 giây", "vs STP Timer": "STP cần 30–50s (Max Age)" },
+            },
+          ],
+        },
 
-        class MultiNodeSimulator {
-            constructor() {
-                this.currentIndex = 0;
-                this.isPlaying = false;
-                this.intervalId = null;
-                this.currentAnimation = null;
-                
-                this.dom = {
-                    timelineContainer: document.getElementById('stepper-container'),
-                    timelineProgress: document.getElementById('timeline-progress'),
-                    btnPrev: document.getElementById('btn-prev'),
-                    btnNext: document.getElementById('btn-next'),
-                    btnPlay: document.getElementById('btn-play'),
-                    iconPlay: document.getElementById('icon-play'),
-                    themeIcon: document.getElementById('theme-icon'),
-                    
-                    phaseBadge: document.getElementById('phase-badge'),
-                    timeBadge: document.getElementById('time-badge'),
-                    stepTitle: document.getElementById('step-title'),
-                    stepDesc: document.getElementById('step-desc'),
-                    cliLogs: document.getElementById('cli-logs'),
-                    
-                    topologyCanvas: document.getElementById('topology-canvas'),
-                    linksSvg: document.getElementById('links-svg'),
-                    linkStatusText: document.getElementById('link-status-text'),
-                    
-                    animatedPacket: document.getElementById('animated-packet'),
-                    packetIcon: document.getElementById('packet-icon'),
-                    packetLabel: document.getElementById('packet-label'),
-                    
-                    decodePanel: document.getElementById('decode-panel'),
-                    decodeBody: document.getElementById('decode-body')
-                };
+        mstp: {
+          label: "MSTP",
+          accent: "purple",
+          convergence: "< 1s",
+          convergenceColor: "emerald",
+          steps: [
+            {
+              step: 1,
+              phase: "Instance Mapping",
+              title: "MSTP: Gom nhóm VLAN vào Instance",
+              description: `Thay vì 500 cây STP (PVST+), MSTP <strong>gom nhóm VLAN</strong> vào các Instance. Instance 1 cho VLAN 1–50, Instance 2 cho VLAN 51–100. Toàn bộ Switch trong cùng Region chạy chung cấu hình này.`,
+              cli_logs: `SW1(config)# spanning-tree mode mst\nSW1(config)# spanning-tree mst configuration\nSW1(config-mst)# name REGION-CORE\nSW1(config-mst)# revision 1\nSW1(config-mst)# instance 1 vlan 1-50\nSW1(config-mst)# instance 2 vlan 51-100\nSW1(config-mst)# end`,
+              nodes: {
+                SW1: { state: "ROOT MSTI-1", role: "VLANs 1–50", color: "purple" },
+                SW2: { state: "ROOT MSTI-2", role: "VLANs 51–100", color: "purple" },
+                SW3: { state: "REGION OK", role: "Member of REGION-CORE", color: "slate" },
+              },
+              links: [
+                { source: "SW3", target: "SW1", state: "ACTIVE" },
+                { source: "SW3", target: "SW2", state: "ACTIVE" },
+                { source: "SW1", target: "SW2", state: "ACTIVE" },
+              ],
+              link_state: "2 Instance thay vì 500 — CPU tiết kiệm tối đa",
+              packet: { from: "SW3", to: "SW1", label: "BPDU (MST CIST)", color: "bg-purple-500", icon: "fa-cubes" },
+              decode: { "Region Name": "REGION-CORE", "Revision": "1", "Instance 1": "VLANs 1-50 (Root = SW1)" },
+            },
+            {
+              step: 2,
+              phase: "Load Balancing",
+              title: "MSTP: Load Balancing qua Instance",
+              description: `SW1 làm Root cho Instance 1 (VLAN 1–50) nên cáp SW3→SW1 là đường ưu tiên cho nhóm VLAN này. SW2 làm Root cho Instance 2 (VLAN 51–100) nên cáp SW3→SW2 được tận dụng. <strong>Load-Balancing mà không tốn CPU!</strong>`,
+              cli_logs: `SW3# show spanning-tree mst 1\nMST 1 (VLANs 1-50)\n  Gi0/1 (Core1): FORWARDING - Root Port\n  Gi0/2 (Core2): ALTERNATE\n\nSW3# show spanning-tree mst 2\nMST 2 (VLANs 51-100)\n  Gi0/1 (Core1): ALTERNATE\n  Gi0/2 (Core2): FORWARDING - Root Port`,
+              nodes: {
+                SW1: { state: "ROOT MSTI-1", role: "VLANs 1–50", color: "blue" },
+                SW2: { state: "ROOT MSTI-2", role: "VLANs 51–100", color: "emerald" },
+                SW3: { state: "LOAD BALANCE", role: "Active/Active (Mapped)", color: "purple" },
+              },
+              links: [
+                { source: "SW3", target: "SW1", state: "ACTIVE" },
+                { source: "SW3", target: "SW2", state: "ACTIVE" },
+                { source: "SW1", target: "SW2", state: "ACTIVE" },
+              ],
+              link_state: "Cả 2 Uplink tận dụng — PVST+ hiệu quả + CPU thấp",
+              packet: { from: "SW3", to: "SW2", label: "VLAN 51-100 Traffic", color: "bg-emerald-500", icon: "fa-truck-fast" },
+              decode: { "MSTI 1 Path": "SW3 → Core 1", "MSTI 2 Path": "SW3 → Core 2", "Tổng Instance": "2 (không phải 100!)" },
+            },
+          ],
+        },
+      };
 
-                window.addEventListener('resize', () => {
-                    this.drawLinks(labTimeline[this.currentIndex].links);
-                });
+      class STPVariantSimulator {
+        constructor() {
+          this.mode = "stp";
+          this.currentIndex = 0;
+          this.isPlaying = false;
+          this.intervalId = null;
+          this.currentAnimation = null;
 
-                this.init();
-            }
+          this.dom = {
+            timelineContainer: document.getElementById("stepper-container"),
+            timelineProgress: document.getElementById("timeline-progress"),
+            btnPrev: document.getElementById("btn-prev"),
+            btnNext: document.getElementById("btn-next"),
+            btnPlay: document.getElementById("btn-play"),
+            iconPlay: document.getElementById("icon-play"),
+            themeIcon: document.getElementById("theme-icon"),
+            phaseBadge: document.getElementById("phase-badge"),
+            convergenceBadge: document.getElementById("convergence-badge"),
+            stepTitle: document.getElementById("step-title"),
+            stepDesc: document.getElementById("step-desc"),
+            cliLogs: document.getElementById("cli-logs"),
+            topologyCanvas: document.getElementById("topology-canvas"),
+            linksSvg: document.getElementById("links-svg"),
+            linkStatusText: document.getElementById("link-status-text"),
+            animatedPacket: document.getElementById("animated-packet"),
+            packetIcon: document.getElementById("packet-icon"),
+            packetLabel: document.getElementById("packet-label"),
+            decodePanel: document.getElementById("decode-panel"),
+            decodeBody: document.getElementById("decode-body"),
+          };
 
-            init() {
-                this.buildStepper();
-                
-                let isDark = false;
-                try {
-                    const saved = localStorage.getItem('portfolio-theme');
-                    isDark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                } catch (e) {}
-                document.documentElement.classList.toggle('dark', isDark);
-                if (this.dom.themeIcon) this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+          window.addEventListener("resize", () => {
+            const steps = MODES[this.mode].steps;
+            this.drawLinks(steps[this.currentIndex].links);
+          });
 
-                this.renderStep(0);
-            }
-
-            toggleTheme() {
-                const isDark = !document.documentElement.classList.contains('dark');
-                document.documentElement.classList.toggle('dark', isDark);
-                if (this.dom.themeIcon) this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-                try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch (e) {}
-            }
-
-            getColorClasses(colorName, type = 'bg') {
-                const colors = {
-                    slate: { bg: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600' },
-                    amber: { bg: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700/50' },
-                    blue: { bg: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700/50' },
-                    purple: { bg: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-300 dark:border-purple-700/50' },
-                    indigo: { bg: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700/50' },
-                    emerald: { bg: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/50' },
-                    red: { bg: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700/50' }
-                };
-                return colors[colorName] ? colors[colorName][type] : colors.slate[type];
-            }
-
-            buildStepper() {
-                this.dom.timelineContainer.innerHTML = '';
-                labTimeline.forEach((data, index) => {
-                    const btn = document.createElement('button');
-                    btn.id = `step-btn-${index}`;
-                    btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm hover:scale-105`;
-                    btn.innerHTML = `<span class="hidden md:block">${data.step}. ${data.phase}</span><span class="md:hidden">${data.step}</span>`;
-                    btn.onclick = () => { this.pause(); this.renderStep(index); };
-                    this.dom.timelineContainer.appendChild(btn);
-                });
-            }
-
-            drawLinks(links) {
-                if (!this.dom.linksSvg) return;
-                this.dom.linksSvg.innerHTML = '';
-                
-                const canvasRect = this.dom.topologyCanvas.getBoundingClientRect();
-
-                links.forEach(link => {
-                    const srcNode = document.getElementById('node-' + link.source);
-                    const tgtNode = document.getElementById('node-' + link.target);
-                    if (!srcNode || !tgtNode) return;
-
-                    const sRect = srcNode.getBoundingClientRect();
-                    const tRect = tgtNode.getBoundingClientRect();
-
-                    const sx = sRect.left - canvasRect.left + sRect.width / 2;
-                    const sy = sRect.top - canvasRect.top + sRect.height / 2;
-                    const tx = tRect.left - canvasRect.left + tRect.width / 2;
-                    const ty = tRect.top - canvasRect.top + tRect.height / 2;
-
-                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", sx);
-                    line.setAttribute("y1", sy);
-                    line.setAttribute("x2", tx);
-                    line.setAttribute("y2", ty);
-                    line.setAttribute("stroke-width", "5");
-                    line.setAttribute("stroke-linecap", "round");
-
-                    const isDark = document.documentElement.classList.contains('dark');
-
-                    if (link.state === "ACTIVE") {
-                        line.setAttribute("stroke", isDark ? "#60a5fa" : "#3b82f6"); // blue
-                        line.setAttribute("stroke-dasharray", "12, 12");
-                        line.classList.add("animate-dash");
-                    } else if (link.state === "BLOCKED") {
-                        line.setAttribute("stroke", isDark ? "rgba(239, 68, 68, 0.6)" : "rgba(239, 68, 68, 0.8)"); // red
-                        line.setAttribute("stroke-dasharray", "4, 16");
-                    } else {
-                        line.setAttribute("stroke", isDark ? "rgba(71, 85, 105, 0.4)" : "rgba(203, 213, 225, 0.6)");
-                    }
-                    this.dom.linksSvg.appendChild(line);
-                });
-            }
-
-            renderStep(index) {
-                this.currentIndex = index;
-                const data = labTimeline[index];
-
-                for (let i = 0; i < labTimeline.length; i++) {
-                    const btn = document.getElementById(`step-btn-${i}`);
-                    if (!btn) continue;
-                    if (i < index) {
-                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-500 text-white border-blue-500 cursor-pointer shadow hover:bg-blue-600`;
-                    } else if (i === index) {
-                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-500 border-blue-300 dark:border-blue-700 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/50`;
-                    } else {
-                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700`;
-                    }
-                }
-                
-                const progressPercentage = (index / (labTimeline.length - 1)) * 100;
-                this.dom.timelineProgress.style.width = `${progressPercentage}%`;
-
-                this.dom.phaseBadge.textContent = data.phase;
-                this.dom.timeBadge.innerHTML = `<i class="far fa-clock mr-1"></i>${data.time}`;
-                this.dom.stepTitle.textContent = data.title;
-                this.dom.stepDesc.innerHTML = `<strong>Tiến trình:</strong> ${data.description}`;
-                this.dom.cliLogs.textContent = data.cli_logs;
-
-                Object.keys(data.nodes).forEach(nodeId => {
-                    const nodeData = data.nodes[nodeId];
-                    const stateEl = document.getElementById(`state-${nodeId}`);
-                    const roleEl = document.getElementById(`role-${nodeId}`);
-                    const cardEl = document.getElementById(`node-${nodeId}`);
-                    
-                    if (stateEl && cardEl) {
-                        stateEl.textContent = nodeData.state;
-                        stateEl.className = `text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded transition-colors ${this.getColorClasses(nodeData.color, 'bg')} border`;
-                        
-                        if(roleEl && nodeData.role) {
-                            roleEl.textContent = nodeData.role;
-                            roleEl.className = `absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border whitespace-nowrap ${this.getColorClasses(nodeData.color, 'bg')}`;
-                        }
-
-                        cardEl.className = `absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10 ${nodeData.color === 'red' ? 'border-red-500 shadow-red-500/20' : (index === labTimeline.length - 1 && nodeId !== 'SW2' ? 'border-purple-500 shadow-purple-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700')}`;
-                    }
-                });
-
-                if (this.dom.linkStatusText) this.dom.linkStatusText.textContent = data.link_state;
-                this.drawLinks(data.links);
-                this.handlePacketAnimation(data.animated_packet);
-
-                if (this.dom.btnPrev) this.dom.btnPrev.disabled = index === 0;
-                if (this.dom.btnNext) this.dom.btnNext.disabled = index === labTimeline.length - 1;
-                
-                if (index === labTimeline.length - 1 && this.isPlaying) {
-                    this.pause();
-                }
-            }
-
-            handlePacketAnimation(packetData) {
-                if (this.currentAnimation) {
-                    this.currentAnimation.cancel();
-                }
-                
-                if (!packetData) {
-                    this.dom.animatedPacket.classList.add('hidden');
-                    if (this.dom.decodePanel) this.dom.decodePanel.classList.add('hidden');
-                    return;
-                }
-                
-                if (packetData.packet_decode && this.dom.decodePanel) {
-                    this.dom.decodePanel.classList.remove('hidden');
-                    this.dom.decodeBody.innerHTML = Object.entries(packetData.packet_decode).map(([key, val]) => `
-                        <tr class="w-full flex">
-                            <td class="py-2 px-4 font-semibold text-slate-400 w-1/3 min-w-[120px] whitespace-nowrap">${key}</td>
-                            <td class="py-2 pr-4 text-emerald-400 w-2/3 break-words">${val}</td>
-                        </tr>
-                    `).join('');
-                } else if (this.dom.decodePanel) {
-                    this.dom.decodePanel.classList.add('hidden');
-                }
-
-                this.dom.packetLabel.textContent = packetData.label;
-                this.dom.packetIcon.className = `fas ${packetData.icon}`;
-                this.dom.animatedPacket.className = `absolute z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-bold text-white whitespace-nowrap ${packetData.color} shadow-lg`;
-                
-                const srcNode = document.getElementById('node-' + packetData.from);
-                const tgtNode = document.getElementById('node-' + packetData.to);
-                
-                if (srcNode && tgtNode) {
-                    this.dom.animatedPacket.classList.remove('hidden');
-                    const canvasRect = this.dom.topologyCanvas.getBoundingClientRect();
-                    const sRect = srcNode.getBoundingClientRect();
-                    const tRect = tgtNode.getBoundingClientRect();
-
-                    const sx = sRect.left - canvasRect.left + sRect.width / 2;
-                    const sy = sRect.top - canvasRect.top + sRect.height / 2;
-                    const tx = tRect.left - canvasRect.left + tRect.width / 2;
-                    const ty = tRect.top - canvasRect.top + tRect.height / 2;
-
-                    this.dom.animatedPacket.style.left = "0px";
-                    this.dom.animatedPacket.style.top = "0px";
-
-                    this.currentAnimation = this.dom.animatedPacket.animate([
-                        { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(0.8)`, opacity: 0 },
-                        { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(1)`, opacity: 1, offset: 0.1 },
-                        { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(1)`, opacity: 1, offset: 0.9 },
-                        { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(0.8)`, opacity: 0, offset: 1 }
-                    ], {
-                        duration: 3000,
-                        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                        fill: 'forwards'
-                    });
-                }
-            }
-
-            nextStep() {
-                if (this.currentIndex < labTimeline.length - 1) {
-                    this.renderStep(this.currentIndex + 1);
-                }
-            }
-
-            prevStep() {
-                if (this.currentIndex > 0) {
-                    this.renderStep(this.currentIndex - 1);
-                }
-            }
-
-            togglePlay() {
-                if (this.isPlaying) {
-                    this.pause();
-                } else {
-                    this.play();
-                }
-            }
-
-            play() {
-                if (this.currentIndex === labTimeline.length - 1) {
-                    this.renderStep(0);
-                }
-                this.isPlaying = true;
-                if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-pause';
-                if (this.dom.btnPlay) {
-                    this.dom.btnPlay.classList.replace('bg-blue-600', 'bg-amber-500');
-                    this.dom.btnPlay.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
-                    this.dom.btnPlay.classList.replace('shadow-blue-500/30', 'shadow-amber-500/30');
-                }
-                this.intervalId = setInterval(() => {
-                    if (this.currentIndex < labTimeline.length - 1) {
-                        this.nextStep();
-                    }
-                }, 5500);
-            }
-
-            pause() {
-                this.isPlaying = false;
-                clearInterval(this.intervalId);
-                if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-play ml-1';
-                if (this.dom.btnPlay) {
-                    this.dom.btnPlay.classList.replace('bg-amber-500', 'bg-blue-600');
-                    this.dom.btnPlay.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
-                    this.dom.btnPlay.classList.replace('shadow-amber-500/30', 'shadow-blue-500/30');
-                }
-            }
-
-            reset() {
-                this.pause();
-                this.renderStep(0);
-            }
+          this.init();
         }
 
-        let app;
-        window.addEventListener('DOMContentLoaded', () => {
-            app = new MultiNodeSimulator();
-        });
+        init() {
+          let isDark = false;
+          try {
+            const saved = localStorage.getItem("portfolio-theme");
+            isDark = saved
+              ? saved === "dark"
+              : window.matchMedia &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches;
+          } catch (e) {}
+          document.documentElement.classList.toggle("dark", isDark);
+          if (this.dom.themeIcon)
+            this.dom.themeIcon.className = isDark ? "fas fa-sun" : "fas fa-moon";
+
+          this.updateModeToggleUI();
+          this.buildStepper();
+          this.renderStep(0);
+        }
+
+        switchMode(mode) {
+          if (this.mode === mode) return;
+          this.pause();
+          this.mode = mode;
+          this.currentIndex = 0;
+          this.updateModeToggleUI();
+          this.buildStepper();
+          this.renderStep(0);
+        }
+
+        updateModeToggleUI() {
+          const modeKeys = ["stp", "pvst", "rstp", "mstp"];
+          const accentColors = {
+            stp: "bg-blue-600 text-white shadow-sm",
+            pvst: "bg-blue-600 text-white shadow-sm",
+            rstp: "bg-emerald-600 text-white shadow-sm",
+            mstp: "bg-purple-600 text-white shadow-sm",
+          };
+          const inactiveCls =
+            "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50";
+
+          modeKeys.forEach((key) => {
+            const btn = document.getElementById(`mode-btn-${key}`);
+            if (!btn) return;
+            btn.className = `mode-btn px-4 py-2 text-sm font-bold rounded-lg transition-all ${
+              key === this.mode ? accentColors[key] : inactiveCls
+            }`;
+          });
+
+          // Update convergence badge
+          const modeData = MODES[this.mode];
+          const colorMap = {
+            red: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700/50",
+            amber:
+              "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700/50",
+            emerald:
+              "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/50",
+          };
+          this.dom.convergenceBadge.textContent = `⚡ ${modeData.convergence}`;
+          this.dom.convergenceBadge.className = `px-2 py-1 rounded text-xs font-bold border ${colorMap[modeData.convergenceColor]}`;
+        }
+
+        buildStepper() {
+          const steps = MODES[this.mode].steps;
+          this.dom.timelineContainer.innerHTML = "";
+          steps.forEach((data, index) => {
+            const btn = document.createElement("button");
+            btn.id = `step-btn-${index}`;
+            btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm hover:scale-105`;
+            btn.innerHTML = `<span class="hidden md:block">${data.step}. ${data.phase}</span><span class="md:hidden">${data.step}</span>`;
+            btn.onclick = () => {
+              this.pause();
+              this.renderStep(index);
+            };
+            this.dom.timelineContainer.appendChild(btn);
+          });
+        }
+
+        getColorClasses(colorName) {
+          const colors = {
+            slate:
+              "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600",
+            amber:
+              "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700/50",
+            blue: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700/50",
+            purple:
+              "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-300 dark:border-purple-700/50",
+            indigo:
+              "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700/50",
+            emerald:
+              "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/50",
+            red: "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700/50",
+          };
+          return colors[colorName] || colors.slate;
+        }
+
+        drawLinks(links) {
+          if (!this.dom.linksSvg) return;
+          this.dom.linksSvg.innerHTML = "";
+          const canvasRect =
+            this.dom.topologyCanvas.getBoundingClientRect();
+          const isDark = document.documentElement.classList.contains("dark");
+
+          links.forEach((link) => {
+            const srcNode = document.getElementById("node-" + link.source);
+            const tgtNode = document.getElementById("node-" + link.target);
+            if (!srcNode || !tgtNode) return;
+
+            const sRect = srcNode.getBoundingClientRect();
+            const tRect = tgtNode.getBoundingClientRect();
+            const sx = sRect.left - canvasRect.left + sRect.width / 2;
+            const sy = sRect.top - canvasRect.top + sRect.height / 2;
+            const tx = tRect.left - canvasRect.left + tRect.width / 2;
+            const ty = tRect.top - canvasRect.top + tRect.height / 2;
+
+            const line = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "line"
+            );
+            line.setAttribute("x1", sx);
+            line.setAttribute("y1", sy);
+            line.setAttribute("x2", tx);
+            line.setAttribute("y2", ty);
+            line.setAttribute("stroke-width", "5");
+            line.setAttribute("stroke-linecap", "round");
+
+            if (link.state === "ACTIVE") {
+              line.setAttribute("stroke", isDark ? "#60a5fa" : "#3b82f6");
+              line.setAttribute("stroke-dasharray", "12, 12");
+              line.classList.add("animate-dash");
+            } else if (link.state === "BLOCKED") {
+              line.setAttribute(
+                "stroke",
+                isDark ? "rgba(239,68,68,0.7)" : "rgba(239,68,68,0.9)"
+              );
+              line.setAttribute("stroke-dasharray", "4, 16");
+            } else {
+              line.setAttribute(
+                "stroke",
+                isDark
+                  ? "rgba(71,85,105,0.35)"
+                  : "rgba(203,213,225,0.5)"
+              );
+              line.setAttribute("stroke-dasharray", "6, 12");
+            }
+            this.dom.linksSvg.appendChild(line);
+          });
+        }
+
+        renderStep(index) {
+          const steps = MODES[this.mode].steps;
+          this.currentIndex = index;
+          const data = steps[index];
+
+          // Stepper UI
+          for (let i = 0; i < steps.length; i++) {
+            const btn = document.getElementById(`step-btn-${i}`);
+            if (!btn) continue;
+            if (i < index) {
+              btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-500 text-white border-blue-500 cursor-pointer shadow`;
+            } else if (i === index) {
+              btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-500 border-blue-300 dark:border-blue-700 cursor-pointer`;
+            } else {
+              btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer`;
+            }
+          }
+
+          const pct = steps.length > 1 ? (index / (steps.length - 1)) * 100 : 100;
+          this.dom.timelineProgress.style.width = `${pct}%`;
+
+          // Content
+          this.dom.phaseBadge.textContent = data.phase;
+          this.dom.stepTitle.textContent = data.title;
+          this.dom.stepDesc.innerHTML = data.description;
+          this.dom.cliLogs.textContent = data.cli_logs;
+
+          // Nodes
+          Object.keys(data.nodes).forEach((nodeId) => {
+            const nodeData = data.nodes[nodeId];
+            const stateEl = document.getElementById(`state-${nodeId}`);
+            const roleEl = document.getElementById(`role-${nodeId}`);
+            const cardEl = document.getElementById(`node-${nodeId}`);
+            if (!stateEl || !cardEl) return;
+
+            stateEl.textContent = nodeData.state;
+            stateEl.className = `text-[10px] md:text-xs font-black tracking-widest px-2 py-1 mt-2 rounded transition-colors ${this.getColorClasses(nodeData.color)} border`;
+
+            if (roleEl) {
+              roleEl.textContent = nodeData.role;
+              roleEl.className = `absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap ${this.getColorClasses(nodeData.color)}`;
+            }
+
+            const isRed = nodeData.color === "red";
+            cardEl.className = `absolute w-36 md:w-52 bg-white dark:bg-slate-800 rounded-xl p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10 ${
+              isRed
+                ? "border-red-500 shadow-red-500/20"
+                : "border-slate-200 dark:border-slate-700"
+            }`;
+          });
+
+          // Links
+          this.dom.linkStatusText.textContent = data.link_state;
+          this.drawLinks(data.links);
+
+          // Packet animation
+          this.animatePacket(data.packet);
+
+          // Decode
+          if (data.decode && this.dom.decodePanel) {
+            this.dom.decodePanel.classList.remove("hidden");
+            this.dom.decodeBody.innerHTML = Object.entries(data.decode)
+              .map(
+                ([key, val]) => `
+              <tr class="w-full flex">
+                <td class="py-2 px-4 font-semibold text-slate-400 w-2/5 min-w-[120px] whitespace-nowrap">${key}</td>
+                <td class="py-2 pr-4 text-emerald-400 w-3/5 break-words">${val}</td>
+              </tr>`
+              )
+              .join("");
+          }
+
+          if (this.dom.btnPrev)
+            this.dom.btnPrev.disabled = index === 0;
+          if (this.dom.btnNext)
+            this.dom.btnNext.disabled = index === steps.length - 1;
+          if (index === steps.length - 1 && this.isPlaying) this.pause();
+        }
+
+        animatePacket(packetData) {
+          if (this.currentAnimation) this.currentAnimation.cancel();
+          if (!packetData) {
+            this.dom.animatedPacket.classList.add("hidden");
+            return;
+          }
+
+          const srcNode = document.getElementById("node-" + packetData.from);
+          const tgtNode = document.getElementById("node-" + packetData.to);
+          if (!srcNode || !tgtNode) return;
+
+          this.dom.packetLabel.textContent = packetData.label;
+          this.dom.packetIcon.className = `fas ${packetData.icon}`;
+          this.dom.animatedPacket.className = `absolute z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-bold text-white whitespace-nowrap ${packetData.color} shadow-lg`;
+          this.dom.animatedPacket.classList.remove("hidden");
+
+          const canvasRect = this.dom.topologyCanvas.getBoundingClientRect();
+          const sRect = srcNode.getBoundingClientRect();
+          const tRect = tgtNode.getBoundingClientRect();
+          const sx = sRect.left - canvasRect.left + sRect.width / 2;
+          const sy = sRect.top - canvasRect.top + sRect.height / 2;
+          const tx = tRect.left - canvasRect.left + tRect.width / 2;
+          const ty = tRect.top - canvasRect.top + tRect.height / 2;
+
+          this.dom.animatedPacket.style.left = "0px";
+          this.dom.animatedPacket.style.top = "0px";
+
+          this.currentAnimation = this.dom.animatedPacket.animate(
+            [
+              {
+                transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(0.8)`,
+                opacity: 0,
+              },
+              {
+                transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(1)`,
+                opacity: 1,
+                offset: 0.1,
+              },
+              {
+                transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(1)`,
+                opacity: 1,
+                offset: 0.88,
+              },
+              {
+                transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(0.8)`,
+                opacity: 0,
+              },
+            ],
+            {
+              duration: 2800,
+              easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+              fill: "forwards",
+            }
+          );
+        }
+
+        nextStep() {
+          const steps = MODES[this.mode].steps;
+          if (this.currentIndex < steps.length - 1)
+            this.renderStep(this.currentIndex + 1);
+        }
+
+        prevStep() {
+          if (this.currentIndex > 0) this.renderStep(this.currentIndex - 1);
+        }
+
+        togglePlay() {
+          this.isPlaying ? this.pause() : this.play();
+        }
+
+        play() {
+          const steps = MODES[this.mode].steps;
+          if (this.currentIndex === steps.length - 1) this.renderStep(0);
+          this.isPlaying = true;
+          if (this.dom.iconPlay) this.dom.iconPlay.className = "fas fa-pause";
+          if (this.dom.btnPlay) {
+            this.dom.btnPlay.classList.replace("bg-blue-600", "bg-amber-500");
+            this.dom.btnPlay.classList.replace(
+              "hover:bg-blue-700",
+              "hover:bg-amber-600"
+            );
+            this.dom.btnPlay.classList.replace(
+              "shadow-blue-500/30",
+              "shadow-amber-500/30"
+            );
+          }
+          this.intervalId = setInterval(() => {
+            const s = MODES[this.mode].steps;
+            if (this.currentIndex < s.length - 1) this.nextStep();
+          }, 5000);
+        }
+
+        pause() {
+          this.isPlaying = false;
+          clearInterval(this.intervalId);
+          if (this.dom.iconPlay)
+            this.dom.iconPlay.className = "fas fa-play ml-1";
+          if (this.dom.btnPlay) {
+            this.dom.btnPlay.classList.replace("bg-amber-500", "bg-blue-600");
+            this.dom.btnPlay.classList.replace(
+              "hover:bg-amber-600",
+              "hover:bg-blue-700"
+            );
+            this.dom.btnPlay.classList.replace(
+              "shadow-amber-500/30",
+              "shadow-blue-500/30"
+            );
+          }
+        }
+
+        reset() {
+          this.pause();
+          this.renderStep(0);
+        }
+
+        toggleTheme() {
+          const isDark = !document.documentElement.classList.contains("dark");
+          document.documentElement.classList.toggle("dark", isDark);
+          if (this.dom.themeIcon)
+            this.dom.themeIcon.className = isDark ? "fas fa-sun" : "fas fa-moon";
+          try {
+            localStorage.setItem(
+              "portfolio-theme",
+              isDark ? "dark" : "light"
+            );
+          } catch (e) {}
+          this.drawLinks(MODES[this.mode].steps[this.currentIndex].links);
+        }
+      }
+
+      let app;
+      window.addEventListener("DOMContentLoaded", () => {
+        app = new STPVariantSimulator();
+      });
     </script>
-</body>
+  </body>
 </html>
