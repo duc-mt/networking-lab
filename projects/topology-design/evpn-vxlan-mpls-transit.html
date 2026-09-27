@@ -112,8 +112,8 @@
         <div class="h-6 w-px bg-slate-700"></div>
         <h1 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-3">
           WAN & Multi-Cloud Transit
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30">EVPN-VXLAN STRETCHED L2</span>
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">MPLS UNDERLAY</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30">EVPN-VXLAN STRETCHED L2</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">MPLS UNDERLAY</span>
         </h1>
       </div>
       <div class="flex items-center gap-4">
@@ -128,11 +128,11 @@
   <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col gap-8">
     
     <!-- Design Note Callout -->
-    <div class="bg-amber-950/30 border border-amber-900/50 rounded-xl p-4 flex gap-4 items-start">
-      <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-1 text-xl shrink-0"></i>
+    <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl p-4 flex gap-4 items-start shadow-sm">
+      <i class="fa-solid fa-triangle-exclamation text-amber-600 dark:text-amber-500 mt-1 text-xl shrink-0"></i>
       <div>
-        <h4 class="text-amber-400 font-semibold mb-1">Crucial Design Note: MTU & Overhead Warning</h4>
-        <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+        <h4 class="text-amber-800 dark:text-amber-400 font-bold mb-1">Crucial Design Note: MTU & Overhead Warning</h4>
+        <p class="text-amber-900/80 dark:text-slate-300 text-sm leading-relaxed">
           VXLAN encapsulation adds <strong>~50-54 bytes</strong> of overhead (Outer IP 20B + UDP 8B + VXLAN 8B + Outer Ethernet 14-18B). 
           Đường truyền MPLS Underlay bắt buộc phải cấu hình Path MTU đủ lớn (thường 1554-1600 bytes, hoặc cấu hình Jumbo Frames 9000 bytes) trên toàn tuyến từ đầu đến cuối. 
           Nếu cấu hình MTU sai, các gói tin nhỏ như `ping` (ICMP 64 bytes) vẫn phản hồi bình thường, nhưng các gói TCP/UDP kích thước lớn sẽ bị drop im lặng (do cờ DF-bit không cho phép phân mảnh), dẫn đến tình trạng "Ping thông nhưng App không chạy".
