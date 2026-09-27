@@ -32,3 +32,8 @@ Mỗi khi khởi tạo, chỉnh sửa HTML/CSS hoặc các thành phần giao di
 ## 5. Cấu trúc mã nguồn Lab (Engine & Templates)
 - Bất cứ khi nào được yêu cầu tạo bài Lab mới, AI **PHẢI** đọc qua file `docs/prompt-templates.md` để chọn đúng 1 trong 8 cấu trúc có sẵn (Ví dụ: Protocol Simulator, Troubleshooting, v.v.).
 - Bắt buộc tuân thủ các quy tắc bất biến trong template như: cách dùng hàm `clampNodes()`, cách làm nút `Mode Toggle`, và các Quy ước song ngữ Anh-Việt (Bilingual Standards) đã ghi chú trong đó.
+
+## 6. Quy ước Song ngữ (Bilingual Standards)
+Khi viết nội dung hiển thị trên UI, bắt buộc pha trộn Anh - Việt theo quy chuẩn Kỹ sư mạng:
+- **Tiếng Anh (Giữ nguyên):** Tiêu đề Lab chính (H1), các trạng thái hệ thống (VD: `ONLINE`, `ERR-DISABLE`), nhãn thanh Stepper (VD: `INIT`, `VERIFY`), tên Role/Thiết bị (VD: `Core Switch`), và toàn bộ output CLI/Console. Tuyệt đối không dịch các thuật ngữ chuyên ngành (như Routing, OSPF, Payload, Failover).
+- **Tiếng Việt:** Mô tả chi tiết, nội dung giải thích các bước, tiêu đề phụ, và các phần phân tích. Văn phong phải chuyên nghiệp, súc tích.
