@@ -70,11 +70,12 @@ e.g. "OSPF Neighbor Adjacency between 2 Cisco routers, DOWN to FULL, 7 steps")
 ==================================================
 
 Requirements:
-1. Core engine: a JSON array `labTimeline`, one object per step:
+1. Core engine: a Javascript array `labTimeline`, one object per step:
    { step, time, phase, title, description, cli_logs,
      nodes: { <DeviceName>: { state, role, color } , ... },
      link_state,
      animated_packet: { from, to, label, color, icon, packet_decode: { field: value } | null } | null }
+   CRITICAL: You MUST use ES6 Template Literals (backticks `) instead of standard quotes (" or ') for ANY multi-line string properties (specifically `description` and `cli_logs`) to prevent JS syntax errors from unescaped newlines.
 
 2. Header: sticky at the top, containing the logo badge + "← Portfolio" link back to
    ../../index.html on the left, AND the full suite of playback controls (⏮ ▶/⏸ ⏭ ↺)
