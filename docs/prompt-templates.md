@@ -789,3 +789,45 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 | **Cửa sổ CLI / Terminal** | **English Console + CLI** | Header: `SW-ACC-01# — Console` hoặc `PC-VICTIM-02> ipconfig /all`.<br>Logs: Output nguyên bản của Cisco IOS/Linux/Windows, kèm chú thích `! ` hoặc `→ ` nếu cần diễn giải. |
 | **Đăng ký `assets/js/projects.js`** | **Title EN, Desc VI** | `title: 'Rogue DHCP & Layer 2 Security'`<br>`description: 'Chẩn đoán sự cố mạng do Router Wi-Fi cá nhân gây Rogue DHCP, cấp phát sai Gateway và giải pháp phòng thủ triệt để với DHCP Snooping, DAI, IP Source Guard.'` |
 
+---
+
+## 12. Quy Tắc Phòng Chống Lỗi Giao Diện & Bố Cục UI (Anti-Collision & Layout Robustness)
+
+> **MỤC TIÊU:** Tuyệt đối không để xảy ra hiện tượng các badge, nhãn thông tin hoặc các dòng dữ liệu bị dính sát, đè lên nhau hoặc vỡ layout khi nội dung dài hoặc khi xem trên màn hình kích thước khác nhau.
+
+### 1. Header của các Card thông tin (Anti-Collision Header):
+- **Cấm:** Không dùng `flex items-center justify-between` đơn thuần khi một bên là chuỗi văn bản động hoặc chuỗi dài (như tên interface, location, rule name).
+- **Bắt buộc:** Dùng cấu trúc responsive flex có wrap và border phân cách:
+  ```html
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+      <span id="stage-badge" class="inline-flex self-start items-center px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border border-rose-300 dark:border-rose-700 bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 shrink-0">
+          ...
+      </span>
+      <span id="device-badge" class="text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md self-start sm:self-auto break-all sm:break-normal">
+          ...
+      </span>
+  </div>
+  ```
+- Huy hiệu chính (`stage-badge`) phải có `shrink-0`.
+- Nhãn phụ (`device-badge`, `location`, `ip`) phải luôn được bọc trong một khối pill riêng biệt (`bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md`) để tạo vùng đệm mắt nhìn rõ ràng.
+
+### 2. Các hàng thông số Key-Value (Inspector Panels):
+- **Khoảng cách:** Luôn có `gap-2.5` hoặc `gap-3` giữa nhãn (Key) và giá trị (Value).
+- **Chống co bóp nhãn:** Nhãn bên trái phải có `shrink-0` để không bị bóp méo khi Value quá dài:
+  ```html
+  <div class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+      <span class="text-slate-400 font-sans shrink-0">Luật Firewall:</span>
+      <span id="inspector-rule" class="font-bold text-blue-600 dark:text-blue-400 text-right">...</span>
+  </div>
+  ```
+
+### 3. Thanh Stepper & Pipeline Responsive:
+- Luôn bọc phần timeline/pipeline trong container có `overflow-x-auto` và đặt `min-w-[700px]` bên trong để không bị co cụm trên mobile.
+- Nút bấm stepper dùng nhãn ngắn gọn in hoa tiếng Anh (`phase`), ẩn chữ trên màn hình nhỏ và chỉ hiện số bước:
+  `<span class="hidden md:block">${d.step}. ${d.phase}</span><span class="md:hidden">${d.step}</span>`.
+
+### 4. Quy tắc an toàn định vị Canvas (Topology Safety):
+- Mọi canvas đều phải kích hoạt hàm `clampNodes()` chống tràn biên (Section 10).
+- Không dùng `absolute` trôi nổi mà không có tọa độ neo (`top/left` hoặc `inset-0`).
+
+
