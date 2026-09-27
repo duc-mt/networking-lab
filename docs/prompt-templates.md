@@ -703,3 +703,66 @@ switchMode(mode) {
 - Active class **luôn là `text-blue-600`** — tuyệt đối không đổi màu theo từng chế độ (ví dụ: không làm RSTP xanh lá, MSTP tím). Sự khác biệt thể hiện qua Topology/Animation, không qua màu nút.
 - `switchMode()` phải gọi `this.pause()` trước tiên để tránh bug auto-play chạy tiếp sau khi đổi chế độ.
 - Nếu số node thay đổi giữa các chế độ: ẩn node thừa bằng `opacity-0 pointer-events-none scale-75`, hiện lại bằng `opacity-100 scale-100`, dùng `setTimeout(..., 300)` trước `drawLinks()`.
+
+---
+
+## 10. Mandatory Engine Method: `clampNodes()`
+
+> **CRITICAL:** Bất kỳ lab nào có Topology Canvas (`id="topology-canvas"` với `overflow-hidden`) đều **PHẢI** implement method này trong class simulator. Không cần tính tay `top%` nữa — engine tự hiệu chỉnh.
+
+### Vấn đề cần giải quyết
+
+Các node dùng `position: absolute` + `transform: translate(-50%, -50%)`. Role badge có `absolute -top-3` (~12px phía trên card). Khi `top%` quá nhỏ, badge bị `overflow-hidden` của canvas cắt mất. Tương tự với bottom/left/right edge.
+
+### Implementation (copy nguyên vào mọi simulator class)
+
+```javascript
+// Gọi ở cuối render(): setTimeout(() => { this.clampNodes(); this.drawLinks(...); }, 50);
+// Gọi trong resize handler trước drawLinks.
+// KHÔNG cần biết trước ID của node — tự discover qua querySelectorAll.
+
+clampNodes() {
+    if (!this.dom.canvas) return;
+    const cr  = this.dom.canvas.getBoundingClientRect();
+    const BADGE_PX = 20;  // clearance cho role badge -top-3 (~12px) + padding
+    const EDGE_PX  = 6;   // padding các cạnh còn lại
+
+    this.dom.canvas.querySelectorAll('[id^="node-"]').forEach(node => {
+        const nr  = node.getBoundingClientRect();
+        const hPx = cr.height / 100;
+        const wPx = cr.width  / 100;
+        let top  = parseFloat(node.style.top)  || 50;
+        let left = parseFloat(node.style.left) || 50;
+
+        const topClip   = (cr.top  + BADGE_PX) - nr.top;    if (topClip   > 0) top  += topClip   / hPx;
+        const botClip   = nr.bottom - (cr.bottom - EDGE_PX); if (botClip   > 0) top  -= botClip   / hPx;
+        const leftClip  = (cr.left + EDGE_PX)  - nr.left;   if (leftClip  > 0) left += leftClip  / wPx;
+        const rightClip = nr.right - (cr.right  - EDGE_PX);  if (rightClip > 0) left -= rightClip / wPx;
+
+        node.style.top  = top  + '%';
+        node.style.left = left + '%';
+    });
+}
+```
+
+### Cách tích hợp
+
+```javascript
+// 1. Cuối mỗi render():
+setTimeout(() => {
+    this.clampNodes();
+    this.drawLinks(currentStep.links);
+}, 50);
+// setTimeout 50ms để chờ CSS transition (border, width) settle trước khi đọc getBoundingClientRect()
+
+// 2. Trong resize handler:
+window.addEventListener('resize', () => {
+    this.clampNodes();
+    this.drawLinks(TIMELINE[this.idx].links);
+});
+// KHÔNG gọi drawLinks trước clampNodes — link sẽ kết nối sai tọa độ nếu node chưa được clamp
+```
+
+### Tại sao `setTimeout 50ms`?
+
+Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chưa kịp reflow/repaint. Nếu gọi `getBoundingClientRect()` ngay lập tức, kết quả trả về tọa độ cũ. 50ms đủ để browser commit layout mới trước khi `clampNodes()` đọc vị trí thực.

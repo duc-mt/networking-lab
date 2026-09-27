@@ -358,7 +358,10 @@ class TroubleshootingSimulator {
             fixPanel: document.getElementById('fix-panel'),
             fixText: document.getElementById('fix-text'),
         };
-        window.addEventListener('resize', () => this.drawLinks(TIMELINE[this.idx].links));
+        window.addEventListener('resize', () => {
+            this.clampNodes();
+            this.drawLinks(TIMELINE[this.idx].links);
+        });
         this.init();
     }
 
@@ -468,13 +471,12 @@ class TroubleshootingSimulator {
         Object.entries(d.nodes).forEach(([id, nd]) => {
             const stEl = document.getElementById(`state-${id}`);
             const card = document.getElementById(`node-${id}`);
-            if (stEl) { stEl.textContent = nd.state; stEl.className = `text-[9px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border ${this.colorClass(nd.color)}`; }
-            if (card) card.className = `absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10 ${nd.border}`;
+            if (stEl) { stEl.textContent = nd.state; stEl.className = `text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border ${this.colorClass(nd.color)}`; }
+            if (card) card.className = `absolute w-28 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10 ${nd.border}`;
         });
 
         if (this.dom.portBadge) this.dom.portBadge.classList.toggle('hidden', !d.portBadge);
 
-        this.drawLinks(d.links);
         this.renderHypotheses(d.hypotheses);
         this.animatePacket(d.packet);
 
@@ -490,6 +492,46 @@ class TroubleshootingSimulator {
         if (this.dom.btnPrev) this.dom.btnPrev.disabled = i === 0;
         if (this.dom.btnNext) this.dom.btnNext.disabled = i === TIMELINE.length - 1;
         if (i === TIMELINE.length - 1 && this.playing) this.pause();
+
+        // Clamp nodes first, then draw SVG links based on corrected positions
+        setTimeout(() => { this.clampNodes(); this.drawLinks(d.links); }, 50);
+    }
+
+    // Auto-clamp all nodes within canvas bounds — no manual top% calculation needed.
+    // Discovers all [id^="node-"] elements dynamically. Accounts for the -top-3 role
+    // badge (BADGE_PX) above each card so it is never clipped by overflow-hidden.
+    clampNodes() {
+        if (!this.dom.canvas) return;
+        const cr  = this.dom.canvas.getBoundingClientRect();
+        const BADGE_PX = 20;  // clearance for absolute -top-3 role badge (~12px) + padding
+        const EDGE_PX  = 6;   // general edge padding
+
+        this.dom.canvas.querySelectorAll('[id^="node-"]').forEach(node => {
+            const nr  = node.getBoundingClientRect();
+            const hPx = cr.height / 100;
+            const wPx = cr.width  / 100;
+            let top  = parseFloat(node.style.top)  || 50;
+            let left = parseFloat(node.style.left) || 50;
+
+            // Top: include badge clearance above the card
+            const topClip = (cr.top + BADGE_PX) - nr.top;
+            if (topClip > 0) top += topClip / hPx;
+
+            // Bottom
+            const botClip = nr.bottom - (cr.bottom - EDGE_PX);
+            if (botClip > 0) top -= botClip / hPx;
+
+            // Left
+            const leftClip = (cr.left + EDGE_PX) - nr.left;
+            if (leftClip > 0) left += leftClip / wPx;
+
+            // Right
+            const rightClip = nr.right - (cr.right - EDGE_PX);
+            if (rightClip > 0) left -= rightClip / wPx;
+
+            node.style.top  = top  + '%';
+            node.style.left = left + '%';
+        });
     }
 
     animatePacket(p) {
