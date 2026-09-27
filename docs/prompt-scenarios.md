@@ -1,5 +1,8 @@
 # Prompt scenario reference (English + Vietnamese)
 
+> **⚠️ GLOBAL SECURITY RULE:**
+> All examples below use standard documentation IPs (RFC 1918, RFC 5737) and generic dummy names. **When you copy and adapt these scenarios using real-world cases, you MUST scrub and anonymize your own IPs, hostnames, and credentials before processing.**
+
 Quick-copy reference for the part of each prompt that actually changes per use: the scenario/input block. The rest of each prompt (Tailwind/design-system requirements, JSON schema, header rules) is stable and lives in `docs/prompt-templates.md` — copy the full prompt from there, then swap in one of the blocks below.
 
 For each of the 7 types: a blank **placeholder** (fill in your own details) and a **filled example** (a realistic case, ready to copy as-is or adapt), each in English and Vietnamese.

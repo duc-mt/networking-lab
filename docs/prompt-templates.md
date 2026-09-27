@@ -1,5 +1,14 @@
 # Prompt templates
 
+> **⚠️ GLOBAL SECURITY RULE (MUST ENFORCE):**
+> **Never use real IPs, real hostnames, real MAC addresses, or any sensitive customer/internal network data in the generated labs.** 
+> Always anonymize data before generating the HTML:
+> - Use dummy IPs (e.g., `10.x.x.x`, `192.168.x.x`, `1.1.1.1`).
+> - Use generic hostnames (e.g., `FW-CORE`, `SW-ACCESS-01`, `R1`, `R2`).
+> - Use dummy MACs (e.g., `00:00:5e:00:01:xx`, `aa:bb:cc:dd:ee:ff`).
+> - Strip any identifiable domain names or credentials.
+> This applies to ALL 8 prompt templates below.
+
 Eight reusable prompts for generating new labs that drop straight into this portfolio. Each targets a different shape of networking/security work and produces a different UI pattern — a state machine, a logic tree, a pipeline, a workflow with tabs, a split-screen, a trigger-driven drill, a static reference graph, or a tabbed failure-mode catalog. All of them still produce a single self-contained HTML file matching the site's existing design system (Tailwind CDN, dark-mode class, Inter + Fira Code, Font Awesome, slate/blue/indigo palette, rounded-2xl SaaS cards).
 
 For a quick-copy version of just the scenario/input block of each prompt — blank placeholder and a filled realistic example, both in English and Vietnamese — see `docs/prompt-scenarios.md`.
