@@ -766,3 +766,26 @@ window.addEventListener('resize', () => {
 ### Tại sao `setTimeout 50ms`?
 
 Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chưa kịp reflow/repaint. Nếu gọi `getBoundingClientRect()` ngay lập tức, kết quả trả về tọa độ cũ. 50ms đủ để browser commit layout mới trước khi `clampNodes()` đọc vị trí thực.
+
+---
+
+## 11. Quy Ước Ngôn Ngữ & Thuật Ngữ Chuẩn (Bilingual Standards: EN / VI)
+
+> **MỤC TIÊU:** Đảm bảo tất cả các bài lab (Protocol, Troubleshooting, Failover, MOP...) có phong cách viết song ngữ Anh - Việt đồng bộ, chuyên nghiệp, chuẩn mực của một Kỹ sư Mạng / NetDevOps.
+
+### Bảng đối chiếu quy ước:
+
+| Thành phần UI | Ngôn ngữ | Quy tắc & Ví dụ cụ thể |
+| :--- | :--- | :--- |
+| **Tiêu đề Lab (`<title>`, `<h1>`)** | **English** | Ngắn gọn, chuyên nghiệp, giữ nguyên thuật ngữ quốc tế.<br>• `Port Security Misconfiguration`<br>• `Rogue DHCP Server & Layer 2 Security`<br>• `ClusterXL Zero-Downtime Patching`<br>• `STP Link Failure & Convergence` |
+| **Thanh Stepper (`phase`)** | **UPPERCASE English** | Luôn dùng từ ngắn gọn in hoa. **KHÔNG** dùng tiếng Việt dài dòng làm tràn nút trên mobile.<br>• *Troubleshooting:* `TRIAGE`, `ISOLATE`, `ROOT CAUSE`, `FIX`, `VERIFY`<br>• *Protocol:* `DOWN`, `INIT`, `2-WAY`, `EXCHANGE`, `FULL` / `BLOCKING`, `FORWARDING`<br>• *Failover:* `NORMAL`, `FAILOVER`, `REBOOTING`, `RESTORED`<br>• *MOP:* `PRE-CHECK`, `EXECUTION`, `POST-CHECK`, `ROLLBACK` |
+| **Tiêu đề từng bước (`title`)** | **Tiếng Việt Kỹ thuật** | Ngắn gọn, nêu bật hành động hoặc kết quả. **KHÔNG** thêm tiền tố `"Bước 1:"`, `"Bước 2:"` (vì stepper đã có số bước).<br>• `Tiếp nhận sự cố: Endpoint nhận IP lạ & mất kết nối`<br>• `Kiểm tra hạ tầng: Loại trừ lỗi DHCP Server chính`<br>• `Khắc phục: Kích hoạt DHCP Snooping & DAI & IPSG` |
+| **Mô tả chi tiết (`description`)** | **Tiếng Việt + Thuật ngữ EN** | Diễn giải mạch lạc bằng tiếng Việt, kết hợp thẻ `<code class="font-mono ...">` cho các câu lệnh và thông số kỹ thuật (IP, MAC, VLAN, Default Gateway, DHCP Discover/Offer/ACK, v.v.). |
+| **Vai trò thiết bị (Role Badge)** | **English** | Nhãn nhỏ `-top-3` trên mỗi node card:<br>`Core Switch`, `Access Switch`, `DHCP Server`, `Victim PC 1`, `Rogue Router`, `File Server`. |
+| **Tên thiết bị (Hostnames `<h3>`)** | **Standard Hostname** | Chữ in hoa dạng chuẩn quy hoạch mạng:<br>`SW-CORE-01`, `SW-ACC-01`, `SRV-DHCP-01`, `PC-VICTIM-01`, `ROUTER-WIFI`. |
+| **Trạng thái thiết bị (State Badge)** | **UPPERCASE English** | Trạng thái kỹ thuật in hoa:<br>`ONLINE`, `FORWARDING`, `NORMAL`, `MISCONFIGURED`, `ROGUE ACTIVE`, `POISONED`, `BLOCKED`, `PROTECTED`, `RESTORED ✓`, `DOWN`, `ERR-DISABLE`. |
+| **Khối điều tra (Investigation Panels)** | **Tiếng Việt** | Chuẩn hóa tiêu đề các card bên phải:<br>• `Danh sách Giả thuyết`<br>• `Nguyên nhân gốc rễ`<br>• `Biện pháp Khắc phục`<br>• Nhãn trạng thái giả thuyết: `Đang xét`, `Loại trừ` (gạch ngang chữ), `Xác nhận` (đỏ/cam). |
+| **Checklist & Rollback Table** | **Tiếng Việt + CLI** | Bảng tiêu chuẩn kiểm thử và an toàn vận hành:<br>• Cột: `Hành động`, `Lệnh kiểm tra / Thao tác`, `Trạng thái kỳ vọng (Expected Output)`, `Phương án Rollback`. |
+| **Cửa sổ CLI / Terminal** | **English Console + CLI** | Header: `SW-ACC-01# — Console` hoặc `PC-VICTIM-02> ipconfig /all`.<br>Logs: Output nguyên bản của Cisco IOS/Linux/Windows, kèm chú thích `! ` hoặc `→ ` nếu cần diễn giải. |
+| **Đăng ký `assets/js/projects.js`** | **Title EN, Desc VI** | `title: 'Rogue DHCP & Layer 2 Security'`<br>`description: 'Chẩn đoán sự cố mạng do Router Wi-Fi cá nhân gây Rogue DHCP, cấp phát sai Gateway và giải pháp phòng thủ triệt để với DHCP Snooping, DAI, IP Source Guard.'` |
+
