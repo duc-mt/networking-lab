@@ -7,7 +7,7 @@
 
 Static portfolio of interactive networking labs. No build step — plain HTML/CSS/JS, deployed as-is to GitHub Pages.
 
-**Live demo:** `https://duc-mt.github.io/network-portfolio/` _(placeholder — update once pushed)_
+**Live demo:** [https://duc-mt.github.io/network-portfolio/](https://duc-mt.github.io/network-portfolio/)
 
 ## Structure
 
