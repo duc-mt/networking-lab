@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mai Tấn Đức — NetDevOps Engineer</title>
+    
+    <!-- SEO & Meta Tags -->
+    <meta name="description" content="Portfolio và các bài lab tương tác về Network, NetDevOps, và mô phỏng giao thức mạng của Mai Tấn Đức.">
+    <meta name="author" content="Mai Tấn Đức">
+    <link rel="canonical" href="https://duc-mt.github.io/networking-lab/">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://duc-mt.github.io/networking-lab/">
+    <meta property="og:title" content="Mai Tấn Đức — NetDevOps Engineer">
+    <meta property="og:description" content="Portfolio và các bài lab tương tác về Network, NetDevOps, và mô phỏng giao thức mạng của Mai Tấn Đức.">
 
     <!-- Apply the saved theme before first paint, to avoid a flash of the wrong theme -->
     <script src="assets/js/theme-init.js"></script>
@@ -60,9 +71,9 @@
     <!-- Sticky Header -->
     <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
         <div class="max-w-6xl mx-auto px-4 md:px-8 py-3 flex justify-between items-center gap-4">
-            <a href="#top" class="flex items-center gap-3">
+            <a href="#top" class="flex items-center gap-3" aria-label="Lên đầu trang">
                 <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg">
-                    <i class="fas fa-network-wired"></i>
+                    <i class="fas fa-network-wired" aria-hidden="true"></i>
                 </div>
                 <div>
                     <h1 class="text-base font-bold text-slate-900 dark:text-white leading-tight">Mai Tấn Đức</h1>
@@ -77,11 +88,11 @@
                 </nav>
 
                 <div class="flex items-center gap-2">
-                    <a href="#projects" class="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all-fast" title="Projects">
-                        <i class="fas fa-diagram-project"></i>
+                    <a href="#projects" aria-label="Xem dự án" class="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all-fast" title="Projects">
+                        <i class="fas fa-diagram-project" aria-hidden="true"></i>
                     </a>
-                    <button id="btn-theme" onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all-fast" title="Đổi giao diện Sáng/Tối">
-                        <i id="theme-icon" class="fas fa-sun"></i>
+                    <button id="btn-theme" aria-label="Đổi giao diện Sáng/Tối" onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all-fast" title="Đổi giao diện Sáng/Tối">
+                        <i id="theme-icon" class="fas fa-sun" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
@@ -122,8 +133,8 @@
                 </div>
                 <div class="flex items-center gap-2 w-full md:w-auto">
                     <div class="relative w-full md:w-64">
-                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input id="project-search" type="text" placeholder="Tìm theo tên, giao thức, tag..."
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" aria-hidden="true"></i>
+                        <input id="project-search" type="text" aria-label="Tìm kiếm dự án" placeholder="Tìm theo tên, giao thức, tag..."
                             class="w-full pl-10 pr-4 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all-fast">
                     </div>
 
@@ -153,14 +164,14 @@
                 <p class="text-slate-500 dark:text-slate-400">Một câu hỏi hay, một ý tưởng lab mới — reach me at ducmai.network@gmail.com</p>
             </div>
             <div class="flex items-center gap-3 shrink-0">
-                <a href="https://github.com/duc-mt" class="w-11 h-11 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all-fast" title="GitHub">
-                    <i class="fab fa-github"></i>
+                <a href="https://github.com/duc-mt" aria-label="GitHub" class="w-11 h-11 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all-fast" title="GitHub">
+                    <i class="fab fa-github" aria-hidden="true"></i>
                 </a>
-                <a href="https://www.linkedin.com/in/duc-mt/" class="w-11 h-11 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all-fast" title="LinkedIn">
-                    <i class="fab fa-linkedin-in"></i>
+                <a href="https://www.linkedin.com/in/duc-mt/" aria-label="LinkedIn" class="w-11 h-11 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all-fast" title="LinkedIn">
+                    <i class="fab fa-linkedin-in" aria-hidden="true"></i>
                 </a>
-                <a href="mailto:ducmai.network@gmail.com" class="w-11 h-11 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all-fast" title="Email">
-                    <i class="fas fa-envelope"></i>
+                <a href="mailto:ducmai.network@gmail.com" aria-label="Email" class="w-11 h-11 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all-fast" title="Email">
+                    <i class="fas fa-envelope" aria-hidden="true"></i>
                 </a>
             </div>
         </section>
@@ -272,10 +283,10 @@
                 card.innerHTML = `
                     <div class="flex items-start justify-between">
                         <div class="w-11 h-11 rounded-lg bg-gradient-to-br ${accent} flex items-center justify-center text-white shadow">
-                            <i class="fas ${icon}"></i>
+                            <i class="fas ${icon}" aria-hidden="true"></i>
                         </div>
                         <span class="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
-                            ${isLive ? '' : '<i class="fas fa-clock text-[9px]"></i>'} ${isLive ? meta.short : 'Sắp tới · ' + meta.short}
+                            ${isLive ? '' : '<i class="fas fa-clock text-[9px]" aria-hidden="true"></i>'} ${isLive ? meta.short : 'Sắp tới · ' + meta.short}
                         </span>
                     </div>
                     <div class="flex-1">
