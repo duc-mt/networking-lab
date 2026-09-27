@@ -237,4 +237,15 @@ const PROJECTS = [
         status: 'live',
         dateAdded: '2026-10-03',
     },
+    {
+        title: 'DC Migration & Assessment Plan',
+        topic: 'Data Center',
+        description:
+            'Bóc tách cấu hình, đánh giá rủi ro (SPOF, Routing Trap) và thiết lập các phase Lift & Shift.',
+        type: 'change-mop',
+        tags: ['Migration', 'Assessment', 'Data Center', 'Lift & Shift', 'Architecture'],
+        href: 'projects/change-mop/dc-migration-assessment.html',
+        status: 'live',
+        dateAdded: '2026-10-04',
+    },
 ];

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOP: Assessment & Lift-and-Shift Migration</title>
+
+    <!-- Apply the saved theme before first paint -->
+    <script src="../../assets/js/theme-init.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Shared theme CSS -->
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+
+    <style>
+        .mop-tab-active {
+            border-bottom-width: 2px;
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+        .dark .mop-tab-active {
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex justify-between items-center gap-4">
+            <a href="../../index.html" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-900 dark:text-white leading-tight">MOP: Data Center Migration</h1>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium hover:underline flex items-center gap-1">
+                        <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                    </p>
+                </div>
+            </a>
+            
+            <div class="flex items-center gap-2 ml-auto">
+                <button onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all-fast" title="Đổi giao diện Sáng/Tối">
+                    <i id="theme-icon" class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-8">
+        
+        <!-- Context Card -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Assessment</span>
+                <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded text-xs font-bold uppercase tracking-widest">DC Lift & Shift</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Kế hoạch Di dời & Chuẩn hoá DC-ALPHA</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">Đánh giá Topology logic hiện trạng, bóc tách cấu hình 2 lớp Firewall (FW-EXT, FW-INT) và hệ thống Hyper-V ảo hóa. Ghi nhận 10 điểm nghẽn rủi ro (SPOF, định tuyến rác, lệch Gateway) cần xử lý triệt để trước khi chạy luồng Migration Target.</p>
+            
+            <!-- Architecture Decision Diff -->
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tóm tắt Thông số Hiện trạng</h3>
+                    <ul class="text-sm space-y-2 text-slate-600 dark:text-slate-300 list-disc list-inside">
+                        <li><strong>Routing/L3:</strong> 76 VLANs, 83 static routes, 43 gateways.</li>
+                        <li><strong>Security:</strong> 1,657 firewall rules, 197 VIPs, 21 IPsec VPNs.</li>
+                        <li><strong>Compute:</strong> 19 Host, 258 VMs (1,231 vCPU, 3.3TB RAM).</li>
+                        <li><i class="fas fa-exclamation-triangle text-amber-500 mr-1"></i> <span class="text-amber-600 dark:text-amber-400 font-bold">Cảnh báo:</span> Có 39 VMs đang trạng thái HostNotResponding.</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-[#1e1e1e] rounded-xl border border-slate-700 shadow-xl overflow-hidden flex flex-col">
+                    <div class="bg-[#2d2d2d] border-b border-black/50 text-xs font-bold tracking-widest text-slate-400 uppercase flex flex-row divide-x divide-slate-700/50">
+                        <div class="w-1/2 py-2 text-center text-red-400">Risks (Hiện trạng)</div>
+                        <div class="w-1/2 py-2 text-center text-emerald-400">Target (Sau dọn dẹp)</div>
+                    </div>
+                    <div class="flex flex-row w-full divide-x divide-slate-700/50 text-[13px] font-mono leading-relaxed h-full">
+                        <div class="w-1/2 bg-red-950/20 p-4 text-red-400 flex flex-col gap-1">
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">-</span><span>FW-EXT & FW-INT: SPOF (No HA)</span></div>
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">-</span><span>L1/L2: Thiếu LAGG/Redundancy</span></div>
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">-</span><span>Routing Trap (Gateway rác rớt gói)</span></div>
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">-</span><span>DHCP Scope Leak trên interface tắt</span></div>
+                        </div>
+                        <div class="w-1/2 bg-emerald-950/20 p-4 text-emerald-400 flex flex-col gap-1">
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">+</span><span>Thiết kế bắt buộc: Firewall HA</span></div>
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">+</span><span>Cấu hình NIC Teaming / LAGG</span></div>
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">+</span><span>Gỡ Gateway mồ côi (Orphaned)</span></div>
+                            <div class="flex"><span class="w-6 opacity-50 select-none text-center">+</span><span>Tắt DHCP rác, fix Next-hop mismatch</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive MOP Workspace -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+            
+            <!-- Tabs Navigation -->
+            <div class="flex overflow-x-auto border-b border-slate-200 dark:border-slate-800 px-2 pt-2 bg-slate-50 dark:bg-slate-900/50">
+                <button onclick="switchTab('preChecks')" id="tab-preChecks" class="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors mop-tab-active">Phase 1: Dọn Dẹp</button>
+                <button onclick="switchTab('execution')" id="tab-execution" class="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors">Phase 2: Target & Shift</button>
+                <button onclick="switchTab('postChecks')" id="tab-postChecks" class="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors">Stop-Conditions (No-Go)</button>
+                <button onclick="switchTab('rollback')" id="tab-rollback" class="px-6 py-3 text-sm font-bold text-red-500 hover:text-red-600 border-b-2 border-transparent transition-colors hidden"><i class="fas fa-exclamation-triangle mr-1"></i> Rollback Strategy</button>
+            </div>
+
+            <!-- Tab Content Area -->
+            <div class="p-6">
+                <!-- Risk Banner -->
+                <div id="risk-banner" class="hidden mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4 flex items-start gap-4 transition-all">
+                    <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                        <i class="fas fa-radiation"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-red-800 dark:text-red-400 mb-1">Cảnh báo Stop-Condition (No-Go)</h4>
+                        <p class="text-sm text-red-700 dark:text-red-300 mb-3" id="risk-text">Giai đoạn này chứa rủi ro.</p>
+                        <label class="flex items-center gap-2 text-sm font-bold text-red-800 dark:text-red-300 cursor-pointer select-none">
+                            <input type="checkbox" id="risk-ack" onchange="toggleRiskAck()" class="w-4 h-4 rounded text-red-600 focus:ring-red-500">
+                            Xác nhận đã nghiệm thu bản thiết kế HA cho Firewall Target. Đồng ý Go-Live.
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Lists Container -->
+                <div id="list-container" class="space-y-4">
+                    <!-- Javascript populates this -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Data Structure for MOP
+        const mopData = {
+            preChecks: [
+                { id: "p1", description: "Chuẩn hóa sơ đồ L1/L2", command: "Kiểm tra mapping port firewall, core switch, trunk, rack, panel", expected_result: "Khớp 100% với Physical Connectivity Matrix", status: "pending" },
+                { id: "p2", description: "Gỡ bỏ Orphaned Gateways (Routing Trap)", command: "Remove IP Gateway của ISP-C (đã down/disabled) khỏi các Group: SupperInternet, LB4DMZ, Portal_To_MS", expected_result: "Chống Blackhole routing thành công", status: "pending" },
+                { id: "p3", description: "Fix DHCP Scope Leak & Lệch Gateway", command: "Disable các DHCP scope trên MPLS-A, MPLS-B.\nChỉnh lại Group Transit của ISP-A cho khớp opt50-opt52.", expected_result: "Hệ thống L3 sạch, không cấp IP ảo", status: "pending" },
+                { id: "p4", description: "Xác minh trạng thái VM Compute", command: "Check trạng thái 39 VMs MIT đang bị HostNotResponding", expected_result: "Có confirm từ Owner (Shutdown thật hay bị kẹt host)", status: "pending" }
+            ],
+            execution: [
+                { id: "e1", description: "Data Enrichment (Bổ sung metadata)", command: "Export script PowerShell từ Hyper-V/SCVMM", output: "Thành công trích xuất mapping IP/VLAN/NIC/VirtualSwitch.\nĐã ghép thành công với bộ 1,657 Firewall Rules.", risk_flag: null, estimated_duration_mins: 30, status: "pending" },
+                { id: "e2", description: "Lập ma trận Firewall Access", command: "Tạo Matrix: Source - Destination - Port - Direction - App Owner", output: "Access Matrix Baseline (1,657 rules) đã sẵn sàng phục vụ Move.", risk_flag: null, estimated_duration_mins: 15, status: "pending" },
+                { id: "e3", description: "Nghiệm thu kiến trúc Target (BẮT BUỘC)", command: "Thiết kế bắt buộc: Firewall HA, Switch Redundancy, LAGG, OOB Mgmt.", output: "Target Architecture Document (TAD) Approved.", risk_flag: "SPOF nghiêm trọng nếu Target vẫn chạy Single", estimated_duration_mins: 60, status: "pending" },
+                { id: "e4", description: "Thực thi Lift & Shift theo Wave", command: "Cắt chuyển Wave-1 dựa trên Dependency Matrix.", output: "Đang di dời 50 VMs đầu tiên...\nHoàn tất cắt chuyển L2/L3 Gateway.", risk_flag: null, estimated_duration_mins: 120, status: "pending" }
+            ],
+            postChecks: [
+                { id: "po1", description: "Tạo Baseline Giám sát (Zabbix/NetFlow/Syslog)", command: "Thu thập traffic pattern trước khi move", expected_result: "Baseline sẵn sàng để so sánh hậu Lift & Shift", actual_result: "", status: "pending" },
+                { id: "po2", description: "Kiểm tra IP Quản trị (Physical Hosts)", command: "ping & login thử vào iLO/iDRAC của 19 Hosts", expected_result: "Truy cập OOB bình thường, xác định đúng Rack/U", actual_result: "", status: "pending" },
+                { id: "po3", description: "Phát hiện Mismatch L3 (Ping test)", command: "Ping Next-Hop 10.10.13.254 từ FW-INT", expected_result: "Phải có ARP từ FW-EXT (Trước đó bị cấu hình lệch)", actual_result: "", status: "pending" }
+            ],
+            rollback: [
+                { id: "r1", description: "Data/State Rollback (Acronis)", command: "Kích hoạt job Restore từ Acronis Offline Backup (Đã test RTO/RPO)" },
+                { id: "r2", description: "Routing/Network Rollback", command: "Định tuyến ngược lại hạ tầng cũ thông qua các Static Transit Links" },
+                { id: "r3", description: "Health-Check Verification", command: "Xác nhận L7 App hoạt động lại theo đúng Zabbix Baseline" }
+            ]
+        };
+
+        let currentTab = 'preChecks';
+        let riskAcknowledged = false;
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            ['preChecks', 'execution', 'postChecks', 'rollback'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (el) {
+                    if (t === tabName) {
+                        el.classList.add('mop-tab-active');
+                    } else {
+                        el.classList.remove('mop-tab-active');
+                    }
+                }
+            });
+
+            renderList();
+        }
+
+        function checkFailures() {
+            const hasFailure = mopData.postChecks.some(c => c.status === 'fail');
+            const rbTab = document.getElementById('tab-rollback');
+            if (hasFailure) {
+                rbTab.classList.remove('hidden');
+            } else {
+                rbTab.classList.add('hidden');
+            }
+        }
+
+        function setStatus(phase, id, newStatus) {
+            const item = mopData[phase].find(i => i.id === id);
+            if (item) item.status = newStatus;
+            
+            checkFailures();
+            renderList();
+        }
+
+        function toggleRiskAck() {
+            riskAcknowledged = document.getElementById('risk-ack').checked;
+            renderList();
+        }
+
+        function renderList() {
+            const container = document.getElementById('list-container');
+            const banner = document.getElementById('risk-banner');
+            container.innerHTML = '';
+
+            const items = mopData[currentTab];
+            let hasRisk = false;
+
+            if (currentTab === 'execution') {
+                const risks = items.filter(i => i.risk_flag);
+                if (risks.length > 0) {
+                    hasRisk = true;
+                    banner.classList.remove('hidden');
+                    const riskList = [...new Set(risks.map(r => r.risk_flag))].join('; ');
+                    document.getElementById('risk-text').textContent = `DỪNG HỆ THỐNG (NO-GO) nếu vi phạm: ${riskList}.`;
+                } else {
+                    banner.classList.add('hidden');
+                }
+            } else {
+                banner.classList.add('hidden');
+            }
+
+            items.forEach((item, idx) => {
+                const card = document.createElement('div');
+                const isBlocked = (currentTab === 'execution' && hasRisk && !riskAcknowledged);
+                
+                card.className = `flex flex-col md:flex-row md:items-stretch gap-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 transition-opacity ${isBlocked ? 'opacity-50 pointer-events-none' : ''}`;
+                
+                let controlsHtml = '';
+                
+                if (currentTab === 'preChecks' || currentTab === 'execution') {
+                    controlsHtml = `
+                        <div class="flex items-center gap-2 mt-4 md:mt-0 md:ml-auto shrink-0 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 pt-3 md:pt-0 md:pl-4">
+                            <button onclick="setStatus('${currentTab}', '${item.id}', 'pass')" class="px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${item.status === 'pass' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-200'}">
+                                <i class="fas fa-check"></i> Hoàn thành
+                            </button>
+                        </div>
+                    `;
+                } else if (currentTab === 'postChecks') {
+                    controlsHtml = `
+                        <div class="flex items-center gap-2 mt-4 md:mt-0 md:ml-auto shrink-0 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 pt-3 md:pt-0 md:pl-4">
+                            <button onclick="setStatus('${currentTab}', '${item.id}', 'pass')" class="px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${item.status === 'pass' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-200'}">
+                                <i class="fas fa-check"></i> Pass
+                            </button>
+                            <button onclick="setStatus('${currentTab}', '${item.id}', 'fail')" class="px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${item.status === 'fail' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-200'}">
+                                <i class="fas fa-times"></i> Fail
+                            </button>
+                        </div>
+                    `;
+                } else if (currentTab === 'rollback') {
+                     controlsHtml = `
+                        <div class="flex items-center gap-2 mt-4 md:mt-0 md:ml-auto shrink-0 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 pt-3 md:pt-0 md:pl-4">
+                            <button class="px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 transition-all">
+                                <i class="fas fa-undo"></i> Thực thi
+                            </button>
+                        </div>
+                    `;
+                }
+
+                const riskBadge = item.risk_flag ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-[10px] uppercase font-bold tracking-widest rounded ml-2"><i class="fas fa-exclamation-triangle"></i> ${item.risk_flag}</span>` : '';
+                const timeBadge = item.estimated_duration_mins ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] uppercase font-bold tracking-widest rounded ml-2"><i class="far fa-clock"></i> ${item.estimated_duration_mins} PHÚT</span>` : '';
+                
+                const cmdOutput = item.output ? `
+                    <div class="mt-2 text-xs font-mono text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">
+                        <span class="text-slate-400 select-none">> </span>${item.output.replace(/\n/g, '<br><span class="text-slate-400 select-none">> </span>')}
+                    </div>
+                ` : '';
+
+                card.innerHTML = `
+                    <div class="flex-1">
+                        <div class="flex items-center mb-1">
+                            <span class="w-6 h-6 rounded bg-slate-100 dark:bg-slate-900 text-slate-400 flex items-center justify-center text-xs font-bold mr-3">${idx + 1}</span>
+                            <h4 class="font-bold text-slate-800 dark:text-white">${item.description}${riskBadge}${timeBadge}</h4>
+                        </div>
+                        <div class="ml-9">
+                            <div class="font-mono text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded inline-block mb-2">
+                                <i class="fas fa-terminal opacity-50 mr-1"></i> ${item.command.replace(/\n/g, '<br><i class="fas fa-terminal opacity-0 mr-1"></i> ')}
+                            </div>
+                            ${item.expected_result ? `<p class="text-sm text-slate-500 dark:text-slate-400"><span class="font-semibold text-slate-600 dark:text-slate-300">Kỳ vọng:</span> ${item.expected_result}</p>` : ''}
+                            ${cmdOutput}
+                        </div>
+                    </div>
+                    ${controlsHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('theme-icon').className = document.documentElement.classList.contains('dark') ? 'fas fa-sun' : 'fas fa-moon';
+            switchTab('preChecks');
+        });
+
+        function toggleTheme() {
+            const isDark = !document.documentElement.classList.contains('dark');
+            document.documentElement.classList.toggle('dark', isDark);
+            document.getElementById('theme-icon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+        }
+    </script>
+</body>
+</html>
