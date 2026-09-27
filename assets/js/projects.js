@@ -96,6 +96,21 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        id: 'rstp-convergence',
+        title: 'RSTP Link Failure & Convergence',
+        topic: 'Network Services',
+        category: 'protocol',
+        type: 'protocol',
+        status: 'live',
+        dateAdded: '2026-09-27',
+        image: 'assets/images/protocol-placeholder.jpg',
+        description:
+            'Mô phỏng kịch bản đứt cáp và phục hồi tức thì: cơ chế Proposal/Agreement của RSTP hội tụ trong < 1 giây so với 30-50 giây của STP.',
+        tags: ['RSTP', 'STP', 'Convergence', 'Failover', 'Proposal/Agreement'],
+        href: 'projects/protocol/rstp-convergence.html',
+    },
+
+    {
         id: 'stp-visual-compare',
         title: 'STP Variants in Action',
         topic: 'Network Services',

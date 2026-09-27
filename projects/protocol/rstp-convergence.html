@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSTP Link Failure & Convergence</title>
+    <script src="../../assets/js/theme-init.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui','sans-serif'], mono: ['Fira Code','ui-monospace','SFMono-Regular','monospace'] } } }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+    <style>
+        @keyframes dash { to { stroke-dashoffset: -16; } }
+        .animate-dash { animation: dash 1s linear infinite; }
+        @keyframes redPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } 50% { box-shadow: 0 0 0 14px rgba(239,68,68,0.35); } }
+        .danger-pulse { animation: redPulse 1.2s infinite; }
+        @keyframes greenPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } 50% { box-shadow: 0 0 0 14px rgba(16,185,129,0.35); } }
+        .success-pulse { animation: greenPulse 1.4s infinite; }
+        @keyframes shake { 0%,100%{transform:translate(-50%,-50%) rotate(0)} 20%{transform:translate(-50%,-50%) rotate(-2deg)} 40%{transform:translate(-50%,-50%) rotate(2deg)} 60%{transform:translate(-50%,-50%) rotate(-1.5deg)} 80%{transform:translate(-50%,-50%) rotate(1.5deg)} }
+        .shake { animation: shake 0.5s ease-in-out; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col">
+
+<header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0">
+                <i class="fas fa-network-wired"></i>
+            </a>
+            <div>
+                <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                </a>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">RSTP Link Failure & Convergence</h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+            <button id="btn-prev" onclick="app.prevStep()" disabled class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-backward"></i></button>
+            <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/30 transition-all-fast"><i id="icon-play" class="fas fa-play ml-1"></i></button>
+            <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-forward"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i id="theme-icon" class="fas fa-sun"></i></button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
+
+    <!-- Timeline Stepper -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="relative flex justify-between items-center w-full">
+            <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
+            <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out" style="width:0%"></div>
+            <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-2"></div>
+        </div>
+    </section>
+
+    <!-- Topology Canvas -->
+    <section id="topology-canvas" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[460px] md:min-h-[540px]">
+        <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
+
+        <!-- Failure Overlay Badge -->
+        <div id="failure-badge" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg animate-bounce flex items-center gap-2">
+            <i class="fas fa-bolt"></i> LINK DOWN — SW3 ↔ Core 1
+        </div>
+
+        <!-- Convergence Time Badge -->
+        <div id="converge-badge" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+            <i class="fas fa-check-circle"></i> CONVERGED — &lt; 1s (Proposal/Agreement)
+        </div>
+
+        <!-- Node: Core 1 (Root Bridge) — Top Left -->
+        <div id="node-Core1" class="absolute w-36 md:w-52 bg-white dark:bg-slate-800 rounded-xl p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:25%;top:22%;transform:translate(-50%,-50%)">
+            <div id="role-Core1" class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700/50">Root Bridge</div>
+            <div class="w-12 h-12 md:w-14 md:h-14 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                <i class="fas fa-server text-2xl text-slate-700 dark:text-slate-300"></i>
+            </div>
+            <h3 class="text-base md:text-lg font-extrabold text-slate-800 dark:text-white tracking-tight">Core SW-1</h3>
+            <span id="state-Core1" class="text-[10px] md:text-xs font-black tracking-widest px-2 py-1 mt-2 rounded bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-700/50">ROOT BRIDGE</span>
+        </div>
+
+        <!-- Node: Core 2 — Top Right -->
+        <div id="node-Core2" class="absolute w-36 md:w-52 bg-white dark:bg-slate-800 rounded-xl p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:75%;top:22%;transform:translate(-50%,-50%)">
+            <div id="role-Core2" class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700/50">Secondary</div>
+            <div class="w-12 h-12 md:w-14 md:h-14 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                <i class="fas fa-server text-2xl text-slate-700 dark:text-slate-300"></i>
+            </div>
+            <h3 class="text-base md:text-lg font-extrabold text-slate-800 dark:text-white tracking-tight">Core SW-2</h3>
+            <span id="state-Core2" class="text-[10px] md:text-xs font-black tracking-widest px-2 py-1 mt-2 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/50">FORWARDING</span>
+        </div>
+
+        <!-- Node: Access SW3 — Bottom Center -->
+        <div id="node-SW3" class="absolute w-36 md:w-52 bg-white dark:bg-slate-800 rounded-xl p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:50%;top:78%;transform:translate(-50%,-50%)">
+            <div id="role-SW3" class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-700/50">Access Switch</div>
+            <div class="w-12 h-12 md:w-14 md:h-14 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                <i class="fas fa-layer-group text-2xl text-slate-700 dark:text-slate-300"></i>
+            </div>
+            <h3 class="text-base md:text-lg font-extrabold text-slate-800 dark:text-white tracking-tight">Access SW-3</h3>
+            <span id="state-SW3" class="text-[10px] md:text-xs font-black tracking-widest px-2 py-1 mt-2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600">FORWARDING</span>
+        </div>
+
+        <!-- Port Labels -->
+        <div id="port-sw3-core1" class="absolute z-20 text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 transition-all duration-300" style="left:30%;top:56%;transform:translate(-50%,-50%)">Gi0/1 — Root Port</div>
+        <div id="port-sw3-core2" class="absolute z-20 text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 transition-all duration-300" style="left:70%;top:56%;transform:translate(-50%,-50%)">Gi0/2 — Alternate</div>
+
+        <!-- Central Status -->
+        <div class="absolute z-10 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded shadow text-center backdrop-blur-sm" style="left:50%;top:47%;transform:translate(-50%,-50%)">
+            <span class="block text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-0.5">Trạng thái Mạng</span>
+            <span id="link-status-text" class="text-xs font-bold text-slate-600 dark:text-slate-300 font-mono">Steady State</span>
+        </div>
+
+        <!-- Animated Packet -->
+        <div id="animated-packet" class="absolute z-50 hidden items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap shadow-lg" style="left:0;top:0;transform:translate(-50%,-50%)">
+            <i id="packet-icon" class="fas fa-envelope"></i>
+            <span id="packet-label">Packet</span>
+        </div>
+    </section>
+
+    <!-- Details Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center">
+            <div class="flex items-center gap-3 mb-4">
+                <span id="phase-badge" class="px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded text-xs font-bold uppercase tracking-widest border border-blue-200 dark:border-blue-700/50"></span>
+                <span id="timer-badge" class="text-xs font-mono font-bold px-2 py-1 rounded border"></span>
+            </div>
+            <h3 id="step-title" class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400"></h3>
+            <p id="step-desc" class="text-base md:text-lg leading-relaxed text-slate-600 dark:text-slate-300"></p>
+        </section>
+
+        <div class="flex flex-col gap-6">
+            <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-56 md:h-64">
+                <div class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">Console / Syslog</span>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1 font-mono text-xs text-emerald-400 whitespace-pre-wrap leading-relaxed" id="cli-logs"></div>
+            </section>
+
+            <section id="decode-panel" class="hidden bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow overflow-hidden">
+                <div class="bg-slate-50 dark:bg-slate-900/50 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+                    <i class="fas fa-microscope text-blue-500"></i>
+                    <span class="text-slate-600 dark:text-slate-300 font-bold text-sm">Bóc tách BPDU / Gói tin</span>
+                </div>
+                <div class="p-0 overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <tbody id="decode-body" class="divide-y divide-slate-100 dark:divide-slate-700/50 block bg-slate-50 dark:bg-[#1e1e1e]/50"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<script>
+const TIMELINE = [
+    {
+        step: 1, phase: "STEADY STATE", timer: { label: "T = 0", color: "slate" },
+        title: "Trạng thái ổn định — RSTP đã hội tụ",
+        description: `Mạng đang hoạt động bình thường. <strong>Core 1</strong> là Root Bridge (Priority 4096). SW3 có hai kết nối Uplink:<br>• <strong>Gi0/1 → Core 1</strong>: Root Port (RP) — đang Forwarding dữ liệu.<br>• <strong>Gi0/2 → Core 2</strong>: Alternate Port (ALTN) — đang sẵn sàng chờ, <em>không</em> bị câm lặng hoàn toàn như STP cũ — nó vẫn nhận BPDU mỗi 2 giây.`,
+        cli_logs: `*Hệ thống ổn định. RSTP đã hội tụ.*\n\nSW3# show spanning-tree\nVLAN0001 (Rapid-PVST)\n  Root ID  Priority 4096\n           Address  0001.0001.0001 (Core1)\n\n  Interface  Role  Sts  Cost  Prio\n  Gi0/1      ROOT  FWD  4     128\n  Gi0/2      ALTN  BLK  4     128\n\nSW3# Receiving Hello BPDU every 2s on Gi0/2 from Core2...`,
+        nodes: {
+            Core1: { state: "ROOT BRIDGE", color: "indigo", border: "border-indigo-400" },
+            Core2: { state: "FORWARDING", color: "emerald", border: "border-emerald-400" },
+            SW3:   { state: "FWD | ALTN", color: "slate", border: "border-slate-300 dark:border-slate-700" }
+        },
+        links: [
+            { id: "c1-c2",   src: "Core1", dst: "Core2", st: "ACTIVE" },
+            { id: "sw3-c1",  src: "SW3",   dst: "Core1", st: "ACTIVE" },
+            { id: "sw3-c2",  src: "SW3",   dst: "Core2", st: "IDLE" }
+        ],
+        portLabels: { sw3c1: "Gi0/1 — Root Port (FWD)", sw3c2: "Gi0/2 — Alternate (ALTN)", c1col: "indigo", c2col: "amber" },
+        linkStatus: "Steady State — Gi0/1 Root Port | Gi0/2 Alternate",
+        failureBadge: false, convergeBadge: false,
+        packet: { from: "SW3", to: "Core1", label: "Data Traffic", color: "bg-blue-500", icon: "fa-arrow-up" },
+        decode: { "SW3 Gi0/1": "Root Port — Cost 4 — FORWARDING", "SW3 Gi0/2": "Alternate Port — Cost 4 — BLOCKING", "Hello Interval": "2s (RSTP)", "Max Age": "20s (STP cũ) → không dùng trong RSTP" }
+    },
+    {
+        step: 2, phase: "LINK FAILURE", timer: { label: "T = 0.000s ⚠", color: "red" },
+        title: "Sự cố: Cáp Gi0/1 đứt đột ngột!",
+        description: `<strong>Sự cố vật lý:</strong> Sợi cáp nối SW3 → Core 1 bị ngắt. Tín hiệu vật lý (Carrier) biến mất.<br><br>Khác biệt cốt lõi so với STP cũ: <strong>RSTP không cần chờ Max Age 20 giây</strong> để phát hiện. Ngay khi physical link down, SW3 nhận biết ngay tức thì qua tín hiệu từ NIC và kích hoạt quá trình phục hồi.`,
+        cli_logs: `*Nov 01 09:00:00.001: %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to down\n*Nov 01 09:00:00.001: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to down\n\nSW3# Gi0/1 Physical link DOWN detected!\nSW3# Root Port lost. Initiating RSTP convergence...\nSW3# (STP cũ sẽ phải đợi 20s Max Age ở đây)`,
+        nodes: {
+            Core1: { state: "LINK DOWN", color: "red", border: "border-red-500" },
+            Core2: { state: "FORWARDING", color: "emerald", border: "border-emerald-400" },
+            SW3:   { state: "ROOT LOST!", color: "red", border: "border-red-500" }
+        },
+        links: [
+            { id: "c1-c2",  src: "Core1", dst: "Core2", st: "IDLE" },
+            { id: "sw3-c1", src: "SW3",   dst: "Core1", st: "DOWN" },
+            { id: "sw3-c2", src: "SW3",   dst: "Core2", st: "IDLE" }
+        ],
+        portLabels: { sw3c1: "Gi0/1 — LINK DOWN ❌", sw3c2: "Gi0/2 — Alternate (BLK)", c1col: "red", c2col: "amber" },
+        linkStatus: "LINK DOWN — Root Port mất! Đang khởi động Rapid Convergence...",
+        failureBadge: true, convergeBadge: false,
+        packet: null,
+        decode: { "Sự kiện": "Physical link down trên Gi0/1", "RSTP Action": "Tức thì — không chờ timer", "STP cũ Action": "Chờ 20s (Max Age) trước khi hành động", "Lợi thế": "RSTP tiết kiệm 20 giây so với STP" }
+    },
+    {
+        step: 3, phase: "PROPOSAL BPDU", timer: { label: "T = 0.010s", color: "indigo" },
+        title: "SW3 gửi RST BPDU (Proposal) đến Core 2",
+        description: `SW3 ngay lập tức gửi một <strong>RST BPDU đặc biệt</strong> với cờ <code>Proposal=1</code> ra cổng Gi0/2 (trước đây là Alternate Port) tới Core 2.<br><br>Trong gói tin này, SW3 <em>tuyên bố muốn</em> biến Gi0/2 thành Root Port mới và yêu cầu Core 2 xác nhận (Agreement). Đây là bước đàm phán chủ động, thay thế hoàn toàn cơ chế chờ timer thụ động của STP.`,
+        cli_logs: `*Nov 01 09:00:00.011: SW3# Gi0/1 is ROOT and it went DOWN.\nSW3# Sending RST BPDU on Gi0/2:\n  Flags: PROPOSAL=1, AGREEMENT=0\n  Role:  Designated (tạm thời)\n  State: Discarding\n  Root:  0001.0001.0001 (Core1)\n  Cost:  4 (via Core2)\n\n[→ BPDU RST đang bay sang Core2...]`,
+        nodes: {
+            Core1: { state: "UNREACHABLE", color: "red", border: "border-red-500" },
+            Core2: { state: "RECEIVING...", color: "blue", border: "border-blue-400" },
+            SW3:   { state: "PROPOSING", color: "indigo", border: "border-indigo-400" }
+        },
+        links: [
+            { id: "c1-c2",  src: "Core1", dst: "Core2", st: "IDLE" },
+            { id: "sw3-c1", src: "SW3",   dst: "Core1", st: "DOWN" },
+            { id: "sw3-c2", src: "SW3",   dst: "Core2", st: "ACTIVE" }
+        ],
+        portLabels: { sw3c1: "Gi0/1 — DOWN ❌", sw3c2: "Gi0/2 — Sending Proposal →", c1col: "red", c2col: "blue" },
+        linkStatus: "RST BPDU (Proposal=1) đang bay từ SW3 → Core 2",
+        failureBadge: false, convergeBadge: false,
+        packet: { from: "SW3", to: "Core2", label: "RST BPDU (Proposal)", color: "bg-indigo-500", icon: "fa-handshake" },
+        decode: { "BPDU Type": "RST BPDU (Rapid Spanning Tree)", "Flag Proposal": "1 (yêu cầu Agreement)", "Flag Agreement": "0", "SW3 Role": "Designated (tạm thời, trước khi được xác nhận)" }
+    },
+    {
+        step: 4, phase: "SYNC + AGREEMENT", timer: { label: "T = 0.030s", color: "indigo" },
+        title: "Core 2 đồng bộ (Sync) và phản hồi Agreement",
+        description: `Core 2 nhận được Proposal BPDU. Nó thực hiện quy trình <strong>Sync nội bộ</strong>: chặn tất cả cổng Designated của nó xuống (để không tạo loop tạm thời) rồi gửi ngay một <strong>RST BPDU với cờ <code>Agreement=1</code></strong> về lại SW3.<br><br>Thông điệp ý nghĩa: <em>"Tôi đồng ý — Gi0/2 của mày là Root Port hợp lệ. Hãy bật lên!"</em>`,
+        cli_logs: `*Nov 01 09:00:00.031:\nCore2# Received Proposal BPDU from SW3 on Gi0/0\nCore2# Performing SYNC: blocking all Non-Edge Designated Ports...\nCore2# SYNC complete.\nCore2# Sending RST BPDU Agreement:\n  Flags: PROPOSAL=0, AGREEMENT=1\n  Role:  Root Port (hướng về Core1)\n  State: Forwarding\n\n[← BPDU Agreement bay về SW3...]`,
+        nodes: {
+            Core1: { state: "UNREACHABLE", color: "red", border: "border-red-500" },
+            Core2: { state: "AGREEING", color: "emerald", border: "border-emerald-400" },
+            SW3:   { state: "AWAITING ACK", color: "indigo", border: "border-indigo-400" }
+        },
+        links: [
+            { id: "c1-c2",  src: "Core1", dst: "Core2", st: "IDLE" },
+            { id: "sw3-c1", src: "SW3",   dst: "Core1", st: "DOWN" },
+            { id: "sw3-c2", src: "SW3",   dst: "Core2", st: "ACTIVE" }
+        ],
+        portLabels: { sw3c1: "Gi0/1 — DOWN ❌", sw3c2: "Gi0/2 — ← Agreement inbound", c1col: "red", c2col: "emerald" },
+        linkStatus: "RST BPDU (Agreement=1) phản hồi từ Core 2 → SW3",
+        failureBadge: false, convergeBadge: false,
+        packet: { from: "Core2", to: "SW3", label: "RST BPDU (Agreement)", color: "bg-emerald-500", icon: "fa-check-double" },
+        decode: { "Flag Agreement": "1 (xác nhận Proposal)", "Core 2 Action": "Sync nội bộ → Block all Designated Ports tạm thời", "Mục đích Sync": "Ngăn tạo vòng lặp tạm thời trong lúc chuyển đổi", "Thời gian 3 bước": "0→ 0.03s (cực nhanh, không timer)" }
+    },
+    {
+        step: 5, phase: "RAPID FORWARD", timer: { label: "T = 0.050s ⚡", color: "emerald" },
+        title: "Gi0/2 bật Forwarding ngay lập tức!",
+        description: `SW3 nhận được Agreement. Không cần đợi thêm bất kỳ timer nào, SW3 <strong>lập tức chuyển Gi0/2 sang trạng thái Forwarding</strong>. Luồng dữ liệu người dùng được định tuyến lại qua đường Core 2.<br><br>Tổng thời gian từ lúc đứt cáp tới lúc phục hồi: <strong>~50ms</strong>. So với STP cũ: 30–50 giây.`,
+        cli_logs: `*Nov 01 09:00:00.051:\nSW3# Agreement received on Gi0/2 from Core2!\nSW3# Gi0/2 transitioning:\n  DISCARDING → FORWARDING (skip Learning timer!)\nSW3# Gi0/2 is now ROOT PORT (FWD)\n\n%SPANTREE-5-TOPOTIE: VLAN0001\n  Root: 0001.0001.0001 via Gi0/2 (Core2)\n  Convergence time: 0.050s`,
+        nodes: {
+            Core1: { state: "UNREACHABLE", color: "red", border: "border-red-500" },
+            Core2: { state: "FORWARDING", color: "emerald", border: "border-emerald-400" },
+            SW3:   { state: "FWD via Core2", color: "emerald", border: "border-emerald-500" }
+        },
+        links: [
+            { id: "c1-c2",  src: "Core1", dst: "Core2", st: "IDLE" },
+            { id: "sw3-c1", src: "SW3",   dst: "Core1", st: "DOWN" },
+            { id: "sw3-c2", src: "SW3",   dst: "Core2", st: "ACTIVE" }
+        ],
+        portLabels: { sw3c1: "Gi0/1 — DOWN ❌", sw3c2: "Gi0/2 — NEW Root Port ✅", c1col: "red", c2col: "emerald" },
+        linkStatus: "Hội tụ hoàn tất trong ~50ms! Dữ liệu đi qua Core 2",
+        failureBadge: false, convergeBadge: true,
+        packet: { from: "SW3", to: "Core2", label: "Data Traffic (restored)", color: "bg-emerald-500", icon: "fa-bolt" },
+        decode: { "Gi0/2 State": "DISCARDING → FORWARDING (tức thì, không chờ timer)", "Thời gian": "~50ms tổng", "STP cũ cần": "30,000ms (30 giây)", "Tỷ lệ cải thiện": "RSTP nhanh hơn 600 lần!" }
+    },
+    {
+        step: 6, phase: "TOPOLOGY CHANGE", timer: { label: "T = 0.080s", color: "blue" },
+        title: "Thông báo Topology Change (TCN) toàn mạng",
+        description: `Sau khi bản thân phục hồi, SW3 gửi <strong>Topology Change Notification (TCN)</strong> ra toàn mạng. Mọi Switch khác nhận tín hiệu này sẽ <em>xóa bảng MAC ngay lập tức</em> (flush MAC table) thay vì đợi Entry hết hạn (300s), giúp lưu lượng không bị gửi nhầm đường cũ sau khi failover.<br><br>Đây là cơ chế quan trọng giúp Control Plane và Data Plane đồng bộ sau sự kiện failover.`,
+        cli_logs: `*Nov 01 09:00:00.081:\nSW3# Sending Topology Change Notification (TCN)\n  on all active ports...\n\nCore2# Received TC flag in BPDU.\n  Flushing MAC Table on all ports except Gi0/0...\n  MAC flush complete (0 entries removed).\n\n*Nov 01 09:00:00.090:\n%SPANTREE-5-ROOTCHANGE: Root changed on VLAN0001\n  New Root: Core1 via Core2 (Cost 8)\n  RSTP Converged.`,
+        nodes: {
+            Core1: { state: "ISOLATED", color: "red", border: "border-red-400" },
+            Core2: { state: "NEW HOP ✓", color: "emerald", border: "border-emerald-500" },
+            SW3:   { state: "CONVERGED", color: "emerald", border: "border-emerald-500" }
+        },
+        links: [
+            { id: "c1-c2",  src: "Core1", dst: "Core2", st: "IDLE" },
+            { id: "sw3-c1", src: "SW3",   dst: "Core1", st: "DOWN" },
+            { id: "sw3-c2", src: "SW3",   dst: "Core2", st: "ACTIVE" }
+        ],
+        portLabels: { sw3c1: "Gi0/1 — DOWN ❌", sw3c2: "Gi0/2 — Root Port (FWD) ✅", c1col: "red", c2col: "emerald" },
+        linkStatus: "TCN đã gửi — MAC Table flush — RSTP Converged hoàn toàn!",
+        failureBadge: false, convergeBadge: true,
+        packet: { from: "SW3", to: "Core2", label: "TCN BPDU", color: "bg-blue-500", icon: "fa-broadcast-tower" },
+        decode: { "TCN Mục đích": "Flush MAC Table toàn mạng tức thì", "Nếu không có TCN": "Data Plane gửi nhầm đường cũ trong ~300s", "Kết quả cuối": "RSTP fully converged in < 100ms", "So sánh STP": "STP cần 30–50s + 300s MAC timeout = ~5.5 phút" }
+    }
+];
+
+class RstpSimulator {
+    constructor() {
+        this.idx = 0;
+        this.playing = false;
+        this.intervalId = null;
+        this.currentAnim = null;
+        this.dom = {
+            stepper: document.getElementById('stepper-container'),
+            progress: document.getElementById('timeline-progress'),
+            btnPrev: document.getElementById('btn-prev'),
+            btnNext: document.getElementById('btn-next'),
+            btnPlay: document.getElementById('btn-play'),
+            iconPlay: document.getElementById('icon-play'),
+            themeIcon: document.getElementById('theme-icon'),
+            phaseBadge: document.getElementById('phase-badge'),
+            timerBadge: document.getElementById('timer-badge'),
+            title: document.getElementById('step-title'),
+            desc: document.getElementById('step-desc'),
+            cli: document.getElementById('cli-logs'),
+            canvas: document.getElementById('topology-canvas'),
+            svg: document.getElementById('links-svg'),
+            linkStatus: document.getElementById('link-status-text'),
+            packet: document.getElementById('animated-packet'),
+            packetIcon: document.getElementById('packet-icon'),
+            packetLabel: document.getElementById('packet-label'),
+            decodePanel: document.getElementById('decode-panel'),
+            decodeBody: document.getElementById('decode-body'),
+            failureBadge: document.getElementById('failure-badge'),
+            convergeBadge: document.getElementById('converge-badge'),
+            portSw3c1: document.getElementById('port-sw3-core1'),
+            portSw3c2: document.getElementById('port-sw3-core2'),
+        };
+        window.addEventListener('resize', () => this.drawLinks(TIMELINE[this.idx].links));
+        this.init();
+    }
+
+    init() {
+        let dark = false;
+        try { const s = localStorage.getItem('portfolio-theme'); dark = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; } catch(e){}
+        document.documentElement.classList.toggle('dark', dark);
+        if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+        this.buildStepper();
+        this.render(0);
+    }
+
+    buildStepper() {
+        this.dom.stepper.innerHTML = '';
+        TIMELINE.forEach((d, i) => {
+            const btn = document.createElement('button');
+            btn.id = `step-btn-${i}`;
+            btn.innerHTML = `<span class="hidden md:block">${d.step}. ${d.phase}</span><span class="md:hidden">${d.step}</span>`;
+            btn.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm hover:scale-105';
+            btn.onclick = () => { this.pause(); this.render(i); };
+            this.dom.stepper.appendChild(btn);
+        });
+    }
+
+    colorClass(c) {
+        const m = {
+            slate: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600',
+            blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700/50',
+            indigo: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700/50',
+            emerald: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/50',
+            amber: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700/50',
+            red: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700/50',
+        };
+        return m[c] || m.slate;
+    }
+
+    drawLinks(links) {
+        this.dom.svg.innerHTML = '';
+        const cr = this.dom.canvas.getBoundingClientRect();
+        const dark = document.documentElement.classList.contains('dark');
+        links.forEach(lk => {
+            const s = document.getElementById('node-' + lk.src);
+            const t = document.getElementById('node-' + lk.dst);
+            if (!s || !t) return;
+            const sr = s.getBoundingClientRect(), tr = t.getBoundingClientRect();
+            const x1 = sr.left - cr.left + sr.width/2, y1 = sr.top - cr.top + sr.height/2;
+            const x2 = tr.left - cr.left + tr.width/2, y2 = tr.top - cr.top + tr.height/2;
+            const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+            line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+            line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+            line.setAttribute('stroke-width','5'); line.setAttribute('stroke-linecap','round');
+            if (lk.st === 'ACTIVE') {
+                line.setAttribute('stroke', dark ? '#60a5fa' : '#3b82f6');
+                line.setAttribute('stroke-dasharray','12,12');
+                line.classList.add('animate-dash');
+            } else if (lk.st === 'DOWN') {
+                line.setAttribute('stroke', dark ? 'rgba(239,68,68,0.8)' : 'rgba(239,68,68,0.9)');
+                line.setAttribute('stroke-dasharray','3,12');
+                line.setAttribute('stroke-width','4');
+            } else {
+                line.setAttribute('stroke', dark ? 'rgba(71,85,105,0.3)' : 'rgba(203,213,225,0.4)');
+                line.setAttribute('stroke-dasharray','6,12');
+            }
+            this.dom.svg.appendChild(line);
+        });
+    }
+
+    render(i) {
+        this.idx = i;
+        const d = TIMELINE[i];
+
+        // Stepper
+        TIMELINE.forEach((_,j) => {
+            const b = document.getElementById(`step-btn-${j}`);
+            if (!b) return;
+            if (j < i) b.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-500 text-white border-blue-500 cursor-pointer shadow';
+            else if (j === i) b.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-500 border-blue-300 dark:border-blue-700 cursor-pointer';
+            else b.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer';
+        });
+        this.dom.progress.style.width = `${(i / (TIMELINE.length - 1)) * 100}%`;
+
+        // Content
+        this.dom.phaseBadge.textContent = d.phase;
+        const tcMap = { slate: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-300 dark:border-slate-600', red: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-300 dark:border-red-700/50', indigo: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700/50', emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/50', blue: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300 dark:border-blue-700/50' };
+        this.dom.timerBadge.textContent = d.timer.label;
+        this.dom.timerBadge.className = `text-xs font-mono font-bold px-2 py-1 rounded border ${tcMap[d.timer.color] || tcMap.slate}`;
+        this.dom.title.textContent = d.title;
+        this.dom.desc.innerHTML = d.description;
+        this.dom.cli.textContent = d.cli_logs;
+
+        // Nodes
+        Object.entries(d.nodes).forEach(([id, nd]) => {
+            const stEl = document.getElementById(`state-${id}`);
+            const card = document.getElementById(`node-${id}`);
+            if (stEl) { stEl.textContent = nd.state; stEl.className = `text-[10px] md:text-xs font-black tracking-widest px-2 py-1 mt-2 rounded ${this.colorClass(nd.color)} border`; }
+            if (card) {
+                const extra = nd.color === 'emerald' && i >= 4 ? ' success-pulse' : nd.color === 'red' ? ' danger-pulse' : '';
+                card.className = `absolute w-36 md:w-52 bg-white dark:bg-slate-800 rounded-xl p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10 ${nd.border}${extra}`;
+            }
+        });
+
+        // Port labels
+        if (this.dom.portSw3c1) {
+            this.dom.portSw3c1.textContent = d.portLabels.sw3c1;
+            const c1c = { red: 'bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700', blue: 'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700', indigo: 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700' };
+            this.dom.portSw3c1.className = `absolute z-20 text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border transition-all duration-300 ${c1c[d.portLabels.c1col] || c1c.blue}`;
+        }
+        if (this.dom.portSw3c2) {
+            this.dom.portSw3c2.textContent = d.portLabels.sw3c2;
+            const c2c = { amber: 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700', emerald: 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700', blue: 'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700' };
+            this.dom.portSw3c2.className = `absolute z-20 text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border transition-all duration-300 ${c2c[d.portLabels.c2col] || c2c.amber}`;
+        }
+
+        // Status
+        this.dom.linkStatus.textContent = d.linkStatus;
+        if (this.dom.failureBadge) this.dom.failureBadge.classList.toggle('hidden', !d.failureBadge);
+        if (this.dom.convergeBadge) this.dom.convergeBadge.classList.toggle('hidden', !d.convergeBadge);
+
+        this.drawLinks(d.links);
+        this.animatePacket(d.packet);
+
+        // Decode
+        if (d.decode) {
+            this.dom.decodePanel.classList.remove('hidden');
+            this.dom.decodeBody.innerHTML = Object.entries(d.decode).map(([k,v]) =>
+                `<tr class="w-full flex"><td class="py-2 px-4 font-semibold text-slate-400 w-2/5 min-w-[140px] whitespace-nowrap">${k}</td><td class="py-2 pr-4 text-emerald-400 w-3/5 break-words">${v}</td></tr>`
+            ).join('');
+        }
+
+        if (this.dom.btnPrev) this.dom.btnPrev.disabled = i === 0;
+        if (this.dom.btnNext) this.dom.btnNext.disabled = i === TIMELINE.length - 1;
+        if (i === TIMELINE.length - 1 && this.playing) this.pause();
+    }
+
+    animatePacket(p) {
+        if (this.currentAnim) this.currentAnim.cancel();
+        if (!p) { this.dom.packet.classList.add('hidden'); return; }
+        const src = document.getElementById('node-' + p.from);
+        const tgt = document.getElementById('node-' + p.to);
+        if (!src || !tgt) { this.dom.packet.classList.add('hidden'); return; }
+        this.dom.packetLabel.textContent = p.label;
+        this.dom.packetIcon.className = `fas ${p.icon}`;
+        this.dom.packet.className = `absolute z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-bold text-white whitespace-nowrap ${p.color} shadow-lg`;
+        this.dom.packet.classList.remove('hidden');
+        const cr = this.dom.canvas.getBoundingClientRect();
+        const sr = src.getBoundingClientRect(), tr = tgt.getBoundingClientRect();
+        const sx = sr.left-cr.left+sr.width/2, sy = sr.top-cr.top+sr.height/2;
+        const tx = tr.left-cr.left+tr.width/2, ty = tr.top-cr.top+tr.height/2;
+        this.dom.packet.style.left = '0px'; this.dom.packet.style.top = '0px';
+        this.currentAnim = this.dom.packet.animate([
+            { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(0.8)`, opacity: 0 },
+            { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(1)`,   opacity: 1, offset: 0.1 },
+            { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(1)`,   opacity: 1, offset: 0.88 },
+            { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(0.8)`, opacity: 0 },
+        ], { duration: 2600, easing: 'cubic-bezier(0.4,0,0.2,1)', fill: 'forwards' });
+    }
+
+    nextStep() { if (this.idx < TIMELINE.length - 1) this.render(this.idx + 1); }
+    prevStep() { if (this.idx > 0) this.render(this.idx - 1); }
+    togglePlay() { this.playing ? this.pause() : this.play(); }
+    play() {
+        if (this.idx === TIMELINE.length - 1) this.render(0);
+        this.playing = true;
+        if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-pause';
+        if (this.dom.btnPlay) { this.dom.btnPlay.classList.replace('bg-blue-600','bg-amber-500'); this.dom.btnPlay.classList.replace('hover:bg-blue-700','hover:bg-amber-600'); }
+        this.intervalId = setInterval(() => { if (this.idx < TIMELINE.length - 1) this.nextStep(); }, 5000);
+    }
+    pause() {
+        this.playing = false; clearInterval(this.intervalId);
+        if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-play ml-1';
+        if (this.dom.btnPlay) { this.dom.btnPlay.classList.replace('bg-amber-500','bg-blue-600'); this.dom.btnPlay.classList.replace('hover:bg-amber-600','hover:bg-blue-700'); }
+    }
+    reset() { this.pause(); this.render(0); }
+    toggleTheme() {
+        const dark = !document.documentElement.classList.contains('dark');
+        document.documentElement.classList.toggle('dark', dark);
+        if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+        try { localStorage.setItem('portfolio-theme', dark ? 'dark' : 'light'); } catch(e){}
+        this.drawLinks(TIMELINE[this.idx].links);
+    }
+}
+
+let app;
+window.addEventListener('DOMContentLoaded', () => { app = new RstpSimulator(); });
+</script>
+</body>
+</html>
