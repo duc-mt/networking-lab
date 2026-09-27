@@ -248,4 +248,15 @@ const PROJECTS = [
         status: 'live',
         dateAdded: '2026-10-05',
     },
+    {
+        title: 'BGP Peering FSM & Technical Traps',
+        topic: 'Routing',
+        description:
+            'Phân tích quá trình thiết lập trạng thái (FSM) và 3 cái bẫy kỹ thuật kinh điển của BGP.',
+        type: 'protocol',
+        tags: ['BGP', 'Routing', 'FSM', 'Troubleshooting', 'Split-Horizon'],
+        href: 'projects/protocol/bgp-fsm.html',
+        status: 'live',
+        dateAdded: '2026-10-06',
+    },
 ];
