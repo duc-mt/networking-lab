@@ -241,8 +241,10 @@
                 </div>
             </section>
 
-            <!-- Real-time CLI / Terminal -->
-            <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col">
+            <!-- Right Column: CLI & Decode -->
+            <div class="flex flex-col gap-6">
+                <!-- Real-time CLI / Terminal -->
+                <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-64 md:h-72">
                 <!-- Terminal Header (Mac Style) -->
                 <div class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none">
                     <div class="flex items-center gap-2">
@@ -258,6 +260,19 @@
                     <pre><code id="cli-logs" class="font-mono text-[13px] md:text-sm text-[#00ff00] leading-relaxed whitespace-pre-wrap break-words"></code></pre>
                 </div>
             </section>
+
+            <!-- Packet Decode Panel -->
+            <section id="packet-decode-panel" class="hidden bg-slate-900 rounded-2xl border border-slate-800 shadow-sm p-5 overflow-hidden transition-all duration-300">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fas fa-search-plus"></i> Packet Decode</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm font-mono text-slate-300">
+                        <tbody id="packet-decode-body" class="divide-y divide-slate-800">
+                            <!-- injected by js -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
 
         </div>
     </main>
@@ -277,7 +292,7 @@
                     R2: { state: "DOWN", role: "Không hoạt động", color: "red" }
                 },
                 link_state: "Khởi động",
-                animated_packet: { from: "R1", to: "R2", label: "Hello (RID 1.1.1.1)", color: "bg-blue-500", icon: "fa-envelope" }
+                animated_packet: { from: "R1", to: "R2", label: "Hello (RID 1.1.1.1)", color: "bg-blue-500", icon: "fa-envelope", packet_decode: { "OSPF Type": "1 (Hello)", "Router ID": "1.1.1.1", "Area ID": "0", "Auth Type": "None", "Active Neighbor": "None" } }
             },
             {
                 step: 2,
@@ -291,7 +306,7 @@
                     R2: { state: "INIT", role: "Phát hiện R1", color: "amber" }
                 },
                 link_state: "Đang dò tìm",
-                animated_packet: { from: "R2", to: "R1", label: "Hello (RID 2.2.2.2)", color: "bg-amber-500", icon: "fa-reply" }
+                animated_packet: { from: "R2", to: "R1", label: "Hello (RID 2.2.2.2)", color: "bg-amber-500", icon: "fa-reply", packet_decode: { "OSPF Type": "1 (Hello)", "Router ID": "2.2.2.2", "Area ID": "0", "Auth Type": "None", "Active Neighbor": "1.1.1.1" } }
             },
             {
                 step: 3,
@@ -319,7 +334,7 @@
                     R2: { state: "EXSTART", role: "Master (DR)", color: "purple" }
                 },
                 link_state: "Thương lượng MTU/Role",
-                animated_packet: { from: "R2", to: "R1", label: "DBD Rỗng (Cờ MS=1)", color: "bg-purple-500", icon: "fa-gavel" }
+                animated_packet: { from: "R2", to: "R1", label: "DBD Rỗng (Cờ MS=1)", color: "bg-purple-500", icon: "fa-gavel", packet_decode: { "OSPF Type": "2 (Database Description)", "Router ID": "2.2.2.2", "Options": "0x52", "Flags": "0x7 (Init, More, Master)" } }
             },
             {
                 step: 5,
@@ -333,7 +348,7 @@
                     R2: { state: "EXCHANGE", role: "Master (DR)", color: "indigo" }
                 },
                 link_state: "Trao đổi LSDB Tóm tắt",
-                animated_packet: { from: "R1", to: "R2", label: "DBD (LSA Headers)", color: "bg-indigo-500", icon: "fa-list-alt" }
+                animated_packet: { from: "R1", to: "R2", label: "DBD (LSA Headers)", color: "bg-indigo-500", icon: "fa-list-alt", packet_decode: { "OSPF Type": "2 (Database Description)", "Router ID": "1.1.1.1", "Flags": "0x0 (Slave)", "LSA Headers": "1.1.1.1, 10.0.0.0/24" } }
             },
             {
                 step: 6,
@@ -347,7 +362,7 @@
                     R2: { state: "LOADING", role: "Đang gửi LSU...", color: "orange" }
                 },
                 link_state: "Đồng bộ hóa LSDB",
-                animated_packet: { from: "R2", to: "R1", label: "LSU (Chi tiết LSA)", color: "bg-orange-500", icon: "fa-download" }
+                animated_packet: { from: "R2", to: "R1", label: "LSU (Chi tiết LSA)", color: "bg-orange-500", icon: "fa-download", packet_decode: { "OSPF Type": "4 (Link State Update)", "Router ID": "2.2.2.2", "LSA Count": "3", "Payload": "Full Link State Records" } }
             },
             {
                 step: 7,
@@ -400,7 +415,9 @@
                     packetLabel: document.getElementById('packet-label'),
                     packetIcon: document.getElementById('packet-icon'),
                     linkStatus: document.getElementById('link-status'),
-                    linkStatusText: document.getElementById('link-status-text')
+                    linkStatusText: document.getElementById('link-status-text'),
+                    decodePanel: document.getElementById('packet-decode-panel'),
+                    decodeBody: document.getElementById('packet-decode-body')
                 };
 
                 this.init();
@@ -523,7 +540,21 @@
                 
                 if (!packetData) {
                     this.dom.animatedPacket.classList.add('hidden');
+                    this.dom.decodePanel.classList.add('hidden');
                     return;
+                }
+                
+                // Render packet decode if exists
+                if (packetData.packet_decode) {
+                    this.dom.decodePanel.classList.remove('hidden');
+                    this.dom.decodeBody.innerHTML = Object.entries(packetData.packet_decode).map(([key, val]) => `
+                        <tr>
+                            <td class="py-2 pr-4 font-semibold text-slate-400 whitespace-nowrap">${key}</td>
+                            <td class="py-2 text-emerald-400 break-all">${val}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    this.dom.decodePanel.classList.add('hidden');
                 }
 
                 this.dom.animatedPacket.classList.remove('hidden');
