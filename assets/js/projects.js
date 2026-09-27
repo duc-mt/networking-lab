@@ -96,6 +96,17 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        id: 'dhcp-dora-fsm',
+        title: 'DHCP DORA Process',
+        category: 'protocol',
+        type: 'protocol',
+        image: 'assets/images/protocol-placeholder.jpg',
+        description:
+            'Mô phỏng chi tiết quá trình cấp phát IP động qua 4 bước D.O.R.A, khám phá cấu trúc bản tin UDP Port 67/68 và cơ chế Broadcast L2/L3.',
+        tags: ['DHCP', 'D.O.R.A', 'UDP', 'Broadcast'],
+        href: 'projects/protocol/dhcp-dora.html',
+    },
+    {
         title: 'Network Bắt Bệnh #06 — DNS Resolution',
         topic: 'DNS',
         description:
