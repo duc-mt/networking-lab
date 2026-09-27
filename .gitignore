@@ -15,3 +15,7 @@ npm-debug.log*
 
 # Local archives created while working on the project
 *.zip
+
+# Temporary scripts
+*.py
+temp_*.js
