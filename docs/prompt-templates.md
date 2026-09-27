@@ -832,3 +832,38 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 - Không dùng `absolute` trôi nổi mà không có tọa độ neo (`top/left` hoặc `inset-0`).
 
 
+
+---
+
+## 13. Quy Tắc Thiết Kế Sơ Đồ Mạng (Topology Design & Styling Rules)
+
+> **MỤC TIÊU:** Đảm bảo toàn bộ các trang mô phỏng Topology (đặc biệt là dạng `topology-design`) đều nhất quán tuyệt đối về khoảng cách, màu sắc, cấu trúc hiển thị trên màn hình siêu rộng (Ultra-wide) và tuân thủ các chuẩn mực trực quan.
+
+### 1. Canvas and Layout Widths (Ultra-wide Support)
+- **Main Container**: Thẻ `<main>` bọc ngoài cùng bắt buộc dùng `class="flex-1 w-full max-w-[1600px] mx-auto ..."` (KHÔNG dùng `max-w-7xl`).
+- **Topology Canvas**: Khung chứa sơ đồ `<div id="topology-container">` bắt buộc dùng `class="relative w-full max-w-[1400px] mx-auto overflow-x-auto ..."` và kèm style inline `style="min-width: 1400px;"`. Cách setup này đảm bảo sơ đồ "bành" ra phủ đều trên màn hình lớn, nhưng vẫn có thanh cuộn ngang (scroll) an toàn trên thiết bị nhỏ.
+
+### 2. Node Positioning & Symmetry (Cân Bằng Đối Xứng)
+- Sử dụng tọa độ Pixel tuyệt đối (ví dụ: `x: 180, y: 350`) được tính toán tỉ mỉ trên hệ quy chiếu chiều ngang `1400px` để đảm bảo đối xứng trái - phải hoàn hảo.
+- **TUYỆT ĐỐI KHÔNG** để các Node bị dồn tụm về bên trái. Phải tính khoảng cách chia đều cho các Region để trải đều từ biên trái sang biên phải.
+
+### 3. Zone Bounding Boxes (Khung Phân Vùng)
+- **Bắt buộc** vẽ các khung viền đứt nét để phân định khu vực vật lý (Ví dụ: On-Prem Site, Cloud Region, MPLS Core).
+- **Style CSS:** `absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0`.
+- **Background:** Phải đổ một lớp nền mờ (opacity ~5%) theo màu chủ đạo của vùng (ví dụ thêm hex `0D` vào mã màu như `#3b82f60D`). KHÔNG được chỉ dùng text suông hay khoảng trắng để phân chia.
+
+### 4. Node Card UI & Semantic Colors (Giao diện Thẻ Thiết Bị)
+- **Role Badge (Nhãn Vai trò - Phía trên cùng):** Dùng màu xám/slate trung tính (`bg-slate-100 text-slate-600`). CẤM dùng màu sắc sặc sỡ phân chia theo Region.
+- **Node Border & Glow:** Viền thẻ và hiệu ứng đổ bóng phát sáng (Outer Glow) PHẢI ĐƯỢC set theo trạng thái sức khỏe (Health state).
+  - Khỏe mạnh (`health: green`): `border-emerald-500` và `shadow-[0_0_15px_rgba(16,185,129,0.3)]`
+  - Cảnh báo (`health: yellow`): dùng dải màu Amber/Yellow
+  - Lỗi (`health: red`): dùng dải màu Red/Rose
+- **Status Badge (Nhãn Trạng thái - Phía dưới cùng):** Mỗi thiết bị phải có thêm một huy hiệu nhỏ xíu (pill badge) ở gáy dưới báo cáo trạng thái vận hành hiện tại (Ví dụ: `ONLINE`, `BGP UP`, `DOWN`).
+- **Primary Spec (Thông số cốt lõi):** Dòng text phụ ngay dưới tên thiết bị phải là thông số quan trọng nhất:
+  - Máy chủ (Compute/Host): Hiển thị IP Address.
+  - Router biên mạng (PE Router/L3): Hiển thị **VRF Name** hoặc **Loopback IP**.
+  - **TUYỆT ĐỐI KHÔNG** vứt một cái tên interface chung chung như `Gi0/0/0` vào vị trí này gây hiểu nhầm kiến trúc.
+
+### 5. Topology Links & Interface Labels (Cáp Mạng và Nhãn Cổng)
+- **Line Animation:** Các liên kết mạng đang active phải có hiệu ứng luồng dữ liệu chạy (Traffic Flowing). Dùng `stroke-dasharray` kết hợp class `.animate-dash` gọi tới CSS `@keyframes dash { to { stroke-dashoffset: -N; } }`.
+- **Port Labels (Nhãn Cổng Vật Lý/Logic):** Bất kỳ thông số cổng nào (như `Gi1/0/24`, `eth0`, `Tunnel0`) **PHẢI** được gắn chặt vào 2 đầu của sợi cáp (vị trí 15-20% và 80-85% trên chiều dài SVG link) dưới dạng HTML Badge. Không được thả lơ lửng ở giữa link.
