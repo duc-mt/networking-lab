@@ -849,6 +849,8 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 - **TUYỆT ĐỐI KHÔNG** để các Node bị dồn tụm về bên trái. Phải phân bổ khoảng cách chia đều cho các Region để trải rộng hài hòa trên bản vẽ.
 
 ### 3. Zone Bounding Boxes (Khung Phân Vùng)
+- **Bounding Box Sizing (Chiều cao an toàn):** Phải đảm bảo chiều cao của khung phân vùng (VD: `height: 92%`) đủ lớn để ôm trọn toàn bộ các thiết bị (nodes) bên trong, không được cắt ngang qua bất kỳ thiết bị nào (nhất là thiết bị nằm ở dưới cùng).
+- **Z-index:** Bounding box bắt buộc phải nằm dưới cùng (`z-0`), còn các Nodes thiết bị phải nổi lên trên (`z-10` hoặc `z-20`).
 - **Bắt buộc** vẽ các khung viền đứt nét để phân định khu vực vật lý (Ví dụ: On-Prem Site, Cloud Region, MPLS Core).
 - **Style CSS:** `absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0`.
 - **Background:** Phải đổ một lớp nền mờ (opacity ~5%) theo màu chủ đạo của vùng (ví dụ thêm hex `0D` vào mã màu như `#3b82f60D`). KHÔNG được chỉ dùng text suông hay khoảng trắng để phân chia.
