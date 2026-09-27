@@ -236,12 +236,18 @@
 
         function sortProjects(list) {
             const sorted = [...list];
-            if (sortSelect.value === 'az') {
-                sorted.sort((a, b) => a.title.localeCompare(b.title));
-            } else {
-                // "newest" — falls back to 0 (oldest) if dateAdded is missing, so it never crashes
-                sorted.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
-            }
+            sorted.sort((a, b) => {
+                // Luôn ưu tiên dự án 'live' lên trên 'soon'
+                const aLive = a.status === 'live' ? 1 : 0;
+                const bLive = b.status === 'live' ? 1 : 0;
+                if (aLive !== bLive) return bLive - aLive;
+
+                if (sortSelect.value === 'az') {
+                    return a.title.localeCompare(b.title);
+                } else {
+                    return new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0);
+                }
+            });
             return sorted;
         }
 
