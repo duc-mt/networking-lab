@@ -64,7 +64,7 @@ Requirements:
    { step, time, phase, title, description, cli_logs,
      nodes: { <DeviceName>: { state, role, color } , ... },
      link_state,
-     animated_packet: { from, to, label, color, icon } | null }
+     animated_packet: { from, to, label, color, icon, packet_decode: { field: value } | null } | null }
 
 2. Header: logo badge (network-wired icon) + "← Portfolio" link back to
    ../../index.html + playback controls (⏮ ▶/⏸ ⏭ ↺) + theme toggle (🌓), matching
@@ -127,7 +127,8 @@ Requirements:
      hypotheses: [                    // running list of possible causes
         { cause: "...", status: "investigating" | "ruled_out" | "confirmed" }
      ],
-     nodes: { <DeviceName>: { state, note, color } },
+     nodes: { <DeviceName>: { state, note, color } }, // Update colors dynamically (Red -> Green) as hypotheses are eliminated to create a visual "isolate" heatmap
+     links: { <LinkId>: { state, color } },
      root_cause: null | "...",        // filled in once found
      fix_applied: null | "..." }
 
@@ -184,6 +185,7 @@ Scenario:
 Requirements:
 1. Core engine: a JSON array `packetWalkTimeline`, one object per checkpoint:
    { checkpoint, stage,               // e.g. "Ingress Interface", "NAT", "Security Policy"
+     direction: "forward" | "return", // to model asymmetric routing or stateful return drops
      device,
      packet_before: { src_ip, src_port, dst_ip, dst_port, protocol, tcp_flags },
      packet_after:  { src_ip, src_port, dst_ip, dst_port, protocol, tcp_flags },
@@ -322,6 +324,7 @@ Requirements:
      script_snippet,                  // pseudocode/real snippet for this step, current line markable
      payload,                         // JSON payload or CLI command being sent, as a string
      device_response,                 // raw response/output for this step
+     transport_metadata,              // e.g. HTTP status 404, SSH negotiation state
      status: "success" | "error" | "retrying",
      error_type: null | "Timeout" | "HTTP 404" | "Invalid input detected" | "Auth failure",
      retry_count }
@@ -405,7 +408,7 @@ Requirements:
 
 5. Role/state visualization: node cards that visually swap Active/Standby
    badges with a clear handoff animation at the moment failover completes;
-   the failed node shown greyed out/red.
+   the failed node shown greyed out/red. Also include a Data Plane Reroute Animation (e.g., animated particles/stream from Client to Server) that visually stops, waits, and then bends to the backup path upon convergence.
 
 6. Impact banner: color-coded by `impact` (green=None, amber=Degraded,
    red=Total Outage), with `impact_scope` text explaining who's affected.
@@ -547,7 +550,8 @@ Requirements:
        links: [{ from, to, state: "ok" | "broken" | "no-response", note }]
      },
      diagnostics: {
-       config: "...",                  // e.g. resolv.conf contents for this case
+       baseline_config: "...",         // the "known good" standard for side-by-side diff comparison
+       current_config: "...",          // e.g. resolv.conf contents for this broken case
        commands: [{ cmd, output, verdict }]   // dig/curl/etc with realistic output
      },
      takeaways: ["...", "...", "..."]
