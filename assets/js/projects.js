@@ -88,6 +88,20 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        id: 'wireguard-pfsense-walk',
+        title: 'WireGuard Packet Walk on pfSense',
+        category: 'packet-walk',
+        type: 'packet-walk',
+        status: 'live',
+        dateAdded: '2026-09-27',
+        image: 'assets/images/protocol-placeholder.jpg',
+        description:
+            'Truy vết chi tiết gói tin WireGuard qua pfSense: từ đóng gói outer UDP 51820, giải mã kernel if_wg, xác thực AllowedIPs đến kiểm soát luật firewall.',
+        tags: ['WireGuard', 'pfSense', 'Packet Walk', 'Firewall', 'Noise Protocol', 'VPN'],
+        href: 'projects/packet-walk/wireguard-pfsense-walk.html',
+    },
+
+    {
         id: 'rogue-dhcp-investigation',
         title: 'Rogue DHCP & Layer 2 Security',
         category: 'troubleshooting',
@@ -224,16 +238,7 @@ const PROJECTS = [
         status: 'soon',
         dateAdded: '2026-09-26',
     },
-    {
-        title: 'Packet Walk Through a Firewall',
-        description:
-            'Trace one packet through ingress, NAT, security policy, and IPS to its final Accept/Deny verdict.',
-        type: 'packet-walk',
-        tags: ['Firewall', 'NAT', 'Security Policy'],
-        href: '#',
-        status: 'soon',
-        dateAdded: '2026-09-26',
-    },
+
     {
         title: 'Core Switch Cutover',
         description:

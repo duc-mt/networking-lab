@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WireGuard VPN Packet Walk on pfSense — Packet Walk Lab</title>
+    <script src="../../assets/js/theme-init.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui','sans-serif'], mono: ['Fira Code','ui-monospace','SFMono-Regular','monospace'] } } }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+    <style>
+        @keyframes flowLight {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+        .pipeline-glow {
+            position: relative;
+            overflow: hidden;
+        }
+        .pipeline-glow::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(244, 63, 94, 0.25), transparent);
+            animation: flowLight 2.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0" title="Về trang chủ Portfolio">
+                <i class="fas fa-shield-halved"></i>
+            </a>
+            <div>
+                <a href="../../index.html" class="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                </a>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">WireGuard VPN Packet Walk on pfSense</h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+            <button id="btn-prev" onclick="app.prevStep()" disabled class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-rose-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-backward"></i></button>
+            <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-rose-500 text-white hover:bg-rose-600 shadow-md shadow-rose-500/30 transition-all-fast"><i id="icon-play" class="fas fa-play ml-1"></i></button>
+            <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-rose-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-forward"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i id="theme-icon" class="fas fa-sun"></i></button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
+
+    <!-- Scenario Context Banner -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-center justify-center text-rose-600 dark:text-rose-400 text-xl shrink-0 mt-0.5">
+                <i class="fas fa-network-wired"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 font-mono">pfSense 2.7+ (FreeBSD if_wg)</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-mono">Noise_IK / ChaCha20-Poly1305</span>
+                </div>
+                <h2 class="text-base md:text-lg font-extrabold text-slate-900 dark:text-white">Truy Vết Gói Tin: Client VPN ➔ Firewall pfSense ➔ Server Nội Bộ</h2>
+                <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Theo dõi chi tiết sự biến đổi gói tin từ outer UDP 51820 qua luật WAN, giải mã kernel, kiểm tra AllowedIPs đến interface LAN.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 shrink-0 text-xs font-mono bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div><span class="text-slate-400 block text-[10px]">Client Tunnel:</span> <span class="font-bold text-rose-600 dark:text-rose-400">10.10.10.2</span></div>
+            <div class="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+            <div><span class="text-slate-400 block text-[10px]">pfSense WAN:</span> <span class="font-bold text-blue-600 dark:text-blue-400">203.0.113.1:51820</span></div>
+            <div class="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+            <div><span class="text-slate-400 block text-[10px]">Internal Server:</span> <span class="font-bold text-emerald-600 dark:text-emerald-400">192.168.1.50:80</span></div>
+        </div>
+    </div>
+
+    <!-- Horizontal Pipeline Stepper -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
+        <div class="min-w-[700px] relative">
+            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center justify-between">
+                <span>Packet Processing Pipeline (Trình Tự Xử Lý Gói Tin)</span>
+                <span id="pipeline-status-text" class="text-rose-500 font-mono">Stage 1 of 6</span>
+            </div>
+
+            <!-- Pipeline Track -->
+            <div class="relative flex items-center justify-between z-10">
+                <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-200 dark:bg-slate-800 z-0"></div>
+                <div id="pipeline-progress" class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-rose-500 transition-all duration-500 ease-out z-0" style="width: 0%;"></div>
+
+                <div id="pipeline-stages" class="flex justify-between w-full relative z-10 gap-2"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+        <!-- Left Column: Packet Inspector + Wireshark Decode (7 cols) -->
+        <div class="xl:col-span-7 flex flex-col gap-6">
+
+            <!-- Packet Transformation Inspector -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-layer-group text-rose-500"></i>
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm md:text-base">Bộ Soi Gói Tin (Packet Transformation Inspector)</h3>
+                    </div>
+                    <span id="encap-status-badge" class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                        Outer UDP Wrapping
+                    </span>
+                </div>
+
+                <!-- Side by side comparison: Before vs After -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Before Card -->
+                    <div class="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-4 border border-slate-200 dark:border-slate-700/60 flex flex-col gap-2.5">
+                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                            <span>Gói Tin Trước (Before)</span>
+                            <span id="before-badge" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Plaintext L3/L4</span>
+                        </div>
+                        <div id="before-fields" class="font-mono text-xs flex flex-col gap-1.5">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- After Card -->
+                    <div class="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-4 border border-slate-200 dark:border-slate-700/60 flex flex-col gap-2.5">
+                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                            <span>Gói Tin Sau (After)</span>
+                            <span id="after-badge" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300">Outer Encapsulated</span>
+                        </div>
+                        <div id="after-fields" class="font-mono text-xs flex flex-col gap-1.5">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layer Header Visualizer -->
+                <div class="bg-[#1e1e1e] text-slate-200 rounded-xl p-3.5 font-mono text-xs overflow-x-auto flex items-center gap-2 border border-slate-800">
+                    <span class="text-slate-500 text-[10px] uppercase font-bold shrink-0">Frame Encap:</span>
+                    <div id="layer-capsules" class="flex items-center gap-1.5 shrink-0">
+                        <!-- Pills showing L2, L3 Outer, L4 UDP, WG Header, Encrypted Payload, etc. -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Wireshark Dissector Tree View -->
+            <section class="bg-[#1e1e1e] rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+                <div class="bg-[#2d2d2d] px-4 py-2.5 flex items-center justify-between border-b border-black/50 select-none">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <span class="text-xs font-mono text-slate-400 ml-2">Wireshark Packet Dissector — Frame #1</span>
+                    </div>
+                    <span id="wireshark-filter" class="text-[11px] font-mono text-emerald-400 bg-black/40 px-2 py-0.5 rounded border border-emerald-500/30">wireguard.type == 4</span>
+                </div>
+                <div class="p-4 overflow-y-auto max-h-72 font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed space-y-1" id="wireshark-tree">
+                    <!-- Tree injected dynamically -->
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Right Column: Checkpoint Details & Firewall Engine (5 cols) -->
+        <div class="xl:col-span-5 flex flex-col gap-6">
+
+            <!-- Checkpoint Information Card -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                    <span id="stage-badge" class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border border-rose-300 dark:border-rose-700 bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                        1. ENCAPSULATION
+                    </span>
+                    <span id="device-badge" class="text-xs font-mono text-slate-400">Endpoint: Client Laptop</span>
+                </div>
+                <h3 id="stage-title" class="text-xl font-extrabold text-slate-900 dark:text-white leading-snug"></h3>
+                <p id="stage-desc" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300"></p>
+            </section>
+
+            <!-- Firewall & Kernel Inspection Card -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-microchip text-blue-500"></i>
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 text-sm">Hành Vi Kernel & Bộ Lọc pfSense</h4>
+                    </div>
+                    <span id="verdict-badge" class="px-2.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                        PASS (ACCEPT)
+                    </span>
+                </div>
+
+                <div class="flex flex-col gap-2.5 text-xs font-mono">
+                    <div class="flex items-start justify-between p-2 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans">Vị trí xử lý:</span>
+                        <span id="inspector-subsystem" class="font-bold text-slate-800 dark:text-slate-200 text-right">WireGuard App / Driver</span>
+                    </div>
+                    <div class="flex items-start justify-between p-2 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans">Luật Firewall áp dụng:</span>
+                        <span id="inspector-rule" class="font-bold text-blue-600 dark:text-blue-400 text-right">N/A (Client Local Stack)</span>
+                    </div>
+                    <div class="flex items-start justify-between p-2 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans">Cryptokey Routing:</span>
+                        <span id="inspector-cryptokey" class="font-bold text-emerald-600 dark:text-emerald-400 text-right">AllowedIPs 10.10.10.2/32</span>
+                    </div>
+                    <div class="flex items-start justify-between p-2 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans">Session State:</span>
+                        <span id="inspector-session" class="font-bold text-indigo-600 dark:text-indigo-400 text-right">ESTABLISHED (Rekey in 94s)</span>
+                    </div>
+                </div>
+
+                <!-- Syslog / Kernel Log Live Output -->
+                <div class="bg-slate-900 text-emerald-400 p-3 rounded-xl font-mono text-[11px] leading-relaxed border border-slate-800 flex flex-col gap-1">
+                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">pfSense Filter Log Output:</div>
+                    <div id="live-log-output" class="whitespace-pre-wrap"></div>
+                </div>
+            </section>
+
+            <!-- Technical Gotcha / Deep Insight Box -->
+            <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 flex flex-col gap-2">
+                <div class="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
+                    <i class="fas fa-lightbulb"></i>
+                    <span id="pro-tip-title">Góc Nhìn Kỹ Thuật (Architecture Insight)</span>
+                </div>
+                <p id="pro-tip-desc" class="text-xs leading-relaxed text-amber-800 dark:text-amber-300"></p>
+            </div>
+
+        </div>
+    </div>
+
+</main>
+
+<script>
+const TIMELINE = [
+    {
+        step: 1,
+        phase: 'ENCAP',
+        title: 'Đóng gói tại Client: Bọc gói tin gốc vào Outer UDP',
+        device: 'Client Laptop (wg0)',
+        description: `Ứng dụng máy trạm gửi bản tin Web <code>HTTP GET</code> tới Server nội bộ: IP nguồn <code>10.10.10.2:49821</code> ➔ IP đích <code>192.168.1.50:80</code> (TCP).<br>WireGuard Driver mã hóa toàn bộ gói IP gốc bằng <strong>ChaCha20-Poly1305</strong> với Session Key hiện hành. Sau đó, nó bọc thêm một lớp vỏ Outer UDP: cổng nguồn ngẫu nhiên <code>58210</code> (sau NAT nhà mạng) hướng tới IP WAN của pfSense tại cổng mặc định <code>51820</code>.`,
+        encapStatus: 'Outer UDP Wrapping (Encapsulation)',
+        beforeBadge: 'Plaintext IP/TCP',
+        afterBadge: 'WireGuard Type 4',
+        beforeFields: [
+            { label: 'Src IP', val: '10.10.10.2' },
+            { label: 'Src Port', val: '49821 (Ephemeral)' },
+            { label: 'Dst IP', val: '192.168.1.50' },
+            { label: 'Dst Port', val: '80 (HTTP)' },
+            { label: 'Protocol', val: 'TCP (SYN / PSH,ACK)' },
+            { label: 'Payload', val: 'HTTP GET /index.html' }
+        ],
+        afterFields: [
+            { label: 'Outer Src', val: '113.161.45.12 (Public Client IP)' },
+            { label: 'Outer Port', val: '58210' },
+            { label: 'Outer Dst', val: '203.0.113.1 (pfSense WAN)' },
+            { label: 'Outer Port', val: '51820 (WireGuard UDP)' },
+            { label: 'Message Type', val: 'Type 4 (Transport Data)' },
+            { label: 'Ciphertext', val: '112 bytes encrypted + 16B Poly1305' }
+        ],
+        layerCapsules: [
+            { text: 'Eth L2', color: 'bg-slate-700' },
+            { text: 'Outer IP: 113.161.45.12 ➔ 203.0.113.1', color: 'bg-blue-600' },
+            { text: 'UDP :51820', color: 'bg-indigo-600' },
+            { text: 'WG Type 4 (ChaCha20)', color: 'bg-rose-600 font-bold' },
+            { text: 'Encrypted Inner IP/TCP Payload', color: 'bg-emerald-800' }
+        ],
+        wiresharkFilter: 'wireguard.type == 4',
+        wiresharkTree: `▶ Frame 1: 174 bytes on wire (1392 bits)
+▶ Ethernet II, Src: 00:0c:29:84:11:22, Dst: 00:50:56:c0:00:01
+▼ Internet Protocol Version 4, Src: 113.161.45.12, Dst: 203.0.113.1
+    Protocol: UDP (17), Length: 160
+▼ User Datagram Protocol, Src Port: 58210, Dst Port: 51820
+    Length: 140, Checksum: 0x4a1b
+▼ WireGuard Protocol
+    Message Type: Transport Data (4)
+    Reserved: 00 00 00
+    Receiver Index: 0x7b4a2e10
+    Counter: 0x0000000000000001
+    Encrypted Encapsulated Packet (112 bytes)
+    Poly1305 Authentication Tag: 4c 8f 19 a2 90 e4 d8 31 10 f4 27 aa 9e b1 c4 8a`,
+        subsystem: 'Client OS Network Stack / wg0 interface',
+        rule: 'N/A (Client Local Routing to AllowedIPs)',
+        cryptokey: 'Client Route: 192.168.1.0/24 in AllowedIPs',
+        session: 'Active Session (Established)',
+        log: 'wg0: sending 140 bytes UDP to 203.0.113.1:51820 via default route',
+        verdict: 'PASS',
+        proTipTitle: 'Lý do WireGuard dùng UDP thay vì TCP',
+        proTipDesc: 'WireGuard cố tình chỉ chạy trên UDP để tránh lỗi kinh điển "TCP-over-TCP Meltdown" (khi cả tầng VPN lẫn tầng ứng dụng cùng retransmit cạnh tranh nhau làm nghẽn băng thông). Mọi cơ chế tin cậy được trao trả cho TCP của ứng dụng bên trong.'
+    },
+    {
+        step: 2,
+        phase: 'WAN RULE',
+        title: 'Kiểm tra luật WAN: Cho phép Inbound UDP 51820',
+        device: 'pfSense Firewall (vtnet0 - WAN)',
+        description: `Gói tin Outer UDP chạm vào cổng WAN của pfSense (<code>203.0.113.1</code>).<br>Bộ lọc gói tin của FreeBSD/pfSense (Packet Filter - <strong>pf</strong>) thẩm tra xem cổng <code>51820</code> có được phép hay không. Rule bắt buộc phải có là: <code>Pass Inbound IPv4 UDP from any to WAN Address:51820</code>.<br>➔ <strong>Nếu thiếu rule này:</strong> Gói tin bị Drop ngay tại interface WAN, kernel WireGuard không bao giờ nhìn thấy gói tin!`,
+        encapStatus: 'pfSense WAN Ingress Evaluation',
+        beforeBadge: 'Outer Packet Ingress',
+        afterBadge: 'Packet Passed to if_wg',
+        beforeFields: [
+            { label: 'Interface', val: 'WAN (vtnet0)' },
+            { label: 'Src IP', val: '113.161.45.12' },
+            { label: 'Dst IP', val: '203.0.113.1 (WAN IP)' },
+            { label: 'Dst Port', val: '51820 (UDP)' },
+            { label: 'PF State', val: 'Evaluate Inbound Rules' }
+        ],
+        afterFields: [
+            { label: 'WAN Rule Match', val: 'Pass Inbound WG (Rule #1004)' },
+            { label: 'Action', val: 'ACCEPT / PASS' },
+            { label: 'Next-Hop', val: 'FreeBSD Kernel Module (if_wg)' },
+            { label: 'State Created', val: 'udp 203.0.113.1:51820 <- 113.161.45.12:58210' }
+        ],
+        layerCapsules: [
+            { text: 'WAN Ingress (vtnet0)', color: 'bg-blue-600' },
+            { text: 'PF Firewall Rule Match', color: 'bg-emerald-600' },
+            { text: 'UDP 51820 State Table', color: 'bg-indigo-600' },
+            { text: 'Forward to Kernel Socket', color: 'bg-rose-600' }
+        ],
+        wiresharkFilter: 'ip.addr == 203.0.113.1 && udp.port == 51820',
+        wiresharkTree: `▼ pfSense Packet Filter (pf) Inspection
+    Interface: WAN (vtnet0)
+    Direction: Inbound
+    Action: Pass
+    Rule ID: 1004 (Description: "Allow WireGuard Inbound")
+    Tracker: 1692847101
+▼ State Table Insertion
+    Key: 113.161.45.12:58210 -> 203.0.113.1:51820 (State: MULTIPLE:MULTIPLE)
+    Expires: 60s (UDP Single State)`,
+        subsystem: 'pfSense Packet Filter (pf) Engine',
+        rule: 'Rule #1004: Pass IPv4 UDP from any to WAN_Address:51820',
+        cryptokey: 'N/A (Lớp ngoài IP Public)',
+        session: 'PF State Created: 113.161.45.12:58210 ➔ 203.0.113.1:51820',
+        log: 'pf: rule 1004/0(match): pass in on vtnet0: 113.161.45.12.58210 > 203.0.113.1.51820: UDP, length 140',
+        verdict: 'PASS',
+        proTipTitle: 'Lỗi thường gặp: Bật WireGuard nhưng quên mở Rule WAN',
+        proTipDesc: 'Người dùng thường nhầm tưởng tạo tunnel trong tab VPN là firewall tự mở cổng. Trên pfSense, WireGuard không tự inject rule ẩn — bạn bắt buộc phải tự thêm rule mở cổng 51820 trên tab WAN, nếu không gói tin sẽ bị Drop âm thầm do luật Default Deny.'
+    },
+    {
+        step: 3,
+        phase: 'DECRYPT',
+        title: 'Giải mã tại Kernel: Khớp Peer & Giải mã ChaCha20',
+        device: 'pfSense Kernel Module (if_wg0)',
+        description: `Gói tin được chuyển cho kernel module <code>if_wg</code> của FreeBSD.<br>pfSense đọc trường <code>Receiver Index (0x7b4a2e10)</code> để tìm đúng phiên làm việc và Peer tương ứng ("remote-laptop").<br>Kernel dùng khóa phiên giải mã payload ChaCha20 và kiểm tra xác thực Poly1305. Payload giải mã thành công hé lộ gói IP gốc: <code>10.10.10.2 ➔ 192.168.1.50</code>.`,
+        encapStatus: 'Noise_IK Kernel Decryption',
+        beforeBadge: 'Encrypted Type 4',
+        afterBadge: 'Decrypted Inner Packet',
+        beforeFields: [
+            { label: 'Receiver Index', val: '0x7b4a2e10' },
+            { label: 'Matched Peer', val: 'Peer #1: Remote-Laptop' },
+            { label: 'Cipher', val: 'ChaCha20' },
+            { label: 'Auth Tag', val: 'Poly1305 (Valid ✓)' },
+            { label: 'Replay Filter', val: 'Counter 1 > Last Counter 0 (OK)' }
+        ],
+        afterFields: [
+            { label: 'Decrypted Protocol', val: 'IPv4 / TCP' },
+            { label: 'Inner Src IP', val: '10.10.10.2' },
+            { label: 'Inner Dst IP', val: '192.168.1.50' },
+            { label: 'TCP Flags', val: '[PSH, ACK] Seq=1 Ack=1' },
+            { label: 'Decrypted Payload', val: 'HTTP GET /index.html' }
+        ],
+        layerCapsules: [
+            { text: 'Receiver Index Match', color: 'bg-indigo-600' },
+            { text: 'Poly1305 Auth Tag: OK', color: 'bg-emerald-600' },
+            { text: 'Outer UDP Stripped', color: 'bg-slate-700' },
+            { text: 'Inner IP: 10.10.10.2 ➔ 192.168.1.50', color: 'bg-emerald-600 font-bold' }
+        ],
+        wiresharkFilter: 'wireguard.decrypted == true',
+        wiresharkTree: `▼ WireGuard Decryption Pipeline (FreeBSD if_wg)
+    Status: Decryption Successful
+    Matched Peer Public Key: X59Y/82K...qM= (Remote-Laptop)
+    Anti-Replay Window: Checked (Counter: 1)
+▼ Decapsulated Frame (Appears on tun_wg0 interface)
+    Internet Protocol Version 4, Src: 10.10.10.2, Dst: 192.168.1.50
+    Transmission Control Protocol, Src Port: 49821, Dst Port: 80, Seq: 1, Ack: 1
+    Hypertext Transfer Protocol: GET /index.html HTTP/1.1`,
+        subsystem: 'FreeBSD Kernel Module (if_wg)',
+        rule: 'Noise_IK Cryptographic Handshake Verification',
+        cryptokey: 'Key Verified for Peer "Remote-Laptop"',
+        session: 'Active Tunnel Session (Dynamic Endpoint updated: 113.161.45.12:58210)',
+        log: 'wireguard: tun_wg0: packet decrypted successfully from peer 1 (Remote-Laptop)',
+        verdict: 'PASS',
+        proTipTitle: 'Cơ chế Silent Drop (Bảo mật tàng hình của WireGuard)',
+        proTipDesc: 'Nếu client dùng cấu hình sai Private Key hoặc gửi gói tin giả mạo, pfSense sẽ âm thầm hủy gói tin mà tuyệt đối không gửi lại ICMP unreachable hay thông báo lỗi. Điều này giúp hệ thống miễn nhiễm với các công cụ quét cổng (port scanner) trên Internet.'
+    },
+    {
+        step: 4,
+        phase: 'CRYPTOKEY',
+        title: 'Xác thực Cryptokey Routing: Kiểm tra AllowedIPs',
+        device: 'pfSense Cryptokey Router',
+        description: `Đây là lớp phòng thủ đặc trưng nhất của WireGuard: <strong>Cryptokey Routing</strong>.<br>Sau khi giải mã, kernel kiểm tra xem IP nguồn của gói tin gốc (<code>10.10.10.2</code>) có nằm trong danh sách <strong><code>AllowedIPs</code></strong> đã cấu hình cho Peer này hay không.<br>➔ <strong>Nếu người dùng cố tình đổi IP tĩnh (ví dụ sửa thành 10.10.10.99):</strong> Gói tin bị Drop ngay lập tức tại Kernel, không kịp chạm vào tab firewall WireGuard!`,
+        encapStatus: 'Cryptokey Ingress Validation',
+        beforeBadge: 'Extracted Source IP',
+        afterBadge: 'Crypto-Routing Verdict',
+        beforeFields: [
+            { label: 'Inner Source IP', val: '10.10.10.2' },
+            { label: 'Peer Configured', val: 'Remote-Laptop' },
+            { label: 'Config AllowedIPs', val: '10.10.10.2/32' }
+        ],
+        afterFields: [
+            { label: 'Lookup Result', val: 'MATCH (10.10.10.2 is in AllowedIPs)' },
+            { label: 'Spoofing Check', val: 'CLEAN (No IP Spoofing)' },
+            { label: 'Interface Bound', val: 'Injected into tun_wg0 (OPT_WG)' }
+        ],
+        layerCapsules: [
+            { text: 'Cryptokey Routing Check', color: 'bg-rose-600' },
+            { text: 'AllowedIPs: 10.10.10.2/32 MATCH', color: 'bg-emerald-600' },
+            { text: 'Source Verification: OK', color: 'bg-blue-600' },
+            { text: 'Pass to tun_wg0 Interface', color: 'bg-slate-700' }
+        ],
+        wiresharkFilter: 'ip.src == 10.10.10.2 && ip.dst == 192.168.1.50',
+        wiresharkTree: `▼ WireGuard Cryptokey Routing Logic
+    Peer Index: 1 (Remote-Laptop)
+    AllowedIPs Table Entry: 10.10.10.2/32
+    Packet Source IP: 10.10.10.2
+    Result: MATCHED. Ingress accepted.
+▼ Network Interface Assignment
+    Interface: tun_wg0 (Assigned as OPT_WG)
+    State: UP / RUNNING`,
+        subsystem: 'WireGuard Cryptokey Routing Engine',
+        rule: 'AllowedIPs Association Table',
+        cryptokey: 'VERIFIED: 10.10.10.2 is bound to Peer "Remote-Laptop"',
+        session: 'Binding Validated',
+        log: 'wireguard: tun_wg0: peer 1 (Remote-Laptop) allowed IP match for 10.10.10.2',
+        verdict: 'PASS',
+        proTipTitle: 'Bản chất của AllowedIPs: Vừa là Route, vừa là ACL',
+        proTipDesc: 'Ở chiều gửi (pfSense ➔ Client), AllowedIPs đóng vai trò là bảng định tuyến (Route Table). Ở chiều nhận (Client ➔ pfSense), AllowedIPs biến thành Access Control List (ACL) nghiêm ngặt để triệt tiêu hoàn toàn nguy cơ IP Spoofing trong tunnel.'
+    },
+    {
+        step: 5,
+        phase: 'FILTER',
+        title: 'Bộ lọc Interface WireGuard: Phân quyền truy cập LAN',
+        device: 'pfSense Packet Filter (Tab WireGuard / OPT_WG)',
+        description: `Gói tin gốc xuất hiện trên giao diện ảo <code>OPT_WG</code> (hoặc tab WireGuard).<br>Đây mới là nơi người quản trị kiểm soát thực sự: <strong>VPN user được phép truy cập những đâu trong nội bộ công ty?</strong><br>Luật Firewall trên tab này cho phép traffic từ mạng VPN <code>10.10.10.0/24</code> tới Server <code>192.168.1.50</code> cổng 80 (HTTP).`,
+        encapStatus: 'VPN Firewall Interface Filtering',
+        beforeBadge: 'Unfiltered Packet on OPT_WG',
+        afterBadge: 'Permitted by Firewall Rule',
+        beforeFields: [
+            { label: 'Ingress Interface', val: 'OPT_WG (tun_wg0)' },
+            { label: 'Src Network', val: '10.10.10.2' },
+            { label: 'Dst Server', val: '192.168.1.50' },
+            { label: 'Service', val: 'HTTP (Port 80)' }
+        ],
+        afterFields: [
+            { label: 'Matched Rule', val: 'Pass OPT_WG to LAN_Web_Server' },
+            { label: 'Rule ID', val: '2001 (Tab: WireGuard)' },
+            { label: 'Verdict', val: 'PASS (Permitted to LAN)' },
+            { label: 'New State', val: 'tcp 192.168.1.50:80 <- 10.10.10.2:49821' }
+        ],
+        layerCapsules: [
+            { text: 'Virtual Interface tun_wg0', color: 'bg-slate-700' },
+            { text: 'Rule #2001: Pass WG to LAN', color: 'bg-emerald-600' },
+            { text: 'TCP State Table Created', color: 'bg-indigo-600' },
+            { text: 'Route Lookup: LAN Subnet', color: 'bg-blue-600' }
+        ],
+        wiresharkFilter: 'tcp.port == 80 && ip.dst == 192.168.1.50',
+        wiresharkTree: `▼ pfSense Packet Filter (pf) Inspection
+    Interface: OPT_WG (tun_wg0)
+    Direction: Inbound
+    Action: Pass
+    Rule ID: 2001 (Description: "Allow VPN Users to Internal Web Server")
+    Source: 10.10.10.0/24
+    Destination: 192.168.1.50:80
+▼ State Table Entry
+    tcp 192.168.1.50:80 <- 10.10.10.2:49821 [ESTABLISHED]`,
+        subsystem: 'pfSense Filter (OPT_WG / WireGuard Tab)',
+        rule: 'Rule #2001: Pass IPv4 TCP from 10.10.10.0/24 to 192.168.1.50:80',
+        cryptokey: 'N/A (Đã qua lớp mã hóa)',
+        session: 'State created on OPT_WG: tcp 192.168.1.50:80 <- 10.10.10.2:49821',
+        log: 'pf: rule 2001/0(match): pass in on tun_wg0: 10.10.10.2.49821 > 192.168.1.50.80: Flags [P.], seq 1:113, ack 1',
+        verdict: 'PASS',
+        proTipTitle: 'Sự khác biệt cốt tử: Tab WAN vs Tab WireGuard',
+        proTipDesc: 'Tab WAN chỉ có một nhiệm vụ duy nhất: cho phép gói Outer UDP 51820 vào được pfSense. Còn việc user VPN có được vào máy chủ kế toán, xem camera hay sang mạng DMZ hay không — 100% được quyết định bởi các rule viết trên tab WireGuard / OPT_WG.'
+    },
+    {
+        step: 6,
+        phase: 'DELIVERY',
+        title: 'Chuyển tiếp gói tin gốc tới Server nội bộ',
+        device: 'pfSense Egress LAN (vtnet1)',
+        description: `pfSense tra cứu bảng định tuyến cho subnet đích <code>192.168.1.0/24</code> (Directly connected trên interface LAN <code>vtnet1</code>).<br>Gói tin gốc được chuyển tiếp ra switch nội bộ tới Server đích <code>192.168.1.50</code> mà không cần qua NAT. Server nhận diện đúng địa chỉ nguồn là VPN client <code>10.10.10.2</code> và phản hồi gói tin chiều về theo chu trình ngược lại.`,
+        encapStatus: 'LAN Delivery & Return Path Readiness',
+        beforeBadge: 'Routed Packet',
+        afterBadge: 'Server Delivery',
+        beforeFields: [
+            { label: 'Egress Interface', val: 'LAN (vtnet1)' },
+            { label: 'Route Type', val: 'Direct Connected (192.168.1.0/24)' },
+            { label: 'Source IP', val: '10.10.10.2 (Giữ nguyên)' },
+            { label: 'Dest IP', val: '192.168.1.50' }
+        ],
+        afterFields: [
+            { label: 'Destination MAC', val: '00:50:56:bb:cc:dd (Server MAC)' },
+            { label: 'Server Sees Src', val: '10.10.10.2' },
+            { label: 'Return Gateway', val: '192.168.1.1 (pfSense LAN)' },
+            { label: 'TCP Handshake', val: 'HTTP 200 OK / Response Sent' }
+        ],
+        layerCapsules: [
+            { text: 'LAN Egress (vtnet1)', color: 'bg-blue-600' },
+            { text: 'ARP Resolution: Server MAC', color: 'bg-indigo-600' },
+            { text: 'Src: 10.10.10.2', color: 'bg-slate-700' },
+            { text: 'Dst: 192.168.1.50:80 HTTP OK', color: 'bg-emerald-600 font-bold' }
+        ],
+        wiresharkFilter: 'ip.addr == 192.168.1.50 && tcp.port == 80',
+        wiresharkTree: `▼ Frame Captured on LAN Interface (vtnet1)
+    Ethernet II, Src: 00:0c:29:ff:ee:dd (pfSense LAN), Dst: 00:50:56:bb:cc:dd (Web Server)
+    Internet Protocol Version 4, Src: 10.10.10.2, Dst: 192.168.1.50
+    Transmission Control Protocol, Src Port: 49821, Dst Port: 80
+    HTTP: GET /index.html HTTP/1.1
+▼ Server Response Received
+    192.168.1.50:80 -> 10.10.10.2:49821 [HTTP/1.1 200 OK]`,
+        subsystem: 'pfSense LAN Switching & Routing Table',
+        rule: 'Direct Routing via vtnet1 (LAN)',
+        cryptokey: 'Full Round-Trip Ready',
+        session: 'Active Connection Established',
+        log: 'kernel: vtnet1: packet delivered to 192.168.1.50 via ARP 00:50:56:bb:cc:dd',
+        verdict: 'PASS',
+        proTipTitle: 'Bẫy định tuyến chiều về (Return Route Trap)',
+        proTipDesc: 'Server nội bộ nhận gói tin có IP nguồn 10.10.10.2. Để trả lời được, Server BẮT BUỘC phải có Default Gateway trỏ về pfSense (192.168.1.1). Nếu mạng dùng Core Switch khác làm Gateway, gói trả lời sẽ bị rớt do định tuyến lệch đường (Asymmetric Routing), trừ khi bạn bật Outbound NAT trên pfSense!'
+    }
+];
+
+class PacketWalkApp {
+    constructor() {
+        this.idx = 0;
+        this.playing = false;
+        this.intervalId = null;
+
+        this.dom = {
+            stagesContainer: document.getElementById('pipeline-stages'),
+            progress: document.getElementById('pipeline-progress'),
+            statusText: document.getElementById('pipeline-status-text'),
+            btnPrev: document.getElementById('btn-prev'),
+            btnNext: document.getElementById('btn-next'),
+            btnPlay: document.getElementById('btn-play'),
+            iconPlay: document.getElementById('icon-play'),
+            themeIcon: document.getElementById('theme-icon'),
+            stageBadge: document.getElementById('stage-badge'),
+            deviceBadge: document.getElementById('device-badge'),
+            stageTitle: document.getElementById('stage-title'),
+            stageDesc: document.getElementById('stage-desc'),
+            encapStatusBadge: document.getElementById('encap-status-badge'),
+            beforeBadge: document.getElementById('before-badge'),
+            afterBadge: document.getElementById('after-badge'),
+            beforeFields: document.getElementById('before-fields'),
+            afterFields: document.getElementById('after-fields'),
+            layerCapsules: document.getElementById('layer-capsules'),
+            wiresharkFilter: document.getElementById('wireshark-filter'),
+            wiresharkTree: document.getElementById('wireshark-tree'),
+            subsystem: document.getElementById('inspector-subsystem'),
+            rule: document.getElementById('inspector-rule'),
+            cryptokey: document.getElementById('inspector-cryptokey'),
+            session: document.getElementById('inspector-session'),
+            liveLog: document.getElementById('live-log-output'),
+            verdictBadge: document.getElementById('verdict-badge'),
+            proTipTitle: document.getElementById('pro-tip-title'),
+            proTipDesc: document.getElementById('pro-tip-desc'),
+        };
+
+        this.init();
+    }
+
+    init() {
+        let dark = false;
+        try {
+            const s = localStorage.getItem('portfolio-theme');
+            dark = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        } catch(e){}
+        document.documentElement.classList.toggle('dark', dark);
+        if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+
+        this.buildPipelineStages();
+        this.render(0);
+    }
+
+    buildPipelineStages() {
+        this.dom.stagesContainer.innerHTML = '';
+        TIMELINE.forEach((d, i) => {
+            const btn = document.createElement('button');
+            btn.id = `pipeline-step-${i}`;
+            btn.className = 'relative flex flex-col items-center gap-1.5 focus:outline-none transition-all duration-300';
+            btn.onclick = () => { this.pause(); this.render(i); };
+
+            btn.innerHTML = `
+                <div id="dot-${i}" class="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-bold text-xs md:text-sm border-2 transition-all duration-300 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 shadow-sm">
+                    ${d.step}
+                </div>
+                <span id="label-${i}" class="text-[10px] md:text-xs font-bold font-mono uppercase tracking-wider text-slate-400 whitespace-nowrap">
+                    ${d.phase}
+                </span>
+            `;
+            this.dom.stagesContainer.appendChild(btn);
+        });
+    }
+
+    render(i) {
+        this.idx = i;
+        const d = TIMELINE[i];
+
+        // Update pipeline dots
+        TIMELINE.forEach((_, j) => {
+            const dot = document.getElementById(`dot-${j}`);
+            const label = document.getElementById(`label-${j}`);
+            if (!dot || !label) return;
+
+            if (j < i) {
+                dot.className = 'w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-bold text-xs md:text-sm border-2 transition-all duration-300 bg-rose-500 text-white border-rose-500 shadow';
+                label.className = 'text-[10px] md:text-xs font-bold font-mono uppercase tracking-wider text-rose-500 whitespace-nowrap';
+            } else if (j === i) {
+                dot.className = 'w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-bold text-xs md:text-sm border-2 transition-all duration-300 bg-rose-50 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 border-rose-500 shadow-lg scale-110 pipeline-glow';
+                label.className = 'text-[10px] md:text-xs font-bold font-mono uppercase tracking-wider text-rose-600 dark:text-rose-400 font-extrabold whitespace-nowrap';
+            } else {
+                dot.className = 'w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-bold text-xs md:text-sm border-2 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700 shadow-sm';
+                label.className = 'text-[10px] md:text-xs font-bold font-mono uppercase tracking-wider text-slate-400 whitespace-nowrap';
+            }
+        });
+
+        // Progress bar
+        this.dom.progress.style.width = `${(i / (TIMELINE.length - 1)) * 100}%`;
+        this.dom.statusText.textContent = `Checkpoint ${d.step} of ${TIMELINE.length}: ${d.phase}`;
+
+        // Top info
+        this.dom.stageBadge.textContent = `${d.step}. ${d.phase}`;
+        this.dom.deviceBadge.textContent = `Location: ${d.device}`;
+        this.dom.stageTitle.textContent = d.title;
+        this.dom.stageDesc.innerHTML = d.description;
+
+        // Packet Inspector
+        this.dom.encapStatusBadge.textContent = d.encapStatus;
+        this.dom.beforeBadge.textContent = d.beforeBadge;
+        this.dom.afterBadge.textContent = d.afterBadge;
+
+        this.dom.beforeFields.innerHTML = d.beforeFields.map(f => `
+            <div class="flex items-center justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/30">
+                <span class="text-slate-400">${f.label}:</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">${f.val}</span>
+            </div>
+        `).join('');
+
+        this.dom.afterFields.innerHTML = d.afterFields.map(f => `
+            <div class="flex items-center justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/30">
+                <span class="text-slate-400">${f.label}:</span>
+                <span class="font-bold text-rose-600 dark:text-rose-400">${f.val}</span>
+            </div>
+        `).join('');
+
+        // Layer capsules
+        this.dom.layerCapsules.innerHTML = d.layerCapsules.map(c => `
+            <span class="px-2 py-0.5 rounded text-[10px] text-white shadow-sm ${c.color}">${c.text}</span>
+        `).join('<i class="fas fa-arrow-right text-[9px] text-slate-500 mx-0.5"></i>');
+
+        // Wireshark tree
+        this.dom.wiresharkFilter.textContent = d.wiresharkFilter;
+        this.dom.wiresharkTree.textContent = d.wiresharkTree;
+
+        // Inspection Details
+        this.dom.subsystem.textContent = d.subsystem;
+        this.dom.rule.textContent = d.rule;
+        this.dom.cryptokey.textContent = d.cryptokey;
+        this.dom.session.textContent = d.session;
+        this.dom.liveLog.textContent = d.log;
+
+        // Verdict Badge
+        if (d.verdict === 'PASS') {
+            this.dom.verdictBadge.textContent = 'PASS (ACCEPT)';
+            this.dom.verdictBadge.className = 'px-2.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+        } else {
+            this.dom.verdictBadge.textContent = 'DROP (BLOCK)';
+            this.dom.verdictBadge.className = 'px-2.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
+        }
+
+        // Pro tips
+        this.dom.proTipTitle.textContent = d.proTipTitle;
+        this.dom.proTipDesc.textContent = d.proTipDesc;
+
+        // Buttons
+        if (this.dom.btnPrev) this.dom.btnPrev.disabled = i === 0;
+        if (this.dom.btnNext) this.dom.btnNext.disabled = i === TIMELINE.length - 1;
+        if (i === TIMELINE.length - 1 && this.playing) this.pause();
+    }
+
+    nextStep() { if (this.idx < TIMELINE.length - 1) this.render(this.idx + 1); }
+    prevStep() { if (this.idx > 0) this.render(this.idx - 1); }
+    togglePlay() { this.playing ? this.pause() : this.play(); }
+
+    play() {
+        if (this.idx === TIMELINE.length - 1) this.render(0);
+        this.playing = true;
+        if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-pause';
+        if (this.dom.btnPlay) {
+            this.dom.btnPlay.classList.replace('bg-rose-500', 'bg-blue-600');
+            this.dom.btnPlay.classList.replace('hover:bg-rose-600', 'hover:bg-blue-700');
+        }
+        this.intervalId = setInterval(() => {
+            if (this.idx < TIMELINE.length - 1) this.nextStep();
+            else this.pause();
+        }, 5500);
+    }
+
+    pause() {
+        this.playing = false;
+        clearInterval(this.intervalId);
+        if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-play ml-1';
+        if (this.dom.btnPlay) {
+            this.dom.btnPlay.classList.replace('bg-blue-600', 'bg-rose-500');
+            this.dom.btnPlay.classList.replace('hover:bg-blue-700', 'hover:bg-rose-600');
+        }
+    }
+
+    reset() { this.pause(); this.render(0); }
+
+    toggleTheme() {
+        const dark = !document.documentElement.classList.contains('dark');
+        document.documentElement.classList.toggle('dark', dark);
+        if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+        try { localStorage.setItem('portfolio-theme', dark ? 'dark' : 'light'); } catch(e){}
+    }
+}
+
+let app;
+window.addEventListener('DOMContentLoaded', () => { app = new PacketWalkApp(); });
+</script>
+</body>
+</html>
