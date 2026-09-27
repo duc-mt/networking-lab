@@ -232,7 +232,7 @@
     const data = {
       zones: [
         { id: "on-prem", label: "On-Premises Site", color: "#3b82f6", bounds: { left: 40, top: 40, width: 260, height: 420 } },
-        { id: "mpls", label: "MPLS Transit (WAN Underlay)", color: "#9ca3af", bounds: { left: 340, top: 40, width: 320, height: 420 } },
+        { id: "mpls", label: "MPLS Transit (WAN Underlay)", color: "#f59e0b", bounds: { left: 340, top: 40, width: 320, height: 420 } },
         { id: "cloud", label: "Cloud Region", color: "#8b5cf6", bounds: { left: 700, top: 40, width: 260, height: 420 } }
       ],
       nodes: [
@@ -336,8 +336,9 @@
       zonesLayer.innerHTML = '';
       data.zones.forEach(z => {
                 const el = document.createElement('div');
-        el.className = `absolute border-2 border-dashed rounded-xl pointer-events-none transition-opacity duration-500 opacity-60 dark:opacity-40`;
+        el.className = `absolute border-2 border-dashed rounded-xl pointer-events-none transition-all duration-500 opacity-80 dark:opacity-60`;
         el.style.borderColor = z.color;
+        el.style.backgroundColor = z.color + '0D'; // ~5% opacity background tint
         el.style.left = z.bounds.left + 'px';
         el.style.top = z.bounds.top + 'px';
         el.style.width = z.bounds.width + 'px';
@@ -369,7 +370,7 @@
         if (currentView === 'overlay' && n.zone === 'mpls') el.classList.add('opacity-20');
         
         let badgeColor = "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-200 dark:border-blue-700";
-        if (n.zone === 'mpls') badgeColor = "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600";
+        if (n.zone === 'mpls') badgeColor = "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-700";
         if (n.zone === 'cloud') badgeColor = "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 border-purple-200 dark:border-purple-700";
         
         let primarySpec = Object.values(n.specs)[0];
