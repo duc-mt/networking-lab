@@ -156,21 +156,6 @@ const PROJECTS = [
     },
 
     {
-        id: 'stp-variants',
-        title: 'STP Evolution & Variants',
-        topic: 'Network Architecture',
-        category: 'protocol',
-        type: 'topology-design',
-        status: 'live',
-        dateAdded: '2026-09-27',
-        image: 'assets/images/protocol-placeholder.jpg',
-        description:
-            'Bảng phân tích và so sánh chi tiết các biến thể của Spanning Tree: STP, PVST+, RSTP, RPVST+ và MSTP.',
-        tags: ['STP', 'RSTP', 'MSTP', 'Architecture', 'Comparison'],
-        href: 'projects/protocol/stp-variants.html',
-    },
-
-    {
         id: 'stp-election',
         title: 'STP Root Election',
         topic: 'Network Services',
