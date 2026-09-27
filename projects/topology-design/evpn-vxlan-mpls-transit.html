@@ -57,8 +57,10 @@
     }
     
     .link-line.type-trunk { stroke: #10b981; stroke-dasharray: 4; }
-    .link-line.type-routed { stroke: #94a3b8; }
-    .dark .link-line.type-routed { stroke: #64748b; }
+    .link-line.type-routed { stroke: #3b82f6; stroke-dasharray: 2; }
+    .dark .link-line.type-routed { stroke: #2563eb; }
+    .link-line.type-mpls { stroke: #f59e0b; stroke-width: 3; }
+    .dark .link-line.type-mpls { stroke: #d97706; }
     .link-line.type-overlay { stroke: #a855f7; stroke-width: 3; stroke-dasharray: 8; }
     
     .link-line.highlight {
@@ -231,12 +233,12 @@
     // --- 1. Data Schema ---
     const data = {
       zones: [
-        { id: "on-prem", label: "On-Premises Site", color: "#3b82f6", bounds: { left: 40, top: 40, width: 260, height: 420 } },
-        { id: "mpls", label: "MPLS Transit (WAN Underlay)", color: "#f59e0b", bounds: { left: 340, top: 40, width: 320, height: 420 } },
-        { id: "cloud", label: "Cloud Region", color: "#8b5cf6", bounds: { left: 700, top: 40, width: 260, height: 420 } }
+        { id: "on-prem", label: "On-Premises Site", color: "#3b82f6", bounds: { left: 20, top: 40, width: 240, height: 420 } },
+        { id: "mpls", label: "MPLS Transit (WAN Underlay)", color: "#f59e0b", bounds: { left: 280, top: 40, width: 440, height: 420 } },
+        { id: "cloud", label: "Cloud Region", color: "#8b5cf6", bounds: { left: 740, top: 40, width: 240, height: 420 } }
       ],
       nodes: [
-        { id: "vtep-onprem", name: "VTEP-OnPrem", role: "VTEP / L2 Gateway", zone: "on-prem", icon: "fa-network-wired", x: 170, y: 150,
+        { id: "vtep-onprem", name: "VTEP-OnPrem", role: "VTEP / L2 Gateway", zone: "on-prem", icon: "fa-network-wired", x: 140, y: 150,
           specs: { "Loopback (VTEP IP)": "10.255.0.1/32", "BGP ASN": "65100" },
           tableType: "bgp",
           tableData: [
@@ -244,7 +246,7 @@
             { peer: "10.0.1.2 (PE-OnPrem)", type: "IPv4 Unicast", state: "ESTABLISHED", rcv: "Underlay Routes" }
           ]
         },
-        { id: "pe-onprem", name: "PE-OnPrem", role: "PE Router", zone: "mpls", icon: "fa-route", x: 420, y: 250,
+        { id: "pe-onprem", name: "PE-OnPrem", role: "PE Router", zone: "mpls", icon: "fa-route", x: 370, y: 250,
           specs: { "VRF": "CORP", "Routing": "OSPF / LDP / MP-BGP" },
           tableType: "routing",
           tableData: [
@@ -252,7 +254,7 @@
             { prefix: "10.255.0.2/32", nextHop: "10.0.2.2 (PE-Cloud)", proto: "MPLS / iBGP", vrf: "CORP" }
           ]
         },
-        { id: "pe-cloud", name: "PE-Cloud", role: "PE Router", zone: "mpls", icon: "fa-route", x: 580, y: 250,
+        { id: "pe-cloud", name: "PE-Cloud", role: "PE Router", zone: "mpls", icon: "fa-route", x: 630, y: 250,
           specs: { "VRF": "CORP", "Routing": "OSPF / LDP / MP-BGP" },
           tableType: "routing",
           tableData: [
@@ -260,7 +262,7 @@
             { prefix: "10.255.0.1/32", nextHop: "10.0.2.1 (PE-OnPrem)", proto: "MPLS / iBGP", vrf: "CORP" }
           ]
         },
-        { id: "vtep-cloud", name: "VTEP-Cloud", role: "VTEP / L2 Gateway", zone: "cloud", icon: "fa-network-wired", x: 830, y: 150,
+        { id: "vtep-cloud", name: "VTEP-Cloud", role: "VTEP / L2 Gateway", zone: "cloud", icon: "fa-network-wired", x: 860, y: 150,
           specs: { "Loopback (VTEP IP)": "10.255.0.2/32", "BGP ASN": "65200" },
           tableType: "bgp",
           tableData: [
@@ -268,12 +270,12 @@
             { peer: "10.0.3.1 (PE-Cloud)", type: "IPv4 Unicast", state: "ESTABLISHED", rcv: "Underlay Routes" }
           ]
         },
-        { id: "host-a", name: "Host-A", role: "Compute", zone: "on-prem", icon: "fa-server", x: 170, y: 350,
+        { id: "host-a", name: "Host-A", role: "Compute", zone: "on-prem", icon: "fa-server", x: 140, y: 350,
           specs: { "IP Address": "10.1.100.10/24", "VLAN": "100" },
           tableType: "interfaces",
           tableData: [ { intf: "eth0", ip: "10.1.100.10", mac: "00:50:56:AA:AA:AA" } ]
         },
-        { id: "host-b", name: "Host-B", role: "Compute", zone: "cloud", icon: "fa-server", x: 830, y: 350,
+        { id: "host-b", name: "Host-B", role: "Compute", zone: "cloud", icon: "fa-server", x: 860, y: 350,
           specs: { "IP Address": "10.1.100.20/24", "VLAN": "100 (Stretched)" },
           tableType: "interfaces",
           tableData: [ { intf: "eth0", ip: "10.1.100.20", mac: "00:50:56:BB:BB:BB" } ]
@@ -420,9 +422,10 @@
         // HTML Badge Label
         const ly = l.curve ? (my + l.curve/2) : my;
         const badge = document.createElement('div');
-        let badgeStyle = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700";
+        let badgeStyle = "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 border-blue-200 dark:border-blue-800"; // default routed
         if (l.type === 'overlay') badgeStyle = "bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 border-purple-200 dark:border-purple-700";
         if (l.type === 'trunk') badgeStyle = "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700";
+        if (l.type === 'mpls') badgeStyle = "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300 border-amber-200 dark:border-amber-700";
         
         badge.className = `absolute z-20 text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${badgeStyle} transition-opacity duration-500 whitespace-nowrap`;
         badge.style.left = mx + 'px';
