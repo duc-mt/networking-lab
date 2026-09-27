@@ -10,10 +10,14 @@
  * this refactor.
  */
 (function () {
-    var isDark = true; // default
+    var isDark = false;
     try {
         var saved = localStorage.getItem('portfolio-theme');
-        if (saved) isDark = saved === 'dark';
+        if (saved) {
+            isDark = saved === 'dark';
+        } else {
+            isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
     } catch (e) {}
     document.documentElement.classList.toggle('dark', isDark);
 })();
