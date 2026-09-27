@@ -450,6 +450,7 @@ convergence sequence for the given mechanism and trigger event.
 Use this format when documenting a complete network **Architecture Blueprint / High-Level Design (HLD)** rather than a timeline of events. There is no time axis or playback controls (⏮ ▶ ⏭). Instead, it's an interactive reference dashboard showcasing the full topology, logical zones, per-device configurations/tables, and end-to-end traffic flow analysis.
 
 ### Broad use cases (Tổng quát hóa cho mọi kiến trúc mạng):
+
 - **Enterprise Campus & L2/L3 Switching:** Core/Agg/Access layers, vPC/MLAG, Port-Channels, STP root bridges, FHRP (HSRP/VRRP VIPs), VLANs & Trunks.
 - **Data Center Fabric (Spine-Leaf):** Underlay (eBGP/IS-IS) & Overlay (EVPN-VXLAN, VNIs, Distributed Anycast Gateways, Multi-Homing).
 - **WAN & Multi-Cloud Transit:** SD-WAN Hub-and-Spoke, Full-Mesh Overlays (IPsec/WireGuard), BGP ASNs, Route Reflectors, AWS Transit Gateway / Azure vWAN.
@@ -776,19 +777,19 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 
 ### Bảng đối chiếu quy ước:
 
-| Thành phần UI | Ngôn ngữ | Quy tắc & Ví dụ cụ thể |
-| :--- | :--- | :--- |
-| **Tiêu đề Lab (`<title>`, `<h1>`)** | **English** | Ngắn gọn, chuyên nghiệp, giữ nguyên thuật ngữ quốc tế.<br>• `Port Security Misconfiguration`<br>• `Rogue DHCP Server & Layer 2 Security`<br>• `ClusterXL Zero-Downtime Patching`<br>• `STP Link Failure & Convergence` |
-| **Thanh Stepper (`phase`)** | **UPPERCASE English** | Luôn dùng từ ngắn gọn in hoa. **KHÔNG** dùng tiếng Việt dài dòng làm tràn nút trên mobile.<br>• *Troubleshooting:* `TRIAGE`, `ISOLATE`, `ROOT CAUSE`, `FIX`, `VERIFY`<br>• *Protocol:* `DOWN`, `INIT`, `2-WAY`, `EXCHANGE`, `FULL` / `BLOCKING`, `FORWARDING`<br>• *Failover:* `NORMAL`, `FAILOVER`, `REBOOTING`, `RESTORED`<br>• *MOP:* `PRE-CHECK`, `EXECUTION`, `POST-CHECK`, `ROLLBACK` |
-| **Tiêu đề từng bước (`title`)** | **Tiếng Việt Kỹ thuật** | Ngắn gọn, nêu bật hành động hoặc kết quả. **KHÔNG** thêm tiền tố `"Bước 1:"`, `"Bước 2:"` (vì stepper đã có số bước).<br>• `Tiếp nhận sự cố: Endpoint nhận IP lạ & mất kết nối`<br>• `Kiểm tra hạ tầng: Loại trừ lỗi DHCP Server chính`<br>• `Khắc phục: Kích hoạt DHCP Snooping & DAI & IPSG` |
-| **Mô tả chi tiết (`description`)** | **Tiếng Việt + Thuật ngữ EN** | Diễn giải mạch lạc bằng tiếng Việt, kết hợp thẻ `<code class="font-mono ...">` cho các câu lệnh và thông số kỹ thuật (IP, MAC, VLAN, Default Gateway, DHCP Discover/Offer/ACK, v.v.). |
-| **Vai trò thiết bị (Role Badge)** | **English** | Nhãn nhỏ `-top-3` trên mỗi node card:<br>`Core Switch`, `Access Switch`, `DHCP Server`, `Victim PC 1`, `Rogue Router`, `File Server`. |
-| **Tên thiết bị (Hostnames `<h3>`)** | **Standard Hostname** | Chữ in hoa dạng chuẩn quy hoạch mạng:<br>`SW-CORE-01`, `SW-ACC-01`, `SRV-DHCP-01`, `PC-VICTIM-01`, `ROUTER-WIFI`. |
-| **Trạng thái thiết bị (State Badge)** | **UPPERCASE English** | Trạng thái kỹ thuật in hoa:<br>`ONLINE`, `FORWARDING`, `NORMAL`, `MISCONFIGURED`, `ROGUE ACTIVE`, `POISONED`, `BLOCKED`, `PROTECTED`, `RESTORED ✓`, `DOWN`, `ERR-DISABLE`. |
-| **Khối điều tra (Investigation Panels)** | **Tiếng Việt** | Chuẩn hóa tiêu đề các card bên phải:<br>• `Danh sách Giả thuyết`<br>• `Nguyên nhân gốc rễ`<br>• `Biện pháp Khắc phục`<br>• Nhãn trạng thái giả thuyết: `Đang xét`, `Loại trừ` (gạch ngang chữ), `Xác nhận` (đỏ/cam). |
-| **Checklist & Rollback Table** | **Tiếng Việt + CLI** | Bảng tiêu chuẩn kiểm thử và an toàn vận hành:<br>• Cột: `Hành động`, `Lệnh kiểm tra / Thao tác`, `Trạng thái kỳ vọng (Expected Output)`, `Phương án Rollback`. |
-| **Cửa sổ CLI / Terminal** | **English Console + CLI** | Header: `SW-ACC-01# — Console` hoặc `PC-VICTIM-02> ipconfig /all`.<br>Logs: Output nguyên bản của Cisco IOS/Linux/Windows, kèm chú thích `! ` hoặc `→ ` nếu cần diễn giải. |
-| **Đăng ký `assets/js/projects.js`** | **Title EN, Desc VI** | `title: 'Rogue DHCP & Layer 2 Security'`<br>`description: 'Chẩn đoán sự cố mạng do Router Wi-Fi cá nhân gây Rogue DHCP, cấp phát sai Gateway và giải pháp phòng thủ triệt để với DHCP Snooping, DAI, IP Source Guard.'` |
+| Thành phần UI                            | Ngôn ngữ                      | Quy tắc & Ví dụ cụ thể                                                                                                                                                                                                                                                                                                                                                                      |
+| :--------------------------------------- | :---------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Tiêu đề Lab (`<title>`, `<h1>`)**      | **English**                   | Ngắn gọn, chuyên nghiệp, giữ nguyên thuật ngữ quốc tế.<br>• `Port Security Misconfiguration`<br>• `Rogue DHCP Server & Layer 2 Security`<br>• `ClusterXL Zero-Downtime Patching`<br>• `STP Link Failure & Convergence`                                                                                                                                                                      |
+| **Thanh Stepper (`phase`)**              | **UPPERCASE English**         | Luôn dùng từ ngắn gọn in hoa. **KHÔNG** dùng tiếng Việt dài dòng làm tràn nút trên mobile.<br>• _Troubleshooting:_ `TRIAGE`, `ISOLATE`, `ROOT CAUSE`, `FIX`, `VERIFY`<br>• _Protocol:_ `DOWN`, `INIT`, `2-WAY`, `EXCHANGE`, `FULL` / `BLOCKING`, `FORWARDING`<br>• _Failover:_ `NORMAL`, `FAILOVER`, `REBOOTING`, `RESTORED`<br>• _MOP:_ `PRE-CHECK`, `EXECUTION`, `POST-CHECK`, `ROLLBACK` |
+| **Tiêu đề từng bước (`title`)**          | **Tiếng Việt Kỹ thuật**       | Ngắn gọn, nêu bật hành động hoặc kết quả. **KHÔNG** thêm tiền tố `"Bước 1:"`, `"Bước 2:"` (vì stepper đã có số bước).<br>• `Tiếp nhận sự cố: Endpoint nhận IP lạ & mất kết nối`<br>• `Kiểm tra hạ tầng: Loại trừ lỗi DHCP Server chính`<br>• `Khắc phục: Kích hoạt DHCP Snooping & DAI & IPSG`                                                                                              |
+| **Mô tả chi tiết (`description`)**       | **Tiếng Việt + Thuật ngữ EN** | Diễn giải mạch lạc bằng tiếng Việt, kết hợp thẻ `<code class="font-mono ...">` cho các câu lệnh và thông số kỹ thuật (IP, MAC, VLAN, Default Gateway, DHCP Discover/Offer/ACK, v.v.).                                                                                                                                                                                                       |
+| **Vai trò thiết bị (Role Badge)**        | **English**                   | Nhãn nhỏ `-top-3` trên mỗi node card:<br>`Core Switch`, `Access Switch`, `DHCP Server`, `Victim PC 1`, `Rogue Router`, `File Server`.                                                                                                                                                                                                                                                       |
+| **Tên thiết bị (Hostnames `<h3>`)**      | **Standard Hostname**         | Chữ in hoa dạng chuẩn quy hoạch mạng:<br>`SW-CORE-01`, `SW-ACC-01`, `SRV-DHCP-01`, `PC-VICTIM-01`, `ROUTER-WIFI`.                                                                                                                                                                                                                                                                           |
+| **Trạng thái thiết bị (State Badge)**    | **UPPERCASE English**         | Trạng thái kỹ thuật in hoa:<br>`ONLINE`, `FORWARDING`, `NORMAL`, `MISCONFIGURED`, `ROGUE ACTIVE`, `POISONED`, `BLOCKED`, `PROTECTED`, `RESTORED ✓`, `DOWN`, `ERR-DISABLE`.                                                                                                                                                                                                                  |
+| **Khối điều tra (Investigation Panels)** | **Tiếng Việt**                | Chuẩn hóa tiêu đề các card bên phải:<br>• `Danh sách Giả thuyết`<br>• `Nguyên nhân gốc rễ`<br>• `Biện pháp Khắc phục`<br>• Nhãn trạng thái giả thuyết: `Đang xét`, `Loại trừ` (gạch ngang chữ), `Xác nhận` (đỏ/cam).                                                                                                                                                                        |
+| **Checklist & Rollback Table**           | **Tiếng Việt + CLI**          | Bảng tiêu chuẩn kiểm thử và an toàn vận hành:<br>• Cột: `Hành động`, `Lệnh kiểm tra / Thao tác`, `Trạng thái kỳ vọng (Expected Output)`, `Phương án Rollback`.                                                                                                                                                                                                                              |
+| **Cửa sổ CLI / Terminal**                | **English Console + CLI**     | Header: `SW-ACC-01# — Console` hoặc `PC-VICTIM-02> ipconfig /all`.<br>Logs: Output nguyên bản của Cisco IOS/Linux/Windows, kèm chú thích `! ` hoặc `→ ` nếu cần diễn giải.                                                                                                                                                                                                                  |
+| **Đăng ký `assets/js/projects.js`**      | **Title EN, Desc VI**         | `title: 'Rogue DHCP & Layer 2 Security'`<br>`description: 'Chẩn đoán sự cố mạng do Router Wi-Fi cá nhân gây Rogue DHCP, cấp phát sai Gateway và giải pháp phòng thủ triệt để với DHCP Snooping, DAI, IP Source Guard.'`                                                                                                                                                                     |
 
 ---
 
@@ -797,41 +798,55 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 > **MỤC TIÊU:** Tuyệt đối không để xảy ra hiện tượng các badge, nhãn thông tin hoặc các dòng dữ liệu bị dính sát, đè lên nhau hoặc vỡ layout khi nội dung dài hoặc khi xem trên màn hình kích thước khác nhau.
 
 ### 1. Header của các Card thông tin (Anti-Collision Header):
+
 - **Cấm:** Không dùng `flex items-center justify-between` đơn thuần khi một bên là chuỗi văn bản động hoặc chuỗi dài (như tên interface, location, rule name).
 - **Bắt buộc:** Dùng cấu trúc responsive flex có wrap và border phân cách:
-  ```html
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-      <span id="stage-badge" class="inline-flex self-start items-center px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border border-rose-300 dark:border-rose-700 bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 shrink-0">
-          ...
-      </span>
-      <span id="device-badge" class="text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md self-start sm:self-auto break-all sm:break-normal">
-          ...
-      </span>
-  </div>
-  ```
+    ```html
+    <div
+        class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800"
+    >
+        <span
+            id="stage-badge"
+            class="inline-flex self-start items-center px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border border-rose-300 dark:border-rose-700 bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 shrink-0"
+        >
+            ...
+        </span>
+        <span
+            id="device-badge"
+            class="text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md self-start sm:self-auto break-all sm:break-normal"
+        >
+            ...
+        </span>
+    </div>
+    ```
 - Huy hiệu chính (`stage-badge`) phải có `shrink-0`.
 - Nhãn phụ (`device-badge`, `location`, `ip`) phải luôn được bọc trong một khối pill riêng biệt (`bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md`) để tạo vùng đệm mắt nhìn rõ ràng.
 
 ### 2. Các hàng thông số Key-Value (Inspector Panels):
+
 - **Khoảng cách:** Luôn có `gap-2.5` hoặc `gap-3` giữa nhãn (Key) và giá trị (Value).
 - **Chống co bóp nhãn:** Nhãn bên trái phải có `shrink-0` để không bị bóp méo khi Value quá dài:
-  ```html
-  <div class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
-      <span class="text-slate-400 font-sans shrink-0">Luật Firewall:</span>
-      <span id="inspector-rule" class="font-bold text-blue-600 dark:text-blue-400 text-right">...</span>
-  </div>
-  ```
+    ```html
+    <div
+        class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50"
+    >
+        <span class="text-slate-400 font-sans shrink-0">Luật Firewall:</span>
+        <span id="inspector-rule" class="font-bold text-blue-600 dark:text-blue-400 text-right">
+            ...
+        </span>
+    </div>
+    ```
 
 ### 3. Thanh Stepper & Pipeline Responsive:
+
 - Luôn bọc phần timeline/pipeline trong container có `overflow-x-auto` và đặt `min-w-[700px]` bên trong để không bị co cụm trên mobile.
 - Nút bấm stepper dùng nhãn ngắn gọn in hoa tiếng Anh (`phase`), ẩn chữ trên màn hình nhỏ và chỉ hiện số bước:
   `<span class="hidden md:block">${d.step}. ${d.phase}</span><span class="md:hidden">${d.step}</span>`.
 
 ### 4. Quy tắc an toàn định vị Canvas (Topology Safety):
+
 - Mọi canvas đều phải kích hoạt hàm `clampNodes()` chống tràn biên (Section 10).
 - Không dùng `absolute` trôi nổi mà không có tọa độ neo (`top/left` hoặc `inset-0`).
-
-
 
 ---
 
@@ -840,15 +855,18 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 > **MỤC TIÊU:** Đảm bảo toàn bộ các trang mô phỏng Topology (đặc biệt là dạng `topology-design`) đều nhất quán tuyệt đối về khoảng cách, màu sắc, cấu trúc hiển thị trên màn hình siêu rộng (Ultra-wide) và tuân thủ các chuẩn mực trực quan.
 
 ### 1. Canvas and Layout Widths (Responsive Auto-Scale Support)
+
 - **Main Container**: Thẻ `<main>` bọc ngoài cùng bắt buộc dùng `class="flex-1 w-full max-w-[1600px] mx-auto ..."` (KHÔNG dùng `max-w-7xl`).
 - **Topology Canvas**: Khung chứa sơ đồ `<div id="topology-container">` dùng `class="relative w-full max-w-[1400px] mx-auto overflow-hidden ..."` với chiều cao tối thiểu (ví dụ `min-h-[500px]` hoặc `min-h-[600px]`). Loại bỏ chế độ cuộn ngang tĩnh (overflow-x-auto), sơ đồ phải tự động co giãn chủ động (responsive) lấp đầy chiều rộng.
 
 ### 2. Node Positioning & Symmetry (Tọa độ Tương đối)
+
 - **CẤM SỬ DỤNG** tọa độ Pixel tĩnh (hardcode pixel). Toàn bộ thiết bị (nodes) và phân vùng (zones) BẮT BUỘC sử dụng tọa độ theo **Phần trăm (%)** (Ví dụ: `left: 15%, top: 50%`) để tự động co giãn mượt mà theo kích thước trình duyệt.
 - Bạn có thể khai báo thẳng % trong array data, hoặc khai báo tọa độ hệ quy chiếu ảo (VD: `REF_W = 1400, REF_H = 600`) rồi tự động tính ra % khi render bằng JS: `el.style.left = (n.x / REF_W * 100) + '%'`.
 - **TUYỆT ĐỐI KHÔNG** để các Node bị dồn tụm về bên trái. Phải phân bổ khoảng cách chia đều cho các Region để trải rộng hài hòa trên bản vẽ.
 
 ### 3. Zone Bounding Boxes (Khung Phân Vùng)
+
 - **Bounding Box Sizing (Chiều cao an toàn):** Phải đảm bảo chiều cao của khung phân vùng (VD: `height: 92%`) đủ lớn để ôm trọn toàn bộ các thiết bị (nodes) bên trong, không được cắt ngang qua bất kỳ thiết bị nào (nhất là thiết bị nằm ở dưới cùng).
 - **Z-index:** Bounding box bắt buộc phải nằm dưới cùng (`z-0`), còn các Nodes thiết bị phải nổi lên trên (`z-10` hoặc `z-20`).
 - **Bắt buộc** vẽ các khung viền đứt nét để phân định khu vực vật lý (Ví dụ: On-Prem Site, Cloud Region, MPLS Core).
@@ -856,18 +874,20 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 - **Background:** Phải đổ một lớp nền mờ (opacity ~5%) theo màu chủ đạo của vùng (ví dụ thêm hex `0D` vào mã màu như `#3b82f60D`). KHÔNG được chỉ dùng text suông hay khoảng trắng để phân chia.
 
 ### 4. Node Card UI & Semantic Colors (Giao diện Thẻ Thiết Bị)
+
 - **Role Badge (Nhãn Vai trò - Phía trên cùng):** Dùng màu xám/slate trung tính (`bg-slate-100 text-slate-600`). CẤM dùng màu sắc sặc sỡ phân chia theo Region.
 - **Node Border & Glow:** Viền thẻ và hiệu ứng đổ bóng phát sáng (Outer Glow) PHẢI ĐƯỢC set theo trạng thái sức khỏe (Health state).
-  - Khỏe mạnh (`health: green`): `border-emerald-500` và `shadow-[0_0_15px_rgba(16,185,129,0.3)]`
-  - Cảnh báo (`health: yellow`): dùng dải màu Amber/Yellow
-  - Lỗi (`health: red`): dùng dải màu Red/Rose
+    - Khỏe mạnh (`health: green`): `border-emerald-500` và `shadow-[0_0_15px_rgba(16,185,129,0.3)]`
+    - Cảnh báo (`health: yellow`): dùng dải màu Amber/Yellow
+    - Lỗi (`health: red`): dùng dải màu Red/Rose
 - **Status Badge (Nhãn Trạng thái - Phía dưới cùng):** Mỗi thiết bị phải có thêm một huy hiệu nhỏ xíu (pill badge) ở gáy dưới báo cáo trạng thái vận hành hiện tại (Ví dụ: `ONLINE`, `BGP UP`, `DOWN`).
 - **Primary Spec (Thông số cốt lõi):** Dòng text phụ ngay dưới tên thiết bị phải là thông số quan trọng nhất:
-  - Máy chủ (Compute/Host): Hiển thị IP Address.
-  - Router biên mạng (PE Router/L3): Hiển thị **VRF Name** hoặc **Loopback IP**.
-  - **TUYỆT ĐỐI KHÔNG** vứt một cái tên interface chung chung như `Gi0/0/0` vào vị trí này gây hiểu nhầm kiến trúc.
+    - Máy chủ (Compute/Host): Hiển thị IP Address.
+    - Router biên mạng (PE Router/L3): Hiển thị **VRF Name** hoặc **Loopback IP**.
+    - **TUYỆT ĐỐI KHÔNG** vứt một cái tên interface chung chung như `Gi0/0/0` vào vị trí này gây hiểu nhầm kiến trúc.
 
 ### 5. Topology Links & Event Listeners (Cáp Mạng và Co Giãn)
+
 - **Resize Listener (QUAN TRỌNG):** Vì thiết bị đã dùng `%`, Bắt buộc phải có `window.addEventListener('resize', drawLinks);` để tính toán lại tọa độ Pixel thực tế (dựa vào `container.clientWidth` và `clientHeight`) rồi cập nhật lại nét vẽ của các thẻ `<svg><path>` mỗi khi trình duyệt co giãn.
 - **Line Animation:** Các liên kết mạng đang active phải có hiệu ứng luồng dữ liệu chạy (Traffic Flowing). Dùng `stroke-dasharray` kết hợp class `.animate-dash` gọi tới CSS `@keyframes dash { to { stroke-dashoffset: -N; } }`.
 - **Port Labels (Nhãn Cổng Vật Lý/Logic):** Bất kỳ thông số cổng nào (như `Gi1/0/24`, `eth0`) PHẢI được gắn vào 2 đầu của cáp. Dùng toán học nội suy trên JS để đẩy khoảng cách Badge ra cách tâm Node một lượng an toàn tương đối khi màn hình bị thu nhỏ (VD: `px = sx + (dx - sx) * 0.2`).. Đồng thời, CẤM ghim nhãn nằm chết tại tâm đường link, phải tính vector pháp tuyến (Normal Vector) và tịnh tiến (Shift) nhãn sang hai bên đường link khoảng `18px` để né xung đột (Anchor Collision) với các nhãn khác ở Top/Bottom của thiết bị.
