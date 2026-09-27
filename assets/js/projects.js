@@ -97,6 +97,17 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        title: 'Network Bắt Bệnh #06 — DNS Resolution',
+        topic: 'DNS',
+        description:
+            'Ping by IP works fine, but hostnames fail — 8 KB cases of DNS resolution breaking on a flat LAN, same topology, one tab per failure mode.',
+        type: 'diagnostic-playbook',
+        tags: ['DNS', 'dnsmasq', 'resolv.conf', '/etc/hosts', 'nscd'],
+        href: 'projects/diagnostic-playbook/dns-resolution.html',
+        status: 'live',
+        dateAdded: '2026-09-27',
+    },
+    {
         title: 'OSPF Neighbor Adjacency',
         topic: 'Routing',
         description:
