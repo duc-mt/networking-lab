@@ -96,6 +96,21 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        id: 'port-security-errdisable',
+        title: 'Port Security — Err-Disabled Incident',
+        topic: 'Switching',
+        category: 'troubleshooting',
+        type: 'troubleshooting',
+        status: 'live',
+        dateAdded: '2026-09-27',
+        image: 'assets/images/protocol-placeholder.jpg',
+        description:
+            'Chẩn đoán sự cố mạng do Port Security Sticky MAC cấu hình lỗi gây err-disabled port, khiến nhân viên mất kết nối sau khi IT di chuyển máy tính.',
+        tags: ['Port Security', 'Err-Disabled', 'Sticky MAC', 'Troubleshooting', 'Switching'],
+        href: 'projects/troubleshooting/port-security-errdisable.html',
+    },
+
+    {
         id: 'rstp-convergence',
         title: 'RSTP Link Failure & Convergence',
         topic: 'Network Services',

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Port Security Misconfiguration — Troubleshooting Lab</title>
+    <script src="../../assets/js/theme-init.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui','sans-serif'], mono: ['Fira Code','ui-monospace','SFMono-Regular','monospace'] } } }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+    <style>
+        @keyframes dash { to { stroke-dashoffset: -16; } }
+        .animate-dash { animation: dash 1s linear infinite; }
+        @keyframes redPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0);} 50%{box-shadow:0 0 0 14px rgba(239,68,68,0.3);} }
+        .danger-pulse { animation: redPulse 1.3s infinite; }
+        @keyframes greenPulse { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0);} 50%{box-shadow:0 0 0 14px rgba(16,185,129,0.3);} }
+        .ok-pulse { animation: greenPulse 1.5s infinite; }
+        .hypothesis-strikethrough { text-decoration: line-through; opacity: 0.5; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0">
+                <i class="fas fa-stethoscope"></i>
+            </a>
+            <div>
+                <a href="../../index.html" class="text-[11px] font-semibold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                </a>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">Port Security Misconfiguration</h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+            <button id="btn-prev" onclick="app.prevStep()" disabled class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-amber-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-backward"></i></button>
+            <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-amber-500 text-white hover:bg-amber-600 shadow-md shadow-amber-500/30 transition-all-fast"><i id="icon-play" class="fas fa-play ml-1"></i></button>
+            <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-amber-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-forward"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i id="theme-icon" class="fas fa-sun"></i></button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
+
+    <!-- Symptom Banner -->
+    <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl px-6 py-4 flex items-start gap-4">
+        <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fas fa-triangle-exclamation text-red-600 dark:text-red-400"></i>
+        </div>
+        <div>
+            <div class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">Ticket #INC-2024-0847 — Mức độ: HIGH</div>
+            <div class="font-bold text-red-800 dark:text-red-300">Triệu chứng: Nhân viên phòng Kế toán không vào được mạng sau khi IT move máy sang bàn mới. Toàn bộ máy tính tầng 3 vẫn hoạt động bình thường.</div>
+        </div>
+    </div>
+
+    <!-- Timeline Stepper -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="relative flex justify-between items-center w-full">
+            <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
+            <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-amber-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out" style="width:0%"></div>
+            <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-2"></div>
+        </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        <!-- Left: Topology -->
+        <div class="xl:col-span-2 flex flex-col gap-6">
+            <section id="topology-canvas" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[400px] md:min-h-[460px]">
+                <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
+
+                <!-- Node: User Laptop (new) -->
+                <div id="node-Laptop" class="absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:15%;top:70%;transform:translate(-50%,-50%)">
+                    <div id="role-Laptop" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-600">Laptop Mới</div>
+                    <div class="w-10 h-10 md:w-12 md:h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-laptop text-lg text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">PC-KT-05</h3>
+                    <div class="text-[9px] font-mono text-slate-500 mt-0.5">MAC: AA:BB:CC:11:22:33</div>
+                    <span id="state-Laptop" class="text-[9px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">NO LINK</span>
+                </div>
+
+                <!-- Node: Access Switch -->
+                <div id="node-SW-ACC" class="absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:50%;top:50%;transform:translate(-50%,-50%)">
+                    <div id="role-SW-ACC" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-700">Access Switch</div>
+                    <div class="w-10 h-10 md:w-12 md:h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-network-wired text-lg text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">SW-ACC-01</h3>
+                    <div class="text-[9px] font-mono text-slate-500 mt-0.5">Gi0/3 — Port Security</div>
+                    <span id="state-SW-ACC" class="text-[9px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">NORMAL</span>
+                </div>
+
+                <!-- Node: Core Switch -->
+                <div id="node-Core" class="absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:50%;top:18%;transform:translate(-50%,-50%)">
+                    <div id="role-Core" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-200 dark:border-blue-700">Core Switch</div>
+                    <div class="w-10 h-10 md:w-12 md:h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-server text-lg text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">SW-CORE-01</h3>
+                    <div class="text-[9px] font-mono text-slate-500 mt-0.5">VLAN 30 — Finance</div>
+                    <span id="state-Core" class="text-[9px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">FORWARDING</span>
+                </div>
+
+                <!-- Node: File Server -->
+                <div id="node-Server" class="absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:85%;top:70%;transform:translate(-50%,-50%)">
+                    <div id="role-Server" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">File Server</div>
+                    <div class="w-10 h-10 md:w-12 md:h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-database text-lg text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">FS-FINANCE</h3>
+                    <div class="text-[9px] font-mono text-slate-500 mt-0.5">10.30.0.10/24</div>
+                    <span id="state-Server" class="text-[9px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
+                </div>
+
+                <!-- Port status badge -->
+                <div id="port-badge" class="hidden absolute z-20 bg-red-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-lg" style="left:35%;top:62%;transform:translate(-50%,-50%)">
+                    <i class="fas fa-lock mr-1"></i>Gi0/3 ERR-DISABLED
+                </div>
+
+                <!-- Animated packet -->
+                <div id="animated-packet" class="absolute z-50 hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold text-white whitespace-nowrap shadow-lg" style="left:0;top:0;transform:translate(-50%,-50%)">
+                    <i id="packet-icon" class="fas fa-envelope"></i>
+                    <span id="packet-label">Packet</span>
+                </div>
+            </section>
+
+            <!-- CLI Terminal -->
+            <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-56 md:h-64">
+                <div class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">SW-ACC-01# — Console</span>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1 font-mono text-xs text-emerald-400 whitespace-pre-wrap leading-relaxed" id="cli-logs"></div>
+            </section>
+        </div>
+
+        <!-- Right: Investigation Panel -->
+        <div class="flex flex-col gap-6">
+            <!-- Phase + Action -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center gap-2 mb-3">
+                    <span id="phase-badge" class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border"></span>
+                </div>
+                <h3 id="step-title" class="text-xl font-extrabold text-slate-900 dark:text-white mb-3"></h3>
+                <p id="step-desc" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300"></p>
+            </section>
+
+            <!-- Hypothesis Checklist -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex-1">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-list-check text-amber-500"></i>
+                    <span class="font-bold text-slate-700 dark:text-slate-300 text-sm">Danh sách Giả thuyết</span>
+                </div>
+                <ul id="hypothesis-list" class="flex flex-col gap-2"></ul>
+            </section>
+
+            <!-- Root Cause Banner (hidden until found) -->
+            <div id="root-cause-panel" class="hidden bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-700 rounded-2xl p-5">
+                <div class="flex items-center gap-2 mb-2 text-red-700 dark:text-red-400 font-bold text-sm">
+                    <i class="fas fa-bullseye"></i> Nguyên nhân gốc rễ
+                </div>
+                <p id="root-cause-text" class="text-sm text-red-800 dark:text-red-300 leading-relaxed"></p>
+            </div>
+
+            <!-- Fix Applied Banner -->
+            <div id="fix-panel" class="hidden bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700 rounded-2xl p-5">
+                <div class="flex items-center gap-2 mb-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
+                    <i class="fas fa-screwdriver-wrench"></i> Biện pháp Khắc phục
+                </div>
+                <p id="fix-text" class="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed"></p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+const HYPOTHESES_MASTER = [
+    { id: 'h1', text: 'Cáp vật lý bị lỗi hoặc cắm sai port' },
+    { id: 'h2', text: 'NIC của laptop bị hỏng' },
+    { id: 'h3', text: 'Port bị shutdown thủ công (admin down)' },
+    { id: 'h4', text: 'VLAN Assignment sai trên port' },
+    { id: 'h5', text: 'Port Security vi phạm → err-disabled' },
+    { id: 'h6', text: 'Sticky MAC cũ của máy trước chặn MAC mới' },
+];
+
+const TIMELINE = [
+    {
+        step: 1, phase: 'TRIAGE', phaseColor: 'amber',
+        title: 'Tiếp nhận sự cố — Kiểm tra vật lý',
+        description: 'IT nhận ticket. Bước đầu tiên: xác nhận Layer 1. Kiểm tra đèn LED port trên switch, cáp patch panel, và thử cắm cáp sang port khác để loại trừ lỗi cáp/NIC.',
+        cli_logs: `SW-ACC-01# show interfaces Gi0/3 status\nPort    Name    Status       Vlan  Duplex  Speed\nGi0/3           err-disabled 30    auto    auto\n\nSW-ACC-01# show interfaces Gi0/3\n  GigabitEthernet0/3 is down, line protocol is down (err-disabled)\n  Hardware is Gigabit Ethernet, address is 0001.0001.0001\n  ...`,
+        nodes: {
+            Laptop:  { state: 'NO LINK', color: 'red',    border: 'border-red-500 danger-pulse' },
+            'SW-ACC': { state: 'CHECKING', color: 'amber',  border: 'border-amber-400' },
+            Core:    { state: 'FORWARDING', color: 'blue',  border: 'border-blue-300 dark:border-blue-600' },
+            Server:  { state: 'ONLINE', color: 'emerald',  border: 'border-emerald-300 dark:border-emerald-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'SW-ACC', st: 'DOWN' },
+            { src: 'SW-ACC', dst: 'Core',   st: 'ACTIVE' },
+            { src: 'Core',   dst: 'Server', st: 'ACTIVE' },
+        ],
+        hypotheses: ['h1:investigating','h2:investigating','h3:investigating','h4:investigating','h5:investigating','h6:investigating'],
+        portBadge: true, rootCause: null, fix: null,
+        packet: null,
+    },
+    {
+        step: 2, phase: 'ISOLATE', phaseColor: 'amber',
+        title: 'Loại trừ: Cáp và NIC không phải vấn đề',
+        description: 'Thử cắm laptop vào port Gi0/5 (port khác, không có Port Security) → mạng lên ngay. Thử cắm cáp từ PC khác vào Gi0/3 → vẫn err-disabled. Kết luận: lỗi nằm ở cấu hình port Gi0/3, không phải cáp hay NIC.',
+        cli_logs: `! Thử laptop vào Gi0/5:\nGi0/5 is up, line protocol is up\n→ Laptop hoạt động tốt. NIC OK.\n\n! Thử PC khác vào Gi0/3:\nGi0/3 is down, line protocol is down (err-disabled)\n→ Cáp và NIC không phải vấn đề.\n→ Lỗi nằm trong cấu hình port Gi0/3.`,
+        nodes: {
+            Laptop:  { state: 'NIC OK', color: 'slate',   border: 'border-slate-300 dark:border-slate-700' },
+            'SW-ACC': { state: 'ERR-DISABLE', color: 'red', border: 'border-red-500 danger-pulse' },
+            Core:    { state: 'FORWARDING', color: 'blue', border: 'border-blue-300 dark:border-blue-600' },
+            Server:  { state: 'ONLINE', color: 'emerald', border: 'border-emerald-300 dark:border-emerald-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'SW-ACC', st: 'DOWN' },
+            { src: 'SW-ACC', dst: 'Core',   st: 'ACTIVE' },
+            { src: 'Core',   dst: 'Server', st: 'ACTIVE' },
+        ],
+        hypotheses: ['h1:ruled_out','h2:ruled_out','h3:investigating','h4:investigating','h5:investigating','h6:investigating'],
+        portBadge: true, rootCause: null, fix: null,
+        packet: null,
+    },
+    {
+        step: 3, phase: 'ISOLATE', phaseColor: 'amber',
+        title: 'Phát hiện: Port bị ERR-DISABLED do Port Security',
+        description: 'Lệnh <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded text-xs font-mono">show port-security interface Gi0/3</code> cho thấy trạng thái <strong>Secure-shutdown (err-disabled)</strong> với lý do: <strong>SecurityViolation</strong>. Bộ đếm vi phạm = 1. Nguyên nhân rõ ràng là Port Security đã bắt gặp một địa chỉ MAC không hợp lệ.',
+        cli_logs: `SW-ACC-01# show port-security interface Gi0/3\nPort Security              : Enabled\nPort Status                : Secure-shutdown\nViolation Mode             : Shutdown\nAging Time                 : 0 mins\nAging Type                 : Absolute\nSecureStatic Address Aging : Disabled\nMaximum MAC Addresses      : 1\nTotal MAC Addresses        : 1\nConfigured MAC Addresses   : 0\nSticky MAC Addresses       : 1\nLast Source Address:Vlan   : AA:BB:CC:11:22:33:30\nSecurity Violation Count   : 1`,
+        nodes: {
+            Laptop:  { state: 'BLOCKED', color: 'red',   border: 'border-red-500' },
+            'SW-ACC': { state: 'SECURE-SHTDWN', color: 'red', border: 'border-red-500 danger-pulse' },
+            Core:    { state: 'FORWARDING', color: 'blue', border: 'border-blue-300 dark:border-blue-600' },
+            Server:  { state: 'ONLINE', color: 'emerald', border: 'border-emerald-300 dark:border-emerald-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'SW-ACC', st: 'DOWN' },
+            { src: 'SW-ACC', dst: 'Core',   st: 'ACTIVE' },
+            { src: 'Core',   dst: 'Server', st: 'ACTIVE' },
+        ],
+        hypotheses: ['h1:ruled_out','h2:ruled_out','h3:ruled_out','h4:ruled_out','h5:confirmed','h6:investigating'],
+        portBadge: true, rootCause: null, fix: null,
+        packet: null,
+    },
+    {
+        step: 4, phase: 'ROOT CAUSE', phaseColor: 'red',
+        title: 'Nguyên nhân gốc: Sticky MAC của máy cũ còn tồn tại',
+        description: `<code class="bg-slate-100 dark:bg-slate-800 px-1 rounded text-xs font-mono">show port-security address</code> tiết lộ sự thật: Port Security đang nhớ MAC <strong>00:11:22:AA:BB:CC</strong> của máy <em>cũ</em> (đã bị remove khỏi bàn này). Khi laptop mới (MAC: AA:BB:CC:11:22:33) cắm vào, hệ thống coi đây là thiết bị lạ, kích hoạt chính sách Violation Mode = Shutdown → port tự động err-disabled.`,
+        cli_logs: `SW-ACC-01# show port-security address\n          Secure Mac Address Table\n----------------------------------------------\nVlan  Mac Address         Type       Ports\n----  -----------         --------   -----\n  30  00:11:22:AA:BB:CC   SecureSticky  Gi0/3\n----------------------------------------------\n\n! Đây là MAC của máy CŨ đã được remove!\n! Máy mới (AA:BB:CC:11:22:33) bị coi là VIOLATION\n! → Port tự động Shutdown (err-disabled)`,
+        nodes: {
+            Laptop:  { state: 'VIOLATION', color: 'red',   border: 'border-red-500 danger-pulse' },
+            'SW-ACC': { state: 'ERR-DISABLED', color: 'red', border: 'border-red-600 danger-pulse' },
+            Core:    { state: 'FORWARDING', color: 'blue', border: 'border-blue-300 dark:border-blue-600' },
+            Server:  { state: 'ONLINE', color: 'emerald', border: 'border-emerald-300 dark:border-emerald-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'SW-ACC', st: 'DOWN' },
+            { src: 'SW-ACC', dst: 'Core',   st: 'ACTIVE' },
+            { src: 'Core',   dst: 'Server', st: 'ACTIVE' },
+        ],
+        hypotheses: ['h1:ruled_out','h2:ruled_out','h3:ruled_out','h4:ruled_out','h5:confirmed','h6:confirmed'],
+        portBadge: true,
+        rootCause: 'Port Security được cấu hình Sticky MAC với max-mac-address = 1. Sticky MAC của thiết bị cũ (00:11:22:AA:BB:CC) vẫn còn trong bảng sau khi máy bị chuyển đi. Laptop mới kết nối với MAC khác → SecurityViolation → Violation Mode Shutdown → port tự động chuyển sang err-disabled.',
+        fix: null,
+        packet: null,
+    },
+    {
+        step: 5, phase: 'FIX', phaseColor: 'emerald',
+        title: 'Khắc phục: Xóa Sticky MAC + Recovery port',
+        description: 'Xóa toàn bộ Sticky MAC entry cũ trên Gi0/3, sau đó thực hiện <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded text-xs font-mono">shutdown / no shutdown</code> để recovery port khỏi trạng thái err-disabled. Port sẽ tự học MAC mới của laptop và ghi vào Sticky.',
+        cli_logs: `SW-ACC-01(config)# interface Gi0/3\nSW-ACC-01(config-if)# no switchport port-security mac-address sticky\n\n! Xóa toàn bộ sticky MAC entry:\nSW-ACC-01# clear port-security sticky interface Gi0/3\n\n! Recovery err-disabled:\nSW-ACC-01(config-if)# shutdown\nSW-ACC-01(config-if)# no shutdown\n\n*Nov: %LINK-3-UPDOWN: Gi0/3, changed state to up\n*Nov: %LINEPROTO-5-UPDOWN: Gi0/3, changed state to up`,
+        nodes: {
+            Laptop:  { state: 'CONNECTING', color: 'amber', border: 'border-amber-400' },
+            'SW-ACC': { state: 'RECOVERING', color: 'amber', border: 'border-amber-400' },
+            Core:    { state: 'FORWARDING', color: 'blue',  border: 'border-blue-300 dark:border-blue-600' },
+            Server:  { state: 'ONLINE', color: 'emerald',  border: 'border-emerald-300 dark:border-emerald-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'SW-ACC', st: 'ACTIVE' },
+            { src: 'SW-ACC', dst: 'Core',   st: 'ACTIVE' },
+            { src: 'Core',   dst: 'Server', st: 'ACTIVE' },
+        ],
+        hypotheses: ['h1:ruled_out','h2:ruled_out','h3:ruled_out','h4:ruled_out','h5:confirmed','h6:confirmed'],
+        portBadge: false,
+        rootCause: 'Port Security được cấu hình Sticky MAC với max-mac-address = 1. Sticky MAC của thiết bị cũ (00:11:22:AA:BB:CC) vẫn còn trong bảng sau khi máy bị chuyển đi. Laptop mới kết nối với MAC khác → SecurityViolation → Violation Mode Shutdown → port tự động chuyển sang err-disabled.',
+        fix: 'Xóa Sticky MAC cũ bằng lệnh "clear port-security sticky interface Gi0/3", sau đó shutdown/no shutdown để recover err-disabled. Port tự học MAC mới (AA:BB:CC:11:22:33) và ghi vào Sticky entry.',
+        packet: { from: 'Laptop', to: 'SW-ACC', label: 'Link-up', color: 'bg-amber-500', icon: 'fa-plug' },
+    },
+    {
+        step: 6, phase: 'VERIFY', phaseColor: 'emerald',
+        title: 'Xác minh & Bài học kinh nghiệm',
+        description: 'Port đã lên. Laptop ping được server thành công. Sticky MAC mới đã được ghi. <strong>Bài học:</strong> Khi IT move máy, phải chạy lệnh <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded text-xs font-mono">clear port-security sticky</code> hoặc cho phép Aging Time. Nên dùng <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded text-xs font-mono">violation restrict</code> (log + drop, không shutdown) ở môi trường có người dùng di động.',
+        cli_logs: `SW-ACC-01# show port-security interface Gi0/3\nPort Security         : Enabled\nPort Status           : Secure-up\nViolation Mode        : Shutdown\nMaximum MAC Addresses : 1\nSticky MAC Addresses  : 1\nSecurity Violation Count : 0\n\nSW-ACC-01# show port-security address\nVlan  Mac Address         Type          Ports\n  30  AA:BB:CC:11:22:33   SecureSticky  Gi0/3\n\nPC-KT-05> ping 10.30.0.10\n!!!!!  Success rate 100%, 5/5 packets`,
+        nodes: {
+            Laptop:  { state: 'ONLINE ✓', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
+            'SW-ACC': { state: 'SECURE-UP', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
+            Core:    { state: 'FORWARDING', color: 'blue',   border: 'border-blue-300 dark:border-blue-600' },
+            Server:  { state: 'ONLINE ✓', color: 'emerald',  border: 'border-emerald-300 dark:border-emerald-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'SW-ACC', st: 'ACTIVE' },
+            { src: 'SW-ACC', dst: 'Core',   st: 'ACTIVE' },
+            { src: 'Core',   dst: 'Server', st: 'ACTIVE' },
+        ],
+        hypotheses: ['h1:ruled_out','h2:ruled_out','h3:ruled_out','h4:ruled_out','h5:confirmed','h6:confirmed'],
+        portBadge: false,
+        rootCause: 'Port Security được cấu hình Sticky MAC với max-mac-address = 1. Sticky MAC của thiết bị cũ (00:11:22:AA:BB:CC) vẫn còn trong bảng sau khi máy bị chuyển đi. Laptop mới kết nối với MAC khác → SecurityViolation → Violation Mode Shutdown → port tự động chuyển sang err-disabled.',
+        fix: 'Xóa Sticky MAC cũ, shutdown/no shutdown để recover. Đề xuất dài hạn: đổi Violation Mode sang "restrict" cho môi trường user di động, hoặc cấu hình Port Security Aging Time = 60 phút để tự xóa entry khi thiết bị rời đi.',
+        packet: { from: 'Laptop', to: 'Server', label: 'Ping 10.30.0.10', color: 'bg-emerald-500', icon: 'fa-check-circle' },
+    },
+];
+
+class TroubleshootingSimulator {
+    constructor() {
+        this.idx = 0; this.playing = false; this.intervalId = null; this.currentAnim = null;
+        this.dom = {
+            stepper: document.getElementById('stepper-container'),
+            progress: document.getElementById('timeline-progress'),
+            btnPrev: document.getElementById('btn-prev'),
+            btnNext: document.getElementById('btn-next'),
+            btnPlay: document.getElementById('btn-play'),
+            iconPlay: document.getElementById('icon-play'),
+            themeIcon: document.getElementById('theme-icon'),
+            phaseBadge: document.getElementById('phase-badge'),
+            title: document.getElementById('step-title'),
+            desc: document.getElementById('step-desc'),
+            cli: document.getElementById('cli-logs'),
+            canvas: document.getElementById('topology-canvas'),
+            svg: document.getElementById('links-svg'),
+            packet: document.getElementById('animated-packet'),
+            packetIcon: document.getElementById('packet-icon'),
+            packetLabel: document.getElementById('packet-label'),
+            portBadge: document.getElementById('port-badge'),
+            hypothesisList: document.getElementById('hypothesis-list'),
+            rootCausePanel: document.getElementById('root-cause-panel'),
+            rootCauseText: document.getElementById('root-cause-text'),
+            fixPanel: document.getElementById('fix-panel'),
+            fixText: document.getElementById('fix-text'),
+        };
+        window.addEventListener('resize', () => this.drawLinks(TIMELINE[this.idx].links));
+        this.init();
+    }
+
+    init() {
+        let dark = false;
+        try { const s = localStorage.getItem('portfolio-theme'); dark = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; } catch(e){}
+        document.documentElement.classList.toggle('dark', dark);
+        if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+        this.buildStepper(); this.render(0);
+    }
+
+    buildStepper() {
+        this.dom.stepper.innerHTML = '';
+        TIMELINE.forEach((d, i) => {
+            const btn = document.createElement('button');
+            btn.id = `step-btn-${i}`;
+            btn.innerHTML = `<span class="hidden md:block">${d.step}. ${d.phase}</span><span class="md:hidden">${d.step}</span>`;
+            btn.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm hover:scale-105';
+            btn.onclick = () => { this.pause(); this.render(i); };
+            this.dom.stepper.appendChild(btn);
+        });
+    }
+
+    colorClass(c) {
+        const m = {
+            slate:   'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600',
+            amber:   'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700/50',
+            blue:    'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700/50',
+            emerald: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/50',
+            red:     'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700/50',
+        };
+        return m[c] || m.slate;
+    }
+
+    drawLinks(links) {
+        this.dom.svg.innerHTML = '';
+        const cr = this.dom.canvas.getBoundingClientRect();
+        const dark = document.documentElement.classList.contains('dark');
+        links.forEach(lk => {
+            const s = document.getElementById('node-' + lk.src);
+            const t = document.getElementById('node-' + lk.dst);
+            if (!s || !t) return;
+            const sr = s.getBoundingClientRect(), tr = t.getBoundingClientRect();
+            const x1 = sr.left-cr.left+sr.width/2, y1 = sr.top-cr.top+sr.height/2;
+            const x2 = tr.left-cr.left+tr.width/2, y2 = tr.top-cr.top+tr.height/2;
+            const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+            line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+            line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+            line.setAttribute('stroke-width','4'); line.setAttribute('stroke-linecap','round');
+            if (lk.st === 'ACTIVE') {
+                line.setAttribute('stroke', dark ? '#60a5fa' : '#3b82f6');
+                line.setAttribute('stroke-dasharray','10,10');
+                line.classList.add('animate-dash');
+            } else if (lk.st === 'DOWN') {
+                line.setAttribute('stroke', dark ? 'rgba(239,68,68,0.8)' : 'rgba(239,68,68,0.9)');
+                line.setAttribute('stroke-dasharray','3,10');
+            } else {
+                line.setAttribute('stroke', dark ? 'rgba(71,85,105,0.3)' : 'rgba(203,213,225,0.4)');
+                line.setAttribute('stroke-dasharray','5,10');
+            }
+            this.dom.svg.appendChild(line);
+        });
+    }
+
+    renderHypotheses(hyps) {
+        const statusMap = {
+            investigating: { icon: 'fa-circle-question', color: 'text-amber-500', label: 'Đang điều tra', cls: '' },
+            ruled_out:     { icon: 'fa-circle-xmark',    color: 'text-slate-400',  label: 'Đã loại trừ', cls: 'hypothesis-strikethrough' },
+            confirmed:     { icon: 'fa-circle-check',    color: 'text-red-500',    label: 'Xác nhận!', cls: 'font-bold' },
+        };
+        this.dom.hypothesisList.innerHTML = hyps.map(h => {
+            const [id, status] = h.split(':');
+            const master = HYPOTHESES_MASTER.find(m => m.id === id);
+            if (!master) return '';
+            const st = statusMap[status] || statusMap.investigating;
+            return `<li class="flex items-start gap-2 text-xs ${st.cls}">
+                <i class="fas ${st.icon} ${st.color} mt-0.5 shrink-0"></i>
+                <span class="text-slate-700 dark:text-slate-300 ${st.cls}">${master.text}</span>
+            </li>`;
+        }).join('');
+    }
+
+    render(i) {
+        this.idx = i;
+        const d = TIMELINE[i];
+
+        TIMELINE.forEach((_,j) => {
+            const b = document.getElementById(`step-btn-${j}`);
+            if (!b) return;
+            if (j < i) b.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-amber-500 text-white border-amber-500 cursor-pointer shadow';
+            else if (j === i) b.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 text-amber-600 border-amber-300 dark:border-amber-700 cursor-pointer';
+            else b.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer';
+        });
+        this.dom.progress.style.width = `${(i / (TIMELINE.length - 1)) * 100}%`;
+
+        const phaseColors = {
+            amber:   'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700/50',
+            red:     'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700/50',
+            emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/50',
+        };
+        this.dom.phaseBadge.textContent = d.phase;
+        this.dom.phaseBadge.className = `px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border ${phaseColors[d.phaseColor] || phaseColors.amber}`;
+        this.dom.title.textContent = d.title;
+        this.dom.desc.innerHTML = d.description;
+        this.dom.cli.textContent = d.cli_logs;
+
+        Object.entries(d.nodes).forEach(([id, nd]) => {
+            const stEl = document.getElementById(`state-${id}`);
+            const card = document.getElementById(`node-${id}`);
+            if (stEl) { stEl.textContent = nd.state; stEl.className = `text-[9px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border ${this.colorClass(nd.color)}`; }
+            if (card) card.className = `absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10 ${nd.border}`;
+        });
+
+        if (this.dom.portBadge) this.dom.portBadge.classList.toggle('hidden', !d.portBadge);
+
+        this.drawLinks(d.links);
+        this.renderHypotheses(d.hypotheses);
+        this.animatePacket(d.packet);
+
+        if (this.dom.rootCausePanel) {
+            this.dom.rootCausePanel.classList.toggle('hidden', !d.rootCause);
+            if (d.rootCause && this.dom.rootCauseText) this.dom.rootCauseText.textContent = d.rootCause;
+        }
+        if (this.dom.fixPanel) {
+            this.dom.fixPanel.classList.toggle('hidden', !d.fix);
+            if (d.fix && this.dom.fixText) this.dom.fixText.textContent = d.fix;
+        }
+
+        if (this.dom.btnPrev) this.dom.btnPrev.disabled = i === 0;
+        if (this.dom.btnNext) this.dom.btnNext.disabled = i === TIMELINE.length - 1;
+        if (i === TIMELINE.length - 1 && this.playing) this.pause();
+    }
+
+    animatePacket(p) {
+        if (this.currentAnim) this.currentAnim.cancel();
+        if (!p) { this.dom.packet.classList.add('hidden'); return; }
+        const src = document.getElementById('node-' + p.from);
+        const tgt = document.getElementById('node-' + p.to);
+        if (!src || !tgt) { this.dom.packet.classList.add('hidden'); return; }
+        this.dom.packetLabel.textContent = p.label;
+        this.dom.packetIcon.className = `fas ${p.icon}`;
+        this.dom.packet.className = `absolute z-50 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold text-white whitespace-nowrap ${p.color} shadow-lg`;
+        this.dom.packet.classList.remove('hidden');
+        const cr = this.dom.canvas.getBoundingClientRect();
+        const sr = src.getBoundingClientRect(), tr = tgt.getBoundingClientRect();
+        const sx = sr.left-cr.left+sr.width/2, sy = sr.top-cr.top+sr.height/2;
+        const tx = tr.left-cr.left+tr.width/2, ty = tr.top-cr.top+tr.height/2;
+        this.dom.packet.style.left = '0px'; this.dom.packet.style.top = '0px';
+        this.currentAnim = this.dom.packet.animate([
+            { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(0.8)`, opacity: 0 },
+            { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(1)`,   opacity: 1, offset: 0.1 },
+            { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(1)`,   opacity: 1, offset: 0.88 },
+            { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(0.8)`, opacity: 0 },
+        ], { duration: 2800, easing: 'cubic-bezier(0.4,0,0.2,1)', fill: 'forwards' });
+    }
+
+    nextStep() { if (this.idx < TIMELINE.length - 1) this.render(this.idx + 1); }
+    prevStep() { if (this.idx > 0) this.render(this.idx - 1); }
+    togglePlay() { this.playing ? this.pause() : this.play(); }
+    play() {
+        if (this.idx === TIMELINE.length - 1) this.render(0);
+        this.playing = true;
+        if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-pause';
+        if (this.dom.btnPlay) { this.dom.btnPlay.classList.replace('bg-amber-500','bg-slate-500'); this.dom.btnPlay.classList.replace('hover:bg-amber-600','hover:bg-slate-600'); }
+        this.intervalId = setInterval(() => { if (this.idx < TIMELINE.length - 1) this.nextStep(); }, 5000);
+    }
+    pause() {
+        this.playing = false; clearInterval(this.intervalId);
+        if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-play ml-1';
+        if (this.dom.btnPlay) { this.dom.btnPlay.classList.replace('bg-slate-500','bg-amber-500'); this.dom.btnPlay.classList.replace('hover:bg-slate-600','hover:bg-amber-600'); }
+    }
+    reset() { this.pause(); this.render(0); }
+    toggleTheme() {
+        const dark = !document.documentElement.classList.contains('dark');
+        document.documentElement.classList.toggle('dark', dark);
+        if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+        try { localStorage.setItem('portfolio-theme', dark ? 'dark' : 'light'); } catch(e){}
+        this.drawLinks(TIMELINE[this.idx].links);
+    }
+}
+
+let app;
+window.addEventListener('DOMContentLoaded', () => { app = new TroubleshootingSimulator(); });
+</script>
+</body>
+</html>
