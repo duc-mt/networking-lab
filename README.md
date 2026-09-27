@@ -16,7 +16,7 @@ Static portfolio of interactive networking labs. No build step — plain HTML/CS
 
 ## Structure
 
-The site is organized around 6 lab **formats** — see `docs/prompt-templates.md` for what each one is, when to use it, and the prompt that generates it.
+The site is organized around 7 lab **formats** — see `docs/prompt-templates.md` for what each one is, when to use it, and the prompt that generates it (and `docs/prompt-scenarios.md` for quick-copy scenario examples in English and Vietnamese).
 
 ```
 /
@@ -37,7 +37,8 @@ The site is organized around 6 lab **formats** — see `docs/prompt-templates.md
 │   ├── failover/                  # HA/failover drill labs
 │   └── topology-design/           # Static topology/routing-table reference dashboards
 ├── docs/
-│   └── prompt-templates.md        # One reusable prompt per folder above, plus a table of which to use when
+│   ├── prompt-templates.md        # One reusable prompt per folder above, plus a table of which to use when
+│   └── prompt-scenarios.md        # Quick-copy scenario blocks per prompt — placeholder + example, EN + VI
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml                 # Lint + format check on every PR/push
