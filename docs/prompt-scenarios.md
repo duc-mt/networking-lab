@@ -1,7 +1,7 @@
 # Prompt scenario reference (English + Vietnamese)
 
 > **⚠️ GLOBAL SECURITY RULE:**
-> The AI processing these prompts is instructed to **automatically scrub and anonymize** any real IPs, hostnames, or credentials you paste into the scenario block. You can safely paste real-world troubleshooting notes; the AI will replace them with dummy equivalents (like `10.x.x.x` or `FW-CORE`) in the generated output to ensure zero sensitive data is published.
+> The AI processing these prompts is instructed to **automatically scrub and anonymize** any real IPs, hostnames, VLAN IDs, or credentials you paste into the scenario block. You can safely paste real-world troubleshooting notes; the AI will replace them with dummy equivalents (like `10.x.x.x` or `FW-CORE`) in the generated output to ensure zero sensitive data is published.
 
 Quick-copy reference for the part of each prompt that actually changes per use: the scenario/input block. The rest of each prompt (Tailwind/design-system requirements, JSON schema, header rules) is stable and lives in `docs/prompt-templates.md` — copy the full prompt from there, then swap in one of the blocks below.
 

@@ -79,7 +79,7 @@
                 <span class="px-2.5 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded text-xs font-bold uppercase tracking-widest">Routing & WAN</span>
             </div>
             <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Triển khai Dual ISP cho ClusterXL (SmartConsole)</h2>
-            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">Cấu hình ISP Redundancy trên Check Point 1800 với 2 đường WAN1 (VLAN 1242) và WAN2 (VLAN 1244). Quyết định chọn kiến trúc <strong>Primary/Backup</strong> thay vì Load Sharing để bảo toàn tính năng tăng tốc phần cứng (SecureXL acceleration) cho thiết bị cấp nhỏ.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">Cấu hình ISP Redundancy trên Check Point 1800 với 2 đường WAN1 (VLAN 101) và WAN2 (VLAN 102). Quyết định chọn kiến trúc <strong>Primary/Backup</strong> thay vì Load Sharing để bảo toàn tính năng tăng tốc phần cứng (SecureXL acceleration) cho thiết bị cấp nhỏ.</p>
             
             <!-- Architecture Decision Diff -->
             <div class="grid md:grid-cols-2 gap-4">
@@ -153,8 +153,8 @@
         // Data Structure for MOP
         const mopData = {
             preChecks: [
-                { id: "p1", description: "Đồng bộ Topology External trên Member 1", command: "Member 1 > Network Management", expected_result: "WAN1 (1242) và WAN2 (1244) đều được set thành External", status: "pending" },
-                { id: "p2", description: "Đồng bộ Topology External trên Member 2", command: "Member 2 > Network Management", expected_result: "WAN1 (1242) và WAN2 (1244) đều được set thành External", status: "pending" },
+                { id: "p1", description: "Đồng bộ Topology External trên Member 1", command: "Member 1 > Network Management", expected_result: "WAN1 (101) và WAN2 (102) đều được set thành External", status: "pending" },
+                { id: "p2", description: "Đồng bộ Topology External trên Member 2", command: "Member 2 > Network Management", expected_result: "WAN1 (101) và WAN2 (102) đều được set thành External", status: "pending" },
                 { id: "p3", description: "Kiểm tra IP hợp lệ", command: "Kiểm tra IP/Subnet 2 WAN trên cả 2 node", expected_result: "Khớp nhau, không có conflict", status: "pending" }
             ],
             execution: [
