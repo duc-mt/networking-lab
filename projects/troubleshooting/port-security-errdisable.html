@@ -80,55 +80,55 @@
 
         <!-- Left: Topology -->
         <div class="xl:col-span-2 flex flex-col gap-6">
-            <section id="topology-canvas" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[400px] md:min-h-[460px]">
+            <section id="topology-canvas" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[500px] md:min-h-[580px]">
                 <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
 
-                <!-- Node: User Laptop (new) -->
-                <div id="node-Laptop" class="absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:15%;top:70%;transform:translate(-50%,-50%)">
-                    <div id="role-Laptop" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-600">Laptop Mới</div>
-                    <div class="w-10 h-10 md:w-12 md:h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-laptop text-lg text-slate-700 dark:text-slate-300"></i>
-                    </div>
-                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">PC-KT-05</h3>
-                    <div class="text-[9px] font-mono text-slate-500 mt-0.5">MAC: AA:BB:CC:11:22:33</div>
-                    <span id="state-Laptop" class="text-[9px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">NO LINK</span>
-                </div>
-
-                <!-- Node: Access Switch -->
-                <div id="node-SW-ACC" class="absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:50%;top:50%;transform:translate(-50%,-50%)">
-                    <div id="role-SW-ACC" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-700">Access Switch</div>
-                    <div class="w-10 h-10 md:w-12 md:h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-network-wired text-lg text-slate-700 dark:text-slate-300"></i>
-                    </div>
-                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">SW-ACC-01</h3>
-                    <div class="text-[9px] font-mono text-slate-500 mt-0.5">Gi0/3 — Port Security</div>
-                    <span id="state-SW-ACC" class="text-[9px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">NORMAL</span>
-                </div>
-
-                <!-- Node: Core Switch -->
-                <div id="node-Core" class="absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:50%;top:18%;transform:translate(-50%,-50%)">
+                <!-- Node: Core Switch — Top Center -->
+                <div id="node-Core" class="absolute w-28 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:50%;top:11%;transform:translate(-50%,-50%)">
                     <div id="role-Core" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-200 dark:border-blue-700">Core Switch</div>
-                    <div class="w-10 h-10 md:w-12 md:h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-server text-lg text-slate-700 dark:text-slate-300"></i>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-server text-base text-slate-700 dark:text-slate-300"></i>
                     </div>
-                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">SW-CORE-01</h3>
-                    <div class="text-[9px] font-mono text-slate-500 mt-0.5">VLAN 30 — Finance</div>
-                    <span id="state-Core" class="text-[9px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">FORWARDING</span>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">SW-CORE-01</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">VLAN 30 — Finance</div>
+                    <span id="state-Core" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">FORWARDING</span>
                 </div>
 
-                <!-- Node: File Server -->
-                <div id="node-Server" class="absolute w-32 md:w-44 bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:85%;top:70%;transform:translate(-50%,-50%)">
+                <!-- Node: Access Switch — Middle Center -->
+                <div id="node-SW-ACC" class="absolute w-28 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:50%;top:48%;transform:translate(-50%,-50%)">
+                    <div id="role-SW-ACC" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-700">Access Switch</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-network-wired text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">SW-ACC-01</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">Gi0/3 — Port Security</div>
+                    <span id="state-SW-ACC" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">NORMAL</span>
+                </div>
+
+                <!-- Node: User Laptop — Bottom Left -->
+                <div id="node-Laptop" class="absolute w-28 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:18%;top:83%;transform:translate(-50%,-50%)">
+                    <div id="role-Laptop" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-600">Laptop Mới</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-laptop text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">PC-KT-05</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">MAC: AA:BB:CC:11:22:33</div>
+                    <span id="state-Laptop" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">NO LINK</span>
+                </div>
+
+                <!-- Node: File Server — Bottom Right -->
+                <div id="node-Server" class="absolute w-28 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:82%;top:83%;transform:translate(-50%,-50%)">
                     <div id="role-Server" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">File Server</div>
-                    <div class="w-10 h-10 md:w-12 md:h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-database text-lg text-slate-700 dark:text-slate-300"></i>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-database text-base text-slate-700 dark:text-slate-300"></i>
                     </div>
-                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">FS-FINANCE</h3>
-                    <div class="text-[9px] font-mono text-slate-500 mt-0.5">10.30.0.10/24</div>
-                    <span id="state-Server" class="text-[9px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">FS-FINANCE</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">10.30.0.10/24</div>
+                    <span id="state-Server" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
                 </div>
 
-                <!-- Port status badge -->
-                <div id="port-badge" class="hidden absolute z-20 bg-red-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-lg" style="left:35%;top:62%;transform:translate(-50%,-50%)">
+                <!-- Port status badge — midpoint Laptop → SW-ACC -->
+                <div id="port-badge" class="hidden absolute z-20 bg-red-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-lg" style="left:33%;top:66%;transform:translate(-50%,-50%)">
                     <i class="fas fa-lock mr-1"></i>Gi0/3 ERR-DISABLED
                 </div>
 
