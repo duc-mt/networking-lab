@@ -260,11 +260,7 @@
                 phase: "IDLE",
                 title: "Trạng thái IDLE",
                 description: "Trạng thái khởi tạo. Tiến trình BGP từ chối mọi kết nối đến. Khi Quản trị viên cấu hình bật BGP (sự kiện Start), thiết bị khởi tạo các tài nguyên cần thiết, thiết lập ConnectRetryTimer, và chuẩn bị chuyển sang trạng thái Connect.",
-                cli_logs: "R1(config)# router bgp 65001
-R1(config-router)# neighbor 10.0.0.2 remote-as 65002
-*Jan  1 00:00:00.100: BGP: 10.0.0.2 state is Idle
-*Jan  1 00:00:00.200: BGP: 10.0.0.2 Event: Start
-*Jan  1 00:00:00.300: BGP: ConnectRetryTimer started",
+                cli_logs: "R1(config)# router bgp 65001\nR1(config-router)# neighbor 10.0.0.2 remote-as 65002\n*Jan  1 00:00:00.100: BGP: 10.0.0.2 state is Idle\n*Jan  1 00:00:00.200: BGP: 10.0.0.2 Event: Start\n*Jan  1 00:00:00.300: BGP: ConnectRetryTimer started",
                 nodes: {
                     R1: { state: "IDLE", role: "AS 65001", color: "slate" },
                     R2: { state: "IDLE", role: "AS 65002", color: "slate" }
@@ -278,9 +274,7 @@ R1(config-router)# neighbor 10.0.0.2 remote-as 65002
                 phase: "CONNECT",
                 title: "Trạng thái CONNECT",
                 description: "Router chờ hoàn tất bắt tay TCP 3-way (TCP/179). Nếu thành công, nó gửi bản tin OPEN và chuyển sang OpenSent. Nếu thất bại, nó rơi vào trạng thái ACTIVE và đợi ConnectRetryTimer kích hoạt lại (Retry).",
-                cli_logs: "*Jan  1 00:00:01.000: BGP: 10.0.0.2 went from Idle to Connect
-*Jan  1 00:00:01.500: TCP: sending SYN, seq 1234567, port 179
-*Jan  1 00:00:01.800: TCP: connection established with 10.0.0.2",
+                cli_logs: "*Jan  1 00:00:01.000: BGP: 10.0.0.2 went from Idle to Connect\n*Jan  1 00:00:01.500: TCP: sending SYN, seq 1234567, port 179\n*Jan  1 00:00:01.800: TCP: connection established with 10.0.0.2",
                 nodes: {
                     R1: { state: "CONNECT", role: "AS 65001", color: "amber" },
                     R2: { state: "LISTEN", role: "AS 65002", color: "slate" }
@@ -294,9 +288,7 @@ R1(config-router)# neighbor 10.0.0.2 remote-as 65002
                 phase: "OPENSENT",
                 title: "Trạng thái OPENSENT",
                 description: "R1 đã gửi bản tin OPEN. Tại đây, thiết bị chờ và validate bản tin OPEN từ Peer: Version phải là 4, ASN phải khớp (tránh AS mismatch), BGP Identifier phải hợp lệ, và đàm phán Capabilities (IPv4/IPv6). Nếu lỗi, gửi NOTIFICATION và về lại IDLE.",
-                cli_logs: "*Jan  1 00:00:03.000: BGP: 10.0.0.2 went from Connect to OpenSent
-*Jan  1 00:00:03.100: BGP: 10.0.0.2 sending OPEN, version 4, my as: 65001, holdtime 180s
-*Jan  1 00:00:03.200: BGP: Capabilities: Route Refresh, Multi-protocol",
+                cli_logs: "*Jan  1 00:00:03.000: BGP: 10.0.0.2 went from Connect to OpenSent\n*Jan  1 00:00:03.100: BGP: 10.0.0.2 sending OPEN, version 4, my as: 65001, holdtime 180s\n*Jan  1 00:00:03.200: BGP: Capabilities: Route Refresh, Multi-protocol",
                 nodes: {
                     R1: { state: "OPENSENT", role: "AS 65001", color: "blue" },
                     R2: { state: "CONNECT", role: "AS 65002", color: "amber" }
@@ -310,10 +302,7 @@ R1(config-router)# neighbor 10.0.0.2 remote-as 65002
                 phase: "OPENCONFIRM",
                 title: "Trạng thái OPENCONFIRM",
                 description: "Cả hai bên đã nhận và pass các bước validate bản tin OPEN. Thiết bị gửi bản tin KEEPALIVE xác nhận và chờ KEEPALIVE từ đối phương. Trạng thái này thường trôi qua rất nhanh (chỉ vài milliseconds).",
-                cli_logs: "*Jan  1 00:00:04.500: BGP: 10.0.0.2 rcv OPEN, version 4, as: 65002, holdtime 180s, id 2.2.2.2
-*Jan  1 00:00:05.000: BGP: 10.0.0.2 went from OpenSent to OpenConfirm
-*Jan  1 00:00:05.100: BGP: 10.0.0.2 sending KEEPALIVE
-*Jan  1 00:00:05.200: BGP: 10.0.0.2 rcv KEEPALIVE",
+                cli_logs: "*Jan  1 00:00:04.500: BGP: 10.0.0.2 rcv OPEN, version 4, as: 65002, holdtime 180s, id 2.2.2.2\n*Jan  1 00:00:05.000: BGP: 10.0.0.2 went from OpenSent to OpenConfirm\n*Jan  1 00:00:05.100: BGP: 10.0.0.2 sending KEEPALIVE\n*Jan  1 00:00:05.200: BGP: 10.0.0.2 rcv KEEPALIVE",
                 nodes: {
                     R1: { state: "OPENCONFIRM", role: "AS 65001", color: "indigo" },
                     R2: { state: "OPENCONFIRM", role: "AS 65002", color: "indigo" }
@@ -327,10 +316,7 @@ R1(config-router)# neighbor 10.0.0.2 remote-as 65002
                 phase: "ESTABLISHED",
                 title: "Trạng thái ESTABLISHED",
                 description: "Peering thành công! BGP session đã UP hoàn toàn. Router bắt đầu trao đổi bảng định tuyến qua các bản tin UPDATE. KEEPALIVE được gửi định kỳ (1/3 HoldTimer) để duy trì session. Nếu HoldTimer hết hạn, session sẽ sập (Flapping).",
-                cli_logs: "*Jan  1 00:00:07.000: BGP: 10.0.0.2 went from OpenConfirm to Established
-*Jan  1 00:00:07.100: %BGP-5-ADJCHANGE: neighbor 10.0.0.2 Up
-*Jan  1 00:00:07.500: BGP: 10.0.0.2 sending UPDATE, prefix 10.10.10.0/24
-*Jan  1 00:00:07.800: BGP: 10.0.0.2 rcv UPDATE, prefix 20.20.20.0/24",
+                cli_logs: "*Jan  1 00:00:07.000: BGP: 10.0.0.2 went from OpenConfirm to Established\n*Jan  1 00:00:07.100: %BGP-5-ADJCHANGE: neighbor 10.0.0.2 Up\n*Jan  1 00:00:07.500: BGP: 10.0.0.2 sending UPDATE, prefix 10.10.10.0/24\n*Jan  1 00:00:07.800: BGP: 10.0.0.2 rcv UPDATE, prefix 20.20.20.0/24",
                 nodes: {
                     R1: { state: "ESTABLISHED", role: "AS 65001", color: "emerald" },
                     R2: { state: "ESTABLISHED", role: "AS 65002", color: "emerald" }
