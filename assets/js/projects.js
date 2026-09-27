@@ -96,8 +96,8 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
-        id: 'dhcp-relay-fsm',
-        title: 'DHCP Relay Agent',
+        id: 'dhcp-master-fsm',
+        title: 'DHCP Protocol Suite',
         topic: 'Network Services',
         category: 'protocol',
         type: 'protocol',
@@ -105,25 +105,11 @@ const PROJECTS = [
         dateAdded: '2026-09-27',
         image: 'assets/images/protocol-placeholder.jpg',
         description:
-            'Mô phỏng cơ chế cấp phát IP liên mạng qua DHCP Relay Agent (Gateway L3), bóc tách Option 82 và nguyên lý chặn Broadcast.',
-        tags: ['DHCP', 'Relay', 'Gateway', 'Option 82', 'Unicast'],
-        href: 'projects/protocol/dhcp-relay.html',
+            'Tổ hợp mô phỏng DHCP: Luân chuyển linh hoạt giữa quá trình cấp phát IP mạng nội bộ (Local DORA 2 Nodes) và cấp phát xuyên mạng (Relay Agent 3 Nodes).',
+        tags: ['DHCP', 'D.O.R.A', 'Relay', 'Option 82', 'Broadcast', 'Unicast'],
+        href: 'projects/protocol/dhcp-master.html',
     },
 
-    {
-        id: 'dhcp-dora-fsm',
-        title: 'DHCP DORA Process',
-        category: 'protocol',
-        type: 'protocol',
-        status: 'live',
-        dateAdded: '2026-09-27',
-        topic: 'Network Services',
-        image: 'assets/images/protocol-placeholder.jpg',
-        description:
-            'Mô phỏng chi tiết quá trình cấp phát IP động qua 4 bước D.O.R.A, khám phá cấu trúc bản tin UDP Port 67/68 và cơ chế Broadcast L2/L3.',
-        tags: ['DHCP', 'D.O.R.A', 'UDP', 'Broadcast'],
-        href: 'projects/protocol/dhcp-dora.html',
-    },
     {
         title: 'Network Bắt Bệnh #06 — DNS Resolution',
         topic: 'DNS',

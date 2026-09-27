@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DHCP Relay Agent Simulator</title>
+    <title>DHCP Master Simulator</title>
 
     <script src="../../assets/js/theme-init.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -50,7 +50,7 @@
                     <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
                         <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
                     </a>
-                    <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">DHCP Relay Agent (Multi-Node)</h1>
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">DHCP Protocol Suite</h1>
                 </div>
             </div>
             <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
@@ -65,11 +65,18 @@
         </div>
     </header>
 
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-8">
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
         
+        <!-- Topology Toggle -->
+        <div class="flex items-center justify-center">
+            <div class="flex items-center bg-slate-200/50 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                <button id="mode-local" onclick="app.switchMode('local')" class="px-5 py-2 text-sm font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 transition-all">Cấp phát Mạng LAN (Local DORA)</button>
+                <button id="mode-relay" onclick="app.switchMode('relay')" class="px-5 py-2 text-sm font-bold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Cấp phát Xuyên Mạng (Relay Agent)</button>
+            </div>
+        </div>
+
         <!-- Timeline Stepper -->
         <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors relative overflow-hidden">
-            <h2 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Trình tự D.O.R.A qua Relay Agent (5 Bước)</h2>
             <div class="relative flex justify-between items-center w-full">
                 <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
                 <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out"></div>
@@ -77,14 +84,14 @@
             </div>
         </section>
 
-        <!-- Topology Canvas (Multi-Node Absolute Positioning) -->
-        <section id="topology-canvas" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[450px] md:min-h-[550px]">
+        <!-- Topology Canvas -->
+        <section id="topology-canvas" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[400px] md:min-h-[500px] transition-all duration-500">
             <!-- Dynamic SVG Links -->
             <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
 
-            <!-- Node 1: Client -->
-            <div id="node-Client" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10" style="left: 20%; top: 75%; transform: translate(-50%, -50%);">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-blue-200 dark:border-blue-700/50 whitespace-nowrap" id="role-Client">Client (VLAN 10)</div>
+            <!-- Node: Client -->
+            <div id="node-Client" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left: 20%; top: 75%; transform: translate(-50%, -50%);">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-blue-200 dark:border-blue-700/50 whitespace-nowrap" id="role-Client">Client</div>
                 <div class="w-12 h-12 md:w-16 md:h-16 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
                     <i class="fas fa-laptop text-2xl md:text-3xl text-slate-700 dark:text-slate-300"></i>
                 </div>
@@ -92,8 +99,8 @@
                 <span id="state-Client" class="text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded">INIT</span>
             </div>
 
-            <!-- Node 2: Relay Agent -->
-            <div id="node-Relay" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10" style="left: 50%; top: 25%; transform: translate(-50%, -50%);">
+            <!-- Node: Relay Agent -->
+            <div id="node-Relay" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10 opacity-0 pointer-events-none scale-75" style="left: 50%; top: 25%; transform: translate(-50%, -50%);">
                 <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-purple-200 dark:border-purple-700/50 whitespace-nowrap" id="role-Relay">Gateway L3</div>
                 <div class="w-12 h-12 md:w-16 md:h-16 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
                     <i class="fas fa-route text-2xl md:text-3xl text-slate-700 dark:text-slate-300"></i>
@@ -102,24 +109,24 @@
                 <span id="state-Relay" class="text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded">LISTEN</span>
             </div>
 
-            <!-- Node 3: DHCP Server -->
-            <div id="node-Server" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10" style="left: 80%; top: 75%; transform: translate(-50%, -50%);">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-emerald-200 dark:border-emerald-700/50 whitespace-nowrap" id="role-Server">Server (VLAN 99)</div>
+            <!-- Node: DHCP Server -->
+            <div id="node-Server" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left: 80%; top: 75%; transform: translate(-50%, -50%);">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-emerald-200 dark:border-emerald-700/50 whitespace-nowrap" id="role-Server">DHCP Server</div>
                 <div class="w-12 h-12 md:w-16 md:h-16 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
                     <i class="fas fa-server text-2xl md:text-3xl text-slate-700 dark:text-slate-300"></i>
                 </div>
-                <h3 class="text-lg md:text-xl font-extrabold text-slate-800 dark:text-white tracking-tight text-center">DHCP Server</h3>
+                <h3 class="text-lg md:text-xl font-extrabold text-slate-800 dark:text-white tracking-tight text-center">Server</h3>
                 <span id="state-Server" class="text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded">IDLE</span>
             </div>
 
             <!-- Central Link Status Badge -->
-            <div id="link-status" class="absolute z-10 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded shadow text-center backdrop-blur-sm" style="left: 50%; top: 60%; transform: translate(-50%, -50%);">
-                <span class="block text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-0.5">Link State</span>
+            <div id="link-status" class="absolute z-10 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded shadow text-center backdrop-blur-sm transition-all duration-500" style="left: 50%; top: 60%; transform: translate(-50%, -50%);">
+                <span class="block text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-0.5">Trạng thái</span>
                 <span id="link-status-text" class="text-xs md:text-sm font-bold text-slate-600 dark:text-slate-300 font-mono"></span>
             </div>
 
             <!-- Dynamic Animated Packet -->
-            <div id="animated-packet" class="absolute z-50 hidden flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap shadow-lg" style="left: 0; top: 0; transform: translate(-50%, -50%);">
+            <div id="animated-packet" class="absolute z-50 hidden flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap shadow-lg transition-colors duration-300" style="left: 0; top: 0; transform: translate(-50%, -50%);">
                 <i id="packet-icon" class="fas fa-envelope"></i>
                 <span id="packet-label">Packet</span>
             </div>
@@ -173,125 +180,203 @@
     </main>
 
     <script>
-        const labTimeline = [
-            {
-                step: 1,
-                time: "00:00:01",
-                phase: "DISCOVER (L2)",
-                title: "Client Broadcast DISCOVER",
-                description: `Client vừa kết nối mạng (VLAN 10) và cần xin IP. Nó gửi một gói tin DHCP DISCOVER Broadcast ra mạng nội bộ. Mặc định Router/Gateway sẽ <strong>chặn toàn bộ gói Broadcast</strong> tại cổng L3. Do đó, gói tin dừng lại ở thiết bị Relay Agent.`,
-                cli_logs: `C:\\> ipconfig /renew\n\n*Sending DHCP DISCOVER...\nSrc MAC: AA:AA:AA:AA:AA:AA\nDst IP: 255.255.255.255`,
-                nodes: {
-                    Client: { label: "Client (VLAN 10)", state: "INIT", role: "0.0.0.0", color: "slate" },
-                    Relay: { label: "Gateway (Relay)", state: "LISTEN", role: "10.0.10.1", color: "slate" },
-                    Server: { label: "DHCP Server", state: "IDLE", role: "10.0.99.10", color: "slate" }
+        const TIMELINES = {
+            local: [
+                {
+                    step: 1,
+                    time: "00:00:01",
+                    phase: "DISCOVER",
+                    title: "Khám phá (DISCOVER)",
+                    description: `Thiết bị Client kết nối vào mạng nội bộ (cùng Subnet với Server) và cần xin IP. Nó gửi bản tin <strong>DHCP DISCOVER</strong> dạng Broadcast để tìm kiếm bất kỳ DHCP Server nào đang hoạt động.`,
+                    cli_logs: `C:\\> ipconfig /renew\n\n*Sending DHCP DISCOVER...\nSrc MAC: AA:AA:AA:AA:AA:AA\nDst IP: 255.255.255.255`,
+                    nodes: {
+                        Client: { label: "Client (0.0.0.0)", state: "INIT", role: "0.0.0.0", color: "amber" },
+                        Server: { label: "DHCP Server", state: "LISTEN", role: "192.168.1.10", color: "slate" }
+                    },
+                    links: [{ source: "Client", target: "Server", state: "ACTIVE" }],
+                    link_state: "Broadcast L2 Tìm Server",
+                    animated_packet: {
+                        from: "Client", to: "Server", label: "DISCOVER", color: "bg-blue-500", icon: "fa-search",
+                        packet_decode: { "Layer 2": "Dst MAC: FF:FF:FF:FF:FF:FF", "Layer 3": "Src IP: 0.0.0.0, Dst IP: 255.255.255.255", "UDP Ports": "Src: 68, Dst: 67" }
+                    }
                 },
-                links: [
-                    { source: "Client", target: "Relay", state: "ACTIVE" },
-                    { source: "Relay", target: "Server", state: "IDLE" }
-                ],
-                link_state: "Broadcast L2 bị chặn tại Gateway",
-                animated_packet: {
-                    from: "Client", to: "Relay", label: "DISCOVER (Bcast)", color: "bg-slate-500", icon: "fa-search",
-                    packet_decode: { "Layer 2": "Dst MAC: FF:FF:FF:FF:FF:FF", "Layer 3": "Src IP: 0.0.0.0, Dst IP: 255.255.255.255", "GIADDR": "0.0.0.0" }
-                }
-            },
-            {
-                step: 2,
-                time: "00:00:02",
-                phase: "DISCOVER (L3)",
-                title: "Relay Proxy (Unicast)",
-                description: `Tính năng Relay Agent trên Gateway "bắt" được gói DISCOVER. Nó sửa trường <strong>GIADDR</strong> (Gateway IP) thành IP của mình (10.0.10.1), chèn thêm Option 82 chứa thông tin vật lý (Port, VLAN), rồi đóng gói lại thành <strong>Unicast</strong> để định tuyến xuyên qua mạng lõi tới DHCP Server.`,
-                cli_logs: `Relay# DHCP: Received DISCOVER from AA:AA:AA:AA:AA:AA\nRelay# DHCP: Forwarding to 10.0.99.10 (Unicast)\nRelay# DHCP: GIADDR set to 10.0.10.1\nRelay# DHCP: Inserted Option 82`,
-                nodes: {
-                    Client: { label: "Client (VLAN 10)", state: "SELECTING", role: "0.0.0.0", color: "amber" },
-                    Relay: { label: "Gateway (Relay)", state: "PROXY", role: "10.0.10.1", color: "blue" },
-                    Server: { label: "DHCP Server", state: "LISTEN", role: "10.0.99.10", color: "slate" }
+                {
+                    step: 2,
+                    time: "00:00:02",
+                    phase: "OFFER",
+                    title: "Đề nghị (OFFER)",
+                    description: `DHCP Server nhận được yêu cầu, liền cấp trước (Reserve) một IP trống trong Pool (192.168.1.50) và gửi trả bản tin <strong>DHCP OFFER</strong> cho Client.`,
+                    cli_logs: `Server# Received DISCOVER from AA:AA:AA:AA:AA:AA\nServer# Reserving IP 192.168.1.50\nServer# Sending DHCPOFFER`,
+                    nodes: {
+                        Client: { label: "Client", state: "SELECTING", role: "0.0.0.0", color: "amber" },
+                        Server: { label: "DHCP Server", state: "OFFERING", role: "192.168.1.10", color: "blue" }
+                    },
+                    links: [{ source: "Client", target: "Server", state: "ACTIVE" }],
+                    link_state: "Server chào IP",
+                    animated_packet: {
+                        from: "Server", to: "Client", label: "OFFER", color: "bg-amber-500", icon: "fa-gift",
+                        packet_decode: { "YIADDR (Your IP)": "192.168.1.50", "Server ID": "192.168.1.10", "Subnet Mask": "255.255.255.0" }
+                    }
                 },
-                links: [
-                    { source: "Client", target: "Relay", state: "IDLE" },
-                    { source: "Relay", target: "Server", state: "ACTIVE" }
-                ],
-                link_state: "Relay đóng gói Unicast tới Server",
-                animated_packet: {
-                    from: "Relay", to: "Server", label: "DISCOVER (Uni)", color: "bg-blue-600", icon: "fa-forward",
-                    packet_decode: { "Layer 3": "Src IP: 10.0.10.1, Dst IP: 10.0.99.10", "GIADDR": "10.0.10.1", "Option 82": "Vlan10+GigabitEthernet1/0/2" }
-                }
-            },
-            {
-                step: 3,
-                time: "00:00:03",
-                phase: "OFFER (L3)",
-                title: "Server Cấp Phát (OFFER)",
-                description: `DHCP Server nhận Unicast từ Relay. Nó đọc trường <strong>GIADDR (10.0.10.1)</strong> để biết Client nằm ở Subnet nào (VLAN 10), từ đó lấy IP 10.0.10.50 từ Pool tương ứng. Server gửi bản tin OFFER dưới dạng Unicast ngược về lại cho Relay Agent.`,
-                cli_logs: `Server# DHCPDISCOVER from AA:AA:AA:AA:AA:AA via 10.0.10.1\nServer# DHCPOFFER on 10.0.10.50 to AA:AA:AA:AA:AA:AA via 10.0.10.1\nServer# Sending Unicast to 10.0.10.1`,
-                nodes: {
-                    Client: { label: "Client (VLAN 10)", state: "SELECTING", role: "0.0.0.0", color: "amber" },
-                    Relay: { label: "Gateway (Relay)", state: "PROXY", role: "10.0.10.1", color: "blue" },
-                    Server: { label: "DHCP Server", state: "OFFERING", role: "10.0.99.10", color: "indigo" }
+                {
+                    step: 3,
+                    time: "00:00:03",
+                    phase: "REQUEST",
+                    title: "Yêu cầu (REQUEST)",
+                    description: `Client nhận được OFFER, nó chấp nhận IP 192.168.1.50 và gửi <strong>DHCP REQUEST</strong> dạng Broadcast để "chốt" IP này, đồng thời ngầm báo cho các Server khác (nếu có) rút lại Offer của họ.`,
+                    cli_logs: `C:\\> Received OFFER: 192.168.1.50\n*Sending DHCP REQUEST for 192.168.1.50...`,
+                    nodes: {
+                        Client: { label: "Client", state: "REQUESTING", role: "192.168.1.50", color: "indigo" },
+                        Server: { label: "DHCP Server", state: "WAIT_ACK", role: "192.168.1.10", color: "indigo" }
+                    },
+                    links: [{ source: "Client", target: "Server", state: "ACTIVE" }],
+                    link_state: "Client xác nhận chọn IP",
+                    animated_packet: {
+                        from: "Client", to: "Server", label: "REQUEST", color: "bg-indigo-500", icon: "fa-hand-paper",
+                        packet_decode: { "Requested IP (Opt 50)": "192.168.1.50", "Server ID (Opt 54)": "192.168.1.10", "Layer 3 Dst": "255.255.255.255" }
+                    }
                 },
-                links: [
-                    { source: "Client", target: "Relay", state: "IDLE" },
-                    { source: "Relay", target: "Server", state: "ACTIVE" }
-                ],
-                link_state: "Server phản hồi qua Unicast",
-                animated_packet: {
-                    from: "Server", to: "Relay", label: "OFFER (Uni)", color: "bg-amber-500", icon: "fa-gift",
-                    packet_decode: { "Layer 3": "Src IP: 10.0.99.10, Dst IP: 10.0.10.1", "YIADDR (Your IP)": "10.0.10.50", "GIADDR": "10.0.10.1" }
+                {
+                    step: 4,
+                    time: "00:00:04",
+                    phase: "ACK",
+                    title: "Xác nhận (ACK)",
+                    description: `Server gửi bản tin chốt hạ <strong>DHCP ACK</strong>, đính kèm các thông số Option quan trọng như Lease Time, DNS, Router. Tiến trình D.O.R.A hoàn tất.`,
+                    cli_logs: `Server# Received REQUEST for 192.168.1.50\nServer# Binding MAC to IP (Lease: 8 days)\nServer# Sending DHCPACK\n\nC:\\> IP Configured Successfully!`,
+                    nodes: {
+                        Client: { label: "Client", state: "BOUND", role: "192.168.1.50", color: "emerald" },
+                        Server: { label: "DHCP Server", state: "BOUND", role: "192.168.1.10", color: "emerald" }
+                    },
+                    links: [{ source: "Client", target: "Server", state: "IDLE" }],
+                    link_state: "Cấp phát IP hoàn tất",
+                    animated_packet: {
+                        from: "Server", to: "Client", label: "ACK", color: "bg-emerald-500", icon: "fa-check-circle",
+                        packet_decode: { "Message Type": "5 (ACK)", "Lease Time (Opt 51)": "691200s", "Router (Opt 3)": "192.168.1.1", "DNS (Opt 6)": "8.8.8.8" }
+                    }
                 }
-            },
-            {
-                step: 4,
-                time: "00:00:04",
-                phase: "OFFER (L2)",
-                title: "Relay Trả OFFER cho Client",
-                description: `Relay Agent nhận được gói Unicast OFFER. Nó gỡ bỏ các tiêu đề định tuyến phụ, đọc địa chỉ MAC đích và chuyển tiếp gói OFFER (bằng Broadcast hoặc Unicast) ngược vào phân đoạn mạng Layer 2 của Client (VLAN 10).`,
-                cli_logs: `Relay# DHCP: Received OFFER for AA:AA:AA:AA:AA:AA from 10.0.99.10\nRelay# DHCP: Forwarding OFFER to VLAN 10 interface`,
-                nodes: {
-                    Client: { label: "Client (VLAN 10)", state: "REQUESTING", role: "0.0.0.0", color: "indigo" },
-                    Relay: { label: "Gateway (Relay)", state: "PROXY", role: "10.0.10.1", color: "blue" },
-                    Server: { label: "DHCP Server", state: "WAIT_ACK", role: "10.0.99.10", color: "indigo" }
+            ],
+            relay: [
+                {
+                    step: 1,
+                    time: "00:00:01",
+                    phase: "DISCOVER (L2)",
+                    title: "Client Broadcast DISCOVER",
+                    description: `Client vừa kết nối mạng (VLAN 10) và cần xin IP. Nó gửi một gói tin DHCP DISCOVER Broadcast. Mặc định Router/Gateway sẽ <strong>chặn toàn bộ gói Broadcast</strong> tại cổng L3. Do đó, gói tin dừng lại ở thiết bị Relay Agent.`,
+                    cli_logs: `C:\\> ipconfig /renew\n\n*Sending DHCP DISCOVER...\nSrc MAC: AA:AA:AA:AA:AA:AA\nDst IP: 255.255.255.255`,
+                    nodes: {
+                        Client: { label: "Client (VLAN 10)", state: "INIT", role: "0.0.0.0", color: "slate" },
+                        Relay: { label: "Gateway (Relay)", state: "LISTEN", role: "10.0.10.1", color: "slate" },
+                        Server: { label: "DHCP Server", state: "IDLE", role: "10.0.99.10", color: "slate" }
+                    },
+                    links: [
+                        { source: "Client", target: "Relay", state: "ACTIVE" },
+                        { source: "Relay", target: "Server", state: "IDLE" }
+                    ],
+                    link_state: "Broadcast L2 bị chặn tại Gateway",
+                    animated_packet: {
+                        from: "Client", to: "Relay", label: "DISCOVER (Bcast)", color: "bg-slate-500", icon: "fa-search",
+                        packet_decode: { "Layer 2": "Dst MAC: FF:FF:FF:FF:FF:FF", "Layer 3": "Src IP: 0.0.0.0, Dst IP: 255.255.255.255", "GIADDR": "0.0.0.0" }
+                    }
                 },
-                links: [
-                    { source: "Client", target: "Relay", state: "ACTIVE" },
-                    { source: "Relay", target: "Server", state: "IDLE" }
-                ],
-                link_state: "Relay Forward OFFER cho Client",
-                animated_packet: {
-                    from: "Relay", to: "Client", label: "OFFER (Bcast)", color: "bg-amber-400", icon: "fa-gift",
-                    packet_decode: { "Layer 3": "Src: 10.0.10.1, Dst: 255.255.255.255", "YIADDR": "10.0.10.50", "Server ID": "10.0.99.10" }
-                }
-            },
-            {
-                step: 5,
-                time: "00:00:06",
-                phase: "ACK",
-                title: "Hoàn tất (REQUEST & ACK)",
-                description: `Quá trình REQUEST và ACK cuối cùng cũng phải đi xuyên qua Relay tương tự như 4 bước trên. Khi hoàn tất, Client nhận được bản tin DHCP ACK, ghi nhận IP 10.0.10.50, Subnet Mask và Gateway. Hoàn tất cấp phát IP liên mạng!`,
-                cli_logs: `C:\\> IPv4 Address. . . . . . . . . . . : 10.0.10.50\n  Subnet Mask . . . . . . . . . . . : 255.255.255.0\n  Default Gateway . . . . . . . . . : 10.0.10.1`,
-                nodes: {
-                    Client: { label: "Client (VLAN 10)", state: "BOUND", role: "10.0.10.50", color: "emerald" },
-                    Relay: { label: "Gateway (Relay)", state: "IDLE", role: "10.0.10.1", color: "slate" },
-                    Server: { label: "DHCP Server", state: "BOUND", role: "10.0.99.10", color: "emerald" }
+                {
+                    step: 2,
+                    time: "00:00:02",
+                    phase: "DISCOVER (L3)",
+                    title: "Relay Proxy (Unicast)",
+                    description: `Tính năng Relay Agent trên Gateway "bắt" được gói DISCOVER. Nó sửa trường <strong>GIADDR</strong> (Gateway IP) thành IP của mình (10.0.10.1), chèn Option 82, rồi đóng gói lại thành <strong>Unicast</strong> định tuyến mạng lõi tới DHCP Server.`,
+                    cli_logs: `Relay# DHCP: Received DISCOVER from AA:AA:AA:AA:AA:AA\nRelay# DHCP: Forwarding to 10.0.99.10 (Unicast)\nRelay# DHCP: GIADDR set to 10.0.10.1\nRelay# DHCP: Inserted Option 82`,
+                    nodes: {
+                        Client: { label: "Client (VLAN 10)", state: "SELECTING", role: "0.0.0.0", color: "amber" },
+                        Relay: { label: "Gateway (Relay)", state: "PROXY", role: "10.0.10.1", color: "blue" },
+                        Server: { label: "DHCP Server", state: "LISTEN", role: "10.0.99.10", color: "slate" }
+                    },
+                    links: [
+                        { source: "Client", target: "Relay", state: "IDLE" },
+                        { source: "Relay", target: "Server", state: "ACTIVE" }
+                    ],
+                    link_state: "Relay đóng gói Unicast tới Server",
+                    animated_packet: {
+                        from: "Relay", to: "Server", label: "DISCOVER (Uni)", color: "bg-blue-600", icon: "fa-forward",
+                        packet_decode: { "Layer 3": "Src IP: 10.0.10.1, Dst IP: 10.0.99.10", "GIADDR": "10.0.10.1", "Option 82": "Vlan10+GigabitEthernet1/0/2" }
+                    }
                 },
-                links: [
-                    { source: "Client", target: "Relay", state: "IDLE" },
-                    { source: "Relay", target: "Server", state: "IDLE" }
-                ],
-                link_state: "Cấp phát IP hoàn tất",
-                animated_packet: {
-                    from: "Server", to: "Client", label: "ACK", color: "bg-emerald-500", icon: "fa-check-circle",
-                    packet_decode: { "Message Type": "5 (ACK)", "YIADDR": "10.0.10.50", "Option 51 (Lease)": "86400s", "GIADDR": "10.0.10.1" }
+                {
+                    step: 3,
+                    time: "00:00:03",
+                    phase: "OFFER (L3)",
+                    title: "Server Cấp Phát (OFFER)",
+                    description: `DHCP Server nhận Unicast từ Relay. Nó đọc trường <strong>GIADDR (10.0.10.1)</strong> để biết Client nằm ở Subnet nào (VLAN 10), từ đó lấy IP 10.0.10.50. Server gửi bản tin OFFER dưới dạng Unicast ngược về lại cho Relay Agent.`,
+                    cli_logs: `Server# DHCPDISCOVER from AA:AA:AA:AA:AA:AA via 10.0.10.1\nServer# DHCPOFFER on 10.0.10.50 to AA:AA:AA:AA:AA:AA via 10.0.10.1\nServer# Sending Unicast to 10.0.10.1`,
+                    nodes: {
+                        Client: { label: "Client (VLAN 10)", state: "SELECTING", role: "0.0.0.0", color: "amber" },
+                        Relay: { label: "Gateway (Relay)", state: "PROXY", role: "10.0.10.1", color: "blue" },
+                        Server: { label: "DHCP Server", state: "OFFERING", role: "10.0.99.10", color: "indigo" }
+                    },
+                    links: [
+                        { source: "Client", target: "Relay", state: "IDLE" },
+                        { source: "Relay", target: "Server", state: "ACTIVE" }
+                    ],
+                    link_state: "Server phản hồi qua Unicast",
+                    animated_packet: {
+                        from: "Server", to: "Relay", label: "OFFER (Uni)", color: "bg-amber-500", icon: "fa-gift",
+                        packet_decode: { "Layer 3": "Src IP: 10.0.99.10, Dst IP: 10.0.10.1", "YIADDR (Your IP)": "10.0.10.50", "GIADDR": "10.0.10.1" }
+                    }
+                },
+                {
+                    step: 4,
+                    time: "00:00:04",
+                    phase: "OFFER (L2)",
+                    title: "Relay Trả OFFER cho Client",
+                    description: `Relay Agent nhận được gói Unicast OFFER. Nó gỡ bỏ các tiêu đề định tuyến phụ, đọc địa chỉ MAC đích và chuyển tiếp gói OFFER (bằng Broadcast hoặc Unicast) ngược vào phân đoạn mạng Layer 2 của Client (VLAN 10).`,
+                    cli_logs: `Relay# DHCP: Received OFFER for AA:AA:AA:AA:AA:AA from 10.0.99.10\nRelay# DHCP: Forwarding OFFER to VLAN 10 interface`,
+                    nodes: {
+                        Client: { label: "Client (VLAN 10)", state: "REQUESTING", role: "0.0.0.0", color: "indigo" },
+                        Relay: { label: "Gateway (Relay)", state: "PROXY", role: "10.0.10.1", color: "blue" },
+                        Server: { label: "DHCP Server", state: "WAIT_ACK", role: "10.0.99.10", color: "indigo" }
+                    },
+                    links: [
+                        { source: "Client", target: "Relay", state: "ACTIVE" },
+                        { source: "Relay", target: "Server", state: "IDLE" }
+                    ],
+                    link_state: "Relay Forward OFFER cho Client",
+                    animated_packet: {
+                        from: "Relay", to: "Client", label: "OFFER (Bcast)", color: "bg-amber-400", icon: "fa-gift",
+                        packet_decode: { "Layer 3": "Src: 10.0.10.1, Dst: 255.255.255.255", "YIADDR": "10.0.10.50", "Server ID": "10.0.99.10" }
+                    }
+                },
+                {
+                    step: 5,
+                    time: "00:00:06",
+                    phase: "ACK",
+                    title: "Hoàn tất (REQUEST & ACK)",
+                    description: `Quá trình REQUEST và ACK cuối cùng cũng đi xuyên qua Relay tương tự. Khi hoàn tất, Client nhận được bản tin DHCP ACK, ghi nhận IP 10.0.10.50, Subnet Mask và Gateway. Cấp phát IP liên mạng thành công!`,
+                    cli_logs: `C:\\> IPv4 Address. . . . . . . . . . . : 10.0.10.50\n  Subnet Mask . . . . . . . . . . . : 255.255.255.0\n  Default Gateway . . . . . . . . . : 10.0.10.1`,
+                    nodes: {
+                        Client: { label: "Client (VLAN 10)", state: "BOUND", role: "10.0.10.50", color: "emerald" },
+                        Relay: { label: "Gateway (Relay)", state: "IDLE", role: "10.0.10.1", color: "slate" },
+                        Server: { label: "DHCP Server", state: "BOUND", role: "10.0.99.10", color: "emerald" }
+                    },
+                    links: [
+                        { source: "Client", target: "Relay", state: "IDLE" },
+                        { source: "Relay", target: "Server", state: "IDLE" }
+                    ],
+                    link_state: "Cấp phát IP hoàn tất",
+                    animated_packet: {
+                        from: "Server", to: "Client", label: "ACK", color: "bg-emerald-500", icon: "fa-check-circle",
+                        packet_decode: { "Message Type": "5 (ACK)", "YIADDR": "10.0.10.50", "Option 51 (Lease)": "86400s", "GIADDR": "10.0.10.1" }
+                    }
                 }
-            }
-        ];
+            ]
+        };
 
-        class MultiNodeSimulator {
+        class MasterSimulator {
             constructor() {
                 this.currentIndex = 0;
                 this.isPlaying = false;
                 this.intervalId = null;
                 this.currentAnimation = null;
+                this.mode = 'local';
+                this.timeline = TIMELINES[this.mode];
                 
                 this.dom = {
                     timelineContainer: document.getElementById('stepper-container'),
@@ -317,15 +402,76 @@
                     packetLabel: document.getElementById('packet-label'),
                     
                     decodePanel: document.getElementById('decode-panel'),
-                    decodeBody: document.getElementById('decode-body')
+                    decodeBody: document.getElementById('decode-body'),
+
+                    nodeClient: document.getElementById('node-Client'),
+                    nodeRelay: document.getElementById('node-Relay'),
+                    nodeServer: document.getElementById('node-Server'),
+                    roleClient: document.getElementById('role-Client'),
+                    roleServer: document.getElementById('role-Server')
                 };
 
-                // Handle resize to redraw links accurately
                 window.addEventListener('resize', () => {
-                    this.drawLinks(labTimeline[this.currentIndex].links);
+                    this.drawLinks(this.timeline[this.currentIndex].links);
                 });
 
                 this.init();
+            }
+
+            switchMode(mode) {
+                if (this.mode === mode) return;
+                this.pause();
+                this.mode = mode;
+                this.timeline = TIMELINES[this.mode];
+
+                // Update Toggle Buttons UI
+                const btnLocal = document.getElementById('mode-local');
+                const btnRelay = document.getElementById('mode-relay');
+                const activeCls = 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400'.split(' ');
+                const inactiveCls = 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'.split(' ');
+
+                if (mode === 'local') {
+                    btnLocal.classList.add(...activeCls);
+                    btnLocal.classList.remove(...inactiveCls);
+                    btnRelay.classList.add(...inactiveCls);
+                    btnRelay.classList.remove(...activeCls);
+
+                    // Update Topology Layout
+                    this.dom.nodeRelay.classList.add('opacity-0', 'pointer-events-none', 'scale-75');
+                    this.dom.nodeRelay.classList.remove('opacity-100', 'scale-100');
+                    
+                    this.dom.nodeClient.style.left = '25%';
+                    this.dom.nodeClient.style.top = '50%';
+                    
+                    this.dom.nodeServer.style.left = '75%';
+                    this.dom.nodeServer.style.top = '50%';
+
+                    this.dom.roleClient.textContent = 'Client';
+                    this.dom.roleServer.textContent = 'DHCP Server';
+                } else {
+                    btnRelay.classList.add(...activeCls);
+                    btnRelay.classList.remove(...inactiveCls);
+                    btnLocal.classList.add(...inactiveCls);
+                    btnLocal.classList.remove(...activeCls);
+
+                    // Update Topology Layout
+                    this.dom.nodeRelay.classList.remove('opacity-0', 'pointer-events-none', 'scale-75');
+                    this.dom.nodeRelay.classList.add('opacity-100', 'scale-100');
+
+                    this.dom.nodeClient.style.left = '20%';
+                    this.dom.nodeClient.style.top = '75%';
+                    
+                    this.dom.nodeServer.style.left = '80%';
+                    this.dom.nodeServer.style.top = '75%';
+
+                    this.dom.roleClient.textContent = 'Client (VLAN 10)';
+                    this.dom.roleServer.textContent = 'Server (VLAN 99)';
+                }
+
+                // Small delay to allow CSS transition to finish before drawing links
+                setTimeout(() => {
+                    this.init();
+                }, 300);
             }
 
             init() {
@@ -363,11 +509,11 @@
 
             buildStepper() {
                 this.dom.timelineContainer.innerHTML = '';
-                labTimeline.forEach((data, index) => {
+                this.timeline.forEach((data, index) => {
                     const btn = document.createElement('button');
                     btn.id = `step-btn-${index}`;
                     btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm hover:scale-105`;
-                    btn.innerHTML = `<span class="hidden md:block">${data.step}. ${data.title.replace('Trạng thái ', '')}</span><span class="md:hidden">${data.step}</span>`;
+                    btn.innerHTML = `<span class="hidden md:block">${data.step}. ${data.phase}</span><span class="md:hidden">${data.step}</span>`;
                     btn.onclick = () => { this.pause(); this.renderStep(index); };
                     this.dom.timelineContainer.appendChild(btn);
                 });
@@ -377,7 +523,6 @@
                 if (!this.dom.linksSvg) return;
                 this.dom.linksSvg.innerHTML = '';
                 
-                // SVG coordinates are relative to the canvas itself
                 const canvasRect = this.dom.topologyCanvas.getBoundingClientRect();
 
                 links.forEach(link => {
@@ -416,10 +561,9 @@
 
             renderStep(index) {
                 this.currentIndex = index;
-                const data = labTimeline[index];
+                const data = this.timeline[index];
 
-                // Stepper Sync
-                for (let i = 0; i < labTimeline.length; i++) {
+                for (let i = 0; i < this.timeline.length; i++) {
                     const btn = document.getElementById(`step-btn-${i}`);
                     if (!btn) continue;
                     if (i < index) {
@@ -431,42 +575,41 @@
                     }
                 }
                 
-                const progressPercentage = (index / (labTimeline.length - 1)) * 100;
+                const progressPercentage = (index / (this.timeline.length - 1)) * 100;
                 this.dom.timelineProgress.style.width = `${progressPercentage}%`;
 
-                // Text Content
                 this.dom.phaseBadge.textContent = data.phase;
                 this.dom.timeBadge.innerHTML = `<i class="far fa-clock mr-1"></i>${data.time}`;
                 this.dom.stepTitle.textContent = data.title;
                 this.dom.stepDesc.innerHTML = `<strong>Tiến trình:</strong> ${data.description}`;
                 this.dom.cliLogs.textContent = data.cli_logs;
 
-                // Multi-Node Updates
                 Object.keys(data.nodes).forEach(nodeId => {
                     const nodeData = data.nodes[nodeId];
                     const stateEl = document.getElementById(`state-${nodeId}`);
+                    const roleEl = document.getElementById(`role-${nodeId}`);
                     const cardEl = document.getElementById(`node-${nodeId}`);
                     
                     if (stateEl && cardEl) {
                         stateEl.textContent = nodeData.state;
                         stateEl.className = `text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded transition-colors ${this.getColorClasses(nodeData.color, 'bg')} border`;
                         
-                        cardEl.className = `absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10 ${index === labTimeline.length - 1 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
+                        if(roleEl && nodeData.role) {
+                            if(nodeId === 'Client') roleEl.textContent = this.mode === 'local' ? `Client (${nodeData.role})` : `Client (VLAN 10)`;
+                        }
+
+                        cardEl.className = `absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10 ${index === this.timeline.length - 1 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
                     }
                 });
 
                 if (this.dom.linkStatusText) this.dom.linkStatusText.textContent = data.link_state;
-
-                // Draw SVG Links
                 this.drawLinks(data.links);
-
-                // Packet Animation
                 this.handlePacketAnimation(data.animated_packet);
 
                 if (this.dom.btnPrev) this.dom.btnPrev.disabled = index === 0;
-                if (this.dom.btnNext) this.dom.btnNext.disabled = index === labTimeline.length - 1;
+                if (this.dom.btnNext) this.dom.btnNext.disabled = index === this.timeline.length - 1;
                 
-                if (index === labTimeline.length - 1 && this.isPlaying) {
+                if (index === this.timeline.length - 1 && this.isPlaying) {
                     this.pause();
                 }
             }
@@ -482,7 +625,6 @@
                     return;
                 }
                 
-                // Decode Panel Update
                 if (packetData.packet_decode && this.dom.decodePanel) {
                     this.dom.decodePanel.classList.remove('hidden');
                     this.dom.decodeBody.innerHTML = Object.entries(packetData.packet_decode).map(([key, val]) => `
@@ -499,7 +641,6 @@
                 this.dom.packetIcon.className = `fas ${packetData.icon}`;
                 this.dom.animatedPacket.className = `absolute z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-bold text-white whitespace-nowrap ${packetData.color} shadow-lg`;
                 
-                // Web Animations API for dynamic Node-to-Node routing
                 const srcNode = document.getElementById('node-' + packetData.from);
                 const tgtNode = document.getElementById('node-' + packetData.to);
                 
@@ -514,7 +655,6 @@
                     const tx = tRect.left - canvasRect.left + tRect.width / 2;
                     const ty = tRect.top - canvasRect.top + tRect.height / 2;
 
-                    // Ensure element is positioned at 0,0 originally so translate works from canvas origin
                     this.dom.animatedPacket.style.left = "0px";
                     this.dom.animatedPacket.style.top = "0px";
 
@@ -532,7 +672,7 @@
             }
 
             nextStep() {
-                if (this.currentIndex < labTimeline.length - 1) {
+                if (this.currentIndex < this.timeline.length - 1) {
                     this.renderStep(this.currentIndex + 1);
                 }
             }
@@ -552,7 +692,7 @@
             }
 
             play() {
-                if (this.currentIndex === labTimeline.length - 1) {
+                if (this.currentIndex === this.timeline.length - 1) {
                     this.renderStep(0);
                 }
                 this.isPlaying = true;
@@ -563,10 +703,10 @@
                     this.dom.btnPlay.classList.replace('shadow-blue-500/30', 'shadow-amber-500/30');
                 }
                 this.intervalId = setInterval(() => {
-                    if (this.currentIndex < labTimeline.length - 1) {
+                    if (this.currentIndex < this.timeline.length - 1) {
                         this.nextStep();
                     }
-                }, 4500); // Slightly longer for the multi-node animation
+                }, 4500);
             }
 
             pause() {
@@ -588,7 +728,14 @@
 
         let app;
         window.addEventListener('DOMContentLoaded', () => {
-            app = new MultiNodeSimulator();
+            app = new MasterSimulator();
+            
+            // Switch to local mode layout explicitly on first load
+            app.dom.nodeClient.style.left = '25%';
+            app.dom.nodeClient.style.top = '50%';
+            app.dom.nodeServer.style.left = '75%';
+            app.dom.nodeServer.style.top = '50%';
+            app.drawLinks(app.timeline[0].links);
         });
     </script>
 </body>
