@@ -602,3 +602,104 @@ Populate `playbookCases` with technically accurate command output for each
 case — exit codes, timing, and DNS response codes should be realistic and
 internally consistent with what's "broken" in that case.
 ```
+
+---
+
+## 9. Mode Toggle (Bộ chuyển chế độ)
+
+> **Quy tắc tự động quyết định:** Khi thiết kế một lab mới, AI phải tự đánh giá xem có nên bổ sung Mode Toggle hay không dựa trên tiêu chí sau — **không cần hỏi người dùng**.
+
+### Khi nào NÊN dùng Mode Toggle
+
+Dùng khi lab có **≥ 2 biến thể/chế độ** thể hiện **cùng một topology nhưng hành vi khác nhau**, và người dùng cần so sánh trực tiếp. Ví dụ:
+
+| Ngữ cảnh                            | Nên Toggle? | Lý do                                                     |
+| ----------------------------------- | ----------- | --------------------------------------------------------- |
+| DHCP Local vs DHCP Relay            | ✅ Có       | Cùng thiết bị, nhưng số node và packet flow khác nhau     |
+| STP vs PVST+ vs RSTP vs MSTP        | ✅ Có       | Cùng topology tam giác, nhưng cơ chế chặn cáp khác nhau   |
+| OSPF P2P vs Broadcast               | ✅ Có       | Cùng 2 router, nhưng DR/BDR election và LSDB khác         |
+| BGP iBGP vs eBGP                    | ✅ Có       | Cùng router pair, nhưng AS path và next-hop khác          |
+| NAT Static vs PAT (Overload)        | ✅ Có       | Cùng topology, nhưng translation table và port usage khác |
+| OSPF Adjacency (7 bước FSM)         | ❌ Không    | Chỉ có 1 kịch bản, dùng stepper thông thường              |
+| BGP FSM (5 trạng thái)              | ❌ Không    | Tuyến tính, không có biến thể để so sánh                  |
+| Troubleshooting / MOP / Packet Walk | ❌ Không    | Các bước tuyến tính theo thời gian, không có "chế độ"     |
+
+### Khi nào KHÔNG nên dùng
+
+- Lab chỉ có **1 kịch bản tuyến tính** → dùng Stepper thông thường.
+- Các biến thể có **topology hoàn toàn khác nhau** (số lượng node chênh lệch nhiều) → tạo 2 lab riêng.
+- Có **> 5 biến thể** → dùng KB Tabs (Diagnostic Playbook format) thay vì Toggle.
+
+---
+
+### Form HTML chuẩn (copy y chang, không sáng tạo thêm)
+
+Đặt ngay **phía trên** section Timeline Stepper, bên trong `<main>`:
+
+```html
+<!-- Mode Toggle — chỉ dùng khi có >= 2 chế độ/biến thể -->
+<div class="flex items-center justify-center">
+    <div
+        class="flex flex-wrap justify-center items-center bg-slate-200/50 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700"
+    >
+        <button
+            id="mode-btn-A"
+            onclick="app.switchMode('A')"
+            class="mode-btn px-5 py-2 text-sm font-bold rounded-md transition-all"
+        >
+            Tên Chế Độ A
+        </button>
+        <button
+            id="mode-btn-B"
+            onclick="app.switchMode('B')"
+            class="mode-btn px-5 py-2 text-sm font-bold rounded-md transition-all"
+        >
+            Tên Chế Độ B
+        </button>
+    </div>
+</div>
+```
+
+**Quy tắc HTML bất biến:**
+
+- Container class: `bg-slate-200/50 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700` — không thay `rounded-xl`, không thêm `gap-1` hay `p-1.5`.
+- Button class base: `px-5 py-2 text-sm font-bold rounded-md` — không dùng `rounded-lg`, không dùng `px-4`.
+- **Không đặt icon `<i class="fas...">` bên trong nút.** Tên nút là text thuần. Có thể thêm chú thích chuẩn nhỏ: `STP <span class="font-normal text-[11px] opacity-70">802.1D</span>`.
+
+---
+
+### Logic JS chuẩn (copy y chang, không sáng tạo thêm)
+
+```javascript
+// Class không thay đổi theo chế độ — tất cả dùng chung 1 màu Active
+const TOGGLE_ACTIVE   = 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400';
+const TOGGLE_INACTIVE = 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200';
+
+updateModeToggleUI() {
+  const allModes = ['A', 'B']; // Liệt kê đúng tất cả key
+  allModes.forEach(key => {
+    const btn = document.getElementById(`mode-btn-${key}`);
+    if (!btn) return;
+    btn.className = `mode-btn px-5 py-2 text-sm font-bold rounded-md transition-all ${
+      key === this.mode ? TOGGLE_ACTIVE : TOGGLE_INACTIVE
+    }`;
+  });
+}
+
+switchMode(mode) {
+  if (this.mode === mode) return;
+  this.pause();
+  this.mode = mode;
+  this.currentIndex = 0;
+  this.updateModeToggleUI();
+  this.buildStepper();
+  this.renderStep(0);
+  // Nếu số node thay đổi: setTimeout(() => { this.init(); }, 300)
+}
+```
+
+**Quy tắc JS bất biến:**
+
+- Active class **luôn là `text-blue-600`** — tuyệt đối không đổi màu theo từng chế độ (ví dụ: không làm RSTP xanh lá, MSTP tím). Sự khác biệt thể hiện qua Topology/Animation, không qua màu nút.
+- `switchMode()` phải gọi `this.pause()` trước tiên để tránh bug auto-play chạy tiếp sau khi đổi chế độ.
+- Nếu số node thay đổi giữa các chế độ: ẩn node thừa bằng `opacity-0 pointer-events-none scale-75`, hiện lại bằng `opacity-100 scale-100`, dùng `setTimeout(..., 300)` trước `drawLinks()`.
