@@ -76,15 +76,18 @@ Requirements:
      link_state,
      animated_packet: { from, to, label, color, icon, packet_decode: { field: value } | null } | null }
 
-2. Header: logo badge (network-wired icon) + "← Portfolio" link back to
-   ../../index.html + playback controls (⏮ ▶/⏸ ⏭ ↺) + theme toggle (🌓), matching
-   the existing project pages exactly.
+2. Header: sticky at the top, containing the logo badge + "← Portfolio" link back to
+   ../../index.html on the left, AND the full suite of playback controls (⏮ ▶/⏸ ⏭ ↺)
+   + theme toggle (🌓) grouped together on the right side of the header. Do NOT put
+   playback controls in the main body/stepper area.
 
 3. Visual topology: device cards connected by a link line, with an animated
    packet element that moves along the link per `animated_packet`.
 
-4. Interactive timeline stepper: horizontal step buttons, active step
-   highlighted, clickable to jump to any state, progress line underneath.
+4. Interactive timeline stepper: must be located inside the main body container
+   (NOT in the header). It should be a horizontal bar with a progress line behind it,
+   and the step buttons must contain the step title (e.g. `1. INIT`, `2. 2-WAY`)
+   visible on desktop (hidden on mobile), active step highlighted, clickable.
 
 5. Terminal/CLI window: dark, monospace, Mac-style traffic-light dots,
    rendering `cli_logs` for the current step.
