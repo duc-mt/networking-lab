@@ -96,6 +96,21 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        id: 'dhcp-relay-fsm',
+        title: 'DHCP Relay Agent',
+        topic: 'Network Services',
+        category: 'protocol',
+        type: 'protocol',
+        status: 'live',
+        dateAdded: '2026-09-27',
+        image: 'assets/images/protocol-placeholder.jpg',
+        description:
+            'Mô phỏng cơ chế cấp phát IP liên mạng qua DHCP Relay Agent (Gateway L3), bóc tách Option 82 và nguyên lý chặn Broadcast.',
+        tags: ['DHCP', 'Relay', 'Gateway', 'Option 82', 'Unicast'],
+        href: 'projects/protocol/dhcp-relay.html',
+    },
+
+    {
         id: 'dhcp-dora-fsm',
         title: 'DHCP DORA Process',
         category: 'protocol',

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DHCP Relay Agent Simulator</title>
+
+    <script src="../../assets/js/theme-init.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+
+    <style>
+        @keyframes emeraldPulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .sync-pulse { animation: emeraldPulse 2s infinite; border-color: #10b981 !important; }
+        @keyframes dash {
+            to { stroke-dashoffset: -16; }
+        }
+        .animate-dash { animation: dash 1s linear infinite; }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0" title="Về trang chủ Portfolio">
+                    <i class="fas fa-network-wired"></i>
+                </a>
+                <div>
+                    <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                        <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                    </a>
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">DHCP Relay Agent (Multi-Node)</h1>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+                <button id="btn-prev" onclick="app.prevStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-backward"></i></button>
+                <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/30 transition-all-fast"><i id="icon-play" class="fas fa-play ml-1"></i></button>
+                <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-forward"></i></button>
+                <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
+                <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i id="theme-icon" class="fas fa-sun"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-8">
+        
+        <!-- Timeline Stepper -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors relative overflow-hidden">
+            <h2 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Trình tự D.O.R.A qua Relay Agent (5 Bước)</h2>
+            <div class="relative flex justify-between items-center w-full">
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
+                <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out"></div>
+                <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-2"></div>
+            </div>
+        </section>
+
+        <!-- Topology Canvas (Multi-Node Absolute Positioning) -->
+        <section class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[450px] md:min-h-[550px]">
+            <!-- Dynamic SVG Links -->
+            <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
+
+            <!-- Node 1: Client -->
+            <div id="node-Client" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10" style="left: 20%; top: 75%; transform: translate(-50%, -50%);">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-blue-200 dark:border-blue-700/50 whitespace-nowrap" id="role-Client">Client (VLAN 10)</div>
+                <div class="w-12 h-12 md:w-16 md:h-16 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                    <i class="fas fa-laptop text-2xl md:text-3xl text-slate-700 dark:text-slate-300"></i>
+                </div>
+                <h3 class="text-lg md:text-xl font-extrabold text-slate-800 dark:text-white tracking-tight">PC Client</h3>
+                <span id="state-Client" class="text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded">INIT</span>
+            </div>
+
+            <!-- Node 2: Relay Agent -->
+            <div id="node-Relay" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10" style="left: 50%; top: 25%; transform: translate(-50%, -50%);">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-purple-200 dark:border-purple-700/50 whitespace-nowrap" id="role-Relay">Gateway L3</div>
+                <div class="w-12 h-12 md:w-16 md:h-16 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                    <i class="fas fa-route text-2xl md:text-3xl text-slate-700 dark:text-slate-300"></i>
+                </div>
+                <h3 class="text-lg md:text-xl font-extrabold text-slate-800 dark:text-white tracking-tight text-center">Relay Agent</h3>
+                <span id="state-Relay" class="text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded">LISTEN</span>
+            </div>
+
+            <!-- Node 3: DHCP Server -->
+            <div id="node-Server" class="absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10" style="left: 80%; top: 75%; transform: translate(-50%, -50%);">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 px-3 py-0.5 rounded-full text-[10px] md:text-xs font-bold border border-emerald-200 dark:border-emerald-700/50 whitespace-nowrap" id="role-Server">Server (VLAN 99)</div>
+                <div class="w-12 h-12 md:w-16 md:h-16 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                    <i class="fas fa-server text-2xl md:text-3xl text-slate-700 dark:text-slate-300"></i>
+                </div>
+                <h3 class="text-lg md:text-xl font-extrabold text-slate-800 dark:text-white tracking-tight text-center">DHCP Server</h3>
+                <span id="state-Server" class="text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded">IDLE</span>
+            </div>
+
+            <!-- Central Link Status Badge -->
+            <div id="link-status" class="absolute z-10 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded shadow text-center backdrop-blur-sm" style="left: 50%; top: 60%; transform: translate(-50%, -50%);">
+                <span class="block text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-0.5">Link State</span>
+                <span id="link-status-text" class="text-xs md:text-sm font-bold text-slate-600 dark:text-slate-300 font-mono"></span>
+            </div>
+
+            <!-- Dynamic Animated Packet -->
+            <div id="animated-packet" class="absolute z-50 hidden flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap shadow-lg" style="left: 0; top: 0; transform: translate(-50%, -50%);">
+                <i id="packet-icon" class="fas fa-envelope"></i>
+                <span id="packet-label">Packet</span>
+            </div>
+        </section>
+
+        <!-- Details & CLI Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center">
+                <div class="flex items-center gap-3 mb-4">
+                    <span id="phase-badge" class="px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded text-xs font-bold uppercase tracking-widest border border-amber-200 dark:border-amber-700/50">Giai đoạn</span>
+                    <span id="time-badge" class="text-sm font-mono text-slate-500 dark:text-slate-400"><i class="far fa-clock mr-1"></i>00:00:01</span>
+                </div>
+                <h3 id="step-title" class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Step Title</h3>
+                <div class="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
+                    <p id="step-desc" class="text-base md:text-lg leading-relaxed"></p>
+                </div>
+            </section>
+
+            <div class="flex flex-col gap-6">
+                <!-- Real-time CLI -->
+                <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-64 md:h-72">
+                    <div class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        </div>
+                        <span class="text-xs font-mono text-slate-400">Terminal Logs</span>
+                    </div>
+                    <div class="p-4 overflow-y-auto flex-1 font-mono text-xs md:text-sm text-emerald-400 whitespace-pre-wrap leading-relaxed shadow-inner" id="cli-logs"></div>
+                </section>
+
+                <!-- Decode Panel -->
+                <section id="decode-panel" class="hidden bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow flex-1 overflow-hidden transition-all duration-300">
+                    <div class="bg-slate-50 dark:bg-slate-900/50 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-bold text-sm">
+                            <i class="fas fa-microscope text-blue-500"></i> Bóc tách Gói tin
+                        </div>
+                        <span class="text-[10px] font-mono bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">WireShark View</span>
+                    </div>
+                    <div class="p-0 overflow-x-auto">
+                        <table class="w-full text-left text-xs font-mono">
+                            <tbody id="decode-body" class="divide-y divide-slate-100 dark:divide-slate-700/50 bg-slate-50 dark:bg-[#1e1e1e]/50 [&>tr:nth-child(even)]:bg-white dark:[&>tr:nth-child(even)]:bg-slate-800/30 px-4 block">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const labTimeline = [
+            {
+                step: 1,
+                time: "00:00:01",
+                phase: "DISCOVER (L2)",
+                title: "Client Broadcast DISCOVER",
+                description: `Client vừa kết nối mạng (VLAN 10) và cần xin IP. Nó gửi một gói tin DHCP DISCOVER Broadcast ra mạng nội bộ. Mặc định Router/Gateway sẽ <strong>chặn toàn bộ gói Broadcast</strong> tại cổng L3. Do đó, gói tin dừng lại ở thiết bị Relay Agent.`,
+                cli_logs: `C:\\> ipconfig /renew\n\n*Sending DHCP DISCOVER...\nSrc MAC: AA:AA:AA:AA:AA:AA\nDst IP: 255.255.255.255`,
+                nodes: {
+                    Client: { label: "Client (VLAN 10)", state: "INIT", role: "0.0.0.0", color: "slate" },
+                    Relay: { label: "Gateway (Relay)", state: "LISTEN", role: "10.0.10.1", color: "slate" },
+                    Server: { label: "DHCP Server", state: "IDLE", role: "10.0.99.10", color: "slate" }
+                },
+                links: [
+                    { source: "Client", target: "Relay", state: "ACTIVE" },
+                    { source: "Relay", target: "Server", state: "IDLE" }
+                ],
+                link_state: "Broadcast L2 bị chặn tại Gateway",
+                animated_packet: {
+                    from: "Client", to: "Relay", label: "DISCOVER (Bcast)", color: "bg-slate-500", icon: "fa-search",
+                    packet_decode: { "Layer 2": "Dst MAC: FF:FF:FF:FF:FF:FF", "Layer 3": "Src IP: 0.0.0.0, Dst IP: 255.255.255.255", "GIADDR": "0.0.0.0" }
+                }
+            },
+            {
+                step: 2,
+                time: "00:00:02",
+                phase: "DISCOVER (L3)",
+                title: "Relay Proxy (Unicast)",
+                description: `Tính năng Relay Agent trên Gateway "bắt" được gói DISCOVER. Nó sửa trường <strong>GIADDR</strong> (Gateway IP) thành IP của mình (10.0.10.1), chèn thêm Option 82 chứa thông tin vật lý (Port, VLAN), rồi đóng gói lại thành <strong>Unicast</strong> để định tuyến xuyên qua mạng lõi tới DHCP Server.`,
+                cli_logs: `Relay# DHCP: Received DISCOVER from AA:AA:AA:AA:AA:AA\nRelay# DHCP: Forwarding to 10.0.99.10 (Unicast)\nRelay# DHCP: GIADDR set to 10.0.10.1\nRelay# DHCP: Inserted Option 82`,
+                nodes: {
+                    Client: { label: "Client (VLAN 10)", state: "SELECTING", role: "0.0.0.0", color: "amber" },
+                    Relay: { label: "Gateway (Relay)", state: "PROXY", role: "10.0.10.1", color: "blue" },
+                    Server: { label: "DHCP Server", state: "LISTEN", role: "10.0.99.10", color: "slate" }
+                },
+                links: [
+                    { source: "Client", target: "Relay", state: "IDLE" },
+                    { source: "Relay", target: "Server", state: "ACTIVE" }
+                ],
+                link_state: "Relay đóng gói Unicast tới Server",
+                animated_packet: {
+                    from: "Relay", to: "Server", label: "DISCOVER (Uni)", color: "bg-blue-600", icon: "fa-forward",
+                    packet_decode: { "Layer 3": "Src IP: 10.0.10.1, Dst IP: 10.0.99.10", "GIADDR": "10.0.10.1", "Option 82": "Vlan10+GigabitEthernet1/0/2" }
+                }
+            },
+            {
+                step: 3,
+                time: "00:00:03",
+                phase: "OFFER (L3)",
+                title: "Server Cấp Phát (OFFER)",
+                description: `DHCP Server nhận Unicast từ Relay. Nó đọc trường <strong>GIADDR (10.0.10.1)</strong> để biết Client nằm ở Subnet nào (VLAN 10), từ đó lấy IP 10.0.10.50 từ Pool tương ứng. Server gửi bản tin OFFER dưới dạng Unicast ngược về lại cho Relay Agent.`,
+                cli_logs: `Server# DHCPDISCOVER from AA:AA:AA:AA:AA:AA via 10.0.10.1\nServer# DHCPOFFER on 10.0.10.50 to AA:AA:AA:AA:AA:AA via 10.0.10.1\nServer# Sending Unicast to 10.0.10.1`,
+                nodes: {
+                    Client: { label: "Client (VLAN 10)", state: "SELECTING", role: "0.0.0.0", color: "amber" },
+                    Relay: { label: "Gateway (Relay)", state: "PROXY", role: "10.0.10.1", color: "blue" },
+                    Server: { label: "DHCP Server", state: "OFFERING", role: "10.0.99.10", color: "indigo" }
+                },
+                links: [
+                    { source: "Client", target: "Relay", state: "IDLE" },
+                    { source: "Relay", target: "Server", state: "ACTIVE" }
+                ],
+                link_state: "Server phản hồi qua Unicast",
+                animated_packet: {
+                    from: "Server", to: "Relay", label: "OFFER (Uni)", color: "bg-amber-500", icon: "fa-gift",
+                    packet_decode: { "Layer 3": "Src IP: 10.0.99.10, Dst IP: 10.0.10.1", "YIADDR (Your IP)": "10.0.10.50", "GIADDR": "10.0.10.1" }
+                }
+            },
+            {
+                step: 4,
+                time: "00:00:04",
+                phase: "OFFER (L2)",
+                title: "Relay Trả OFFER cho Client",
+                description: `Relay Agent nhận được gói Unicast OFFER. Nó gỡ bỏ các tiêu đề định tuyến phụ, đọc địa chỉ MAC đích và chuyển tiếp gói OFFER (bằng Broadcast hoặc Unicast) ngược vào phân đoạn mạng Layer 2 của Client (VLAN 10).`,
+                cli_logs: `Relay# DHCP: Received OFFER for AA:AA:AA:AA:AA:AA from 10.0.99.10\nRelay# DHCP: Forwarding OFFER to VLAN 10 interface`,
+                nodes: {
+                    Client: { label: "Client (VLAN 10)", state: "REQUESTING", role: "0.0.0.0", color: "indigo" },
+                    Relay: { label: "Gateway (Relay)", state: "PROXY", role: "10.0.10.1", color: "blue" },
+                    Server: { label: "DHCP Server", state: "WAIT_ACK", role: "10.0.99.10", color: "indigo" }
+                },
+                links: [
+                    { source: "Client", target: "Relay", state: "ACTIVE" },
+                    { source: "Relay", target: "Server", state: "IDLE" }
+                ],
+                link_state: "Relay Forward OFFER cho Client",
+                animated_packet: {
+                    from: "Relay", to: "Client", label: "OFFER (Bcast)", color: "bg-amber-400", icon: "fa-gift",
+                    packet_decode: { "Layer 3": "Src: 10.0.10.1, Dst: 255.255.255.255", "YIADDR": "10.0.10.50", "Server ID": "10.0.99.10" }
+                }
+            },
+            {
+                step: 5,
+                time: "00:00:06",
+                phase: "ACK",
+                title: "Hoàn tất (REQUEST & ACK)",
+                description: `Quá trình REQUEST và ACK cuối cùng cũng phải đi xuyên qua Relay tương tự như 4 bước trên. Khi hoàn tất, Client nhận được bản tin DHCP ACK, ghi nhận IP 10.0.10.50, Subnet Mask và Gateway. Hoàn tất cấp phát IP liên mạng!`,
+                cli_logs: `C:\\> IPv4 Address. . . . . . . . . . . : 10.0.10.50\n  Subnet Mask . . . . . . . . . . . : 255.255.255.0\n  Default Gateway . . . . . . . . . : 10.0.10.1`,
+                nodes: {
+                    Client: { label: "Client (VLAN 10)", state: "BOUND", role: "10.0.10.50", color: "emerald" },
+                    Relay: { label: "Gateway (Relay)", state: "IDLE", role: "10.0.10.1", color: "slate" },
+                    Server: { label: "DHCP Server", state: "BOUND", role: "10.0.99.10", color: "emerald" }
+                },
+                links: [
+                    { source: "Client", target: "Relay", state: "IDLE" },
+                    { source: "Relay", target: "Server", state: "IDLE" }
+                ],
+                link_state: "Cấp phát IP hoàn tất",
+                animated_packet: {
+                    from: "Server", to: "Client", label: "ACK", color: "bg-emerald-500", icon: "fa-check-circle",
+                    packet_decode: { "Message Type": "5 (ACK)", "YIADDR": "10.0.10.50", "Option 51 (Lease)": "86400s", "GIADDR": "10.0.10.1" }
+                }
+            }
+        ];
+
+        class MultiNodeSimulator {
+            constructor() {
+                this.currentIndex = 0;
+                this.isPlaying = false;
+                this.intervalId = null;
+                this.currentAnimation = null;
+                
+                this.dom = {
+                    timelineContainer: document.getElementById('stepper-container'),
+                    timelineProgress: document.getElementById('timeline-progress'),
+                    btnPrev: document.getElementById('btn-prev'),
+                    btnNext: document.getElementById('btn-next'),
+                    btnPlay: document.getElementById('btn-play'),
+                    iconPlay: document.getElementById('icon-play'),
+                    themeIcon: document.getElementById('theme-icon'),
+                    
+                    phaseBadge: document.getElementById('phase-badge'),
+                    timeBadge: document.getElementById('time-badge'),
+                    stepTitle: document.getElementById('step-title'),
+                    stepDesc: document.getElementById('step-desc'),
+                    cliLogs: document.getElementById('cli-logs'),
+                    
+                    topologyCanvas: document.getElementById('topology-canvas'),
+                    linksSvg: document.getElementById('links-svg'),
+                    linkStatusText: document.getElementById('link-status-text'),
+                    
+                    animatedPacket: document.getElementById('animated-packet'),
+                    packetIcon: document.getElementById('packet-icon'),
+                    packetLabel: document.getElementById('packet-label'),
+                    
+                    decodePanel: document.getElementById('decode-panel'),
+                    decodeBody: document.getElementById('decode-body')
+                };
+
+                // Handle resize to redraw links accurately
+                window.addEventListener('resize', () => {
+                    this.drawLinks(labTimeline[this.currentIndex].links);
+                });
+
+                this.init();
+            }
+
+            init() {
+                this.buildStepper();
+                
+                let isDark = false;
+                try {
+                    const saved = localStorage.getItem('portfolio-theme');
+                    isDark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                } catch (e) {}
+                document.documentElement.classList.toggle('dark', isDark);
+                if (this.dom.themeIcon) this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+
+                this.renderStep(0);
+            }
+
+            toggleTheme() {
+                const isDark = !document.documentElement.classList.contains('dark');
+                document.documentElement.classList.toggle('dark', isDark);
+                if (this.dom.themeIcon) this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+            }
+
+            getColorClasses(colorName, type = 'bg') {
+                const colors = {
+                    slate: { bg: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600' },
+                    amber: { bg: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700/50' },
+                    blue: { bg: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700/50' },
+                    purple: { bg: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-300 dark:border-purple-700/50' },
+                    indigo: { bg: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700/50' },
+                    emerald: { bg: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/50' }
+                };
+                return colors[colorName] ? colors[colorName][type] : colors.slate[type];
+            }
+
+            buildStepper() {
+                this.dom.timelineContainer.innerHTML = '';
+                labTimeline.forEach((data, index) => {
+                    const btn = document.createElement('button');
+                    btn.id = `step-btn-${index}`;
+                    btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm hover:scale-105`;
+                    btn.innerHTML = `<span class="hidden md:block">${data.step}. ${data.title.replace('Trạng thái ', '')}</span><span class="md:hidden">${data.step}</span>`;
+                    btn.onclick = () => { this.pause(); this.renderStep(index); };
+                    this.dom.timelineContainer.appendChild(btn);
+                });
+            }
+
+            drawLinks(links) {
+                if (!this.dom.linksSvg) return;
+                this.dom.linksSvg.innerHTML = '';
+                
+                // SVG coordinates are relative to the canvas itself
+                const canvasRect = this.dom.topologyCanvas.getBoundingClientRect();
+
+                links.forEach(link => {
+                    const srcNode = document.getElementById('node-' + link.source);
+                    const tgtNode = document.getElementById('node-' + link.target);
+                    if (!srcNode || !tgtNode) return;
+
+                    const sRect = srcNode.getBoundingClientRect();
+                    const tRect = tgtNode.getBoundingClientRect();
+
+                    const sx = sRect.left - canvasRect.left + sRect.width / 2;
+                    const sy = sRect.top - canvasRect.top + sRect.height / 2;
+                    const tx = tRect.left - canvasRect.left + tRect.width / 2;
+                    const ty = tRect.top - canvasRect.top + tRect.height / 2;
+
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", sx);
+                    line.setAttribute("y1", sy);
+                    line.setAttribute("x2", tx);
+                    line.setAttribute("y2", ty);
+                    line.setAttribute("stroke-width", "4");
+                    line.setAttribute("stroke-dasharray", "10, 10");
+                    line.setAttribute("stroke-linecap", "round");
+
+                    if (link.state === "ACTIVE") {
+                        const isDark = document.documentElement.classList.contains('dark');
+                        line.setAttribute("stroke", isDark ? "#60a5fa" : "#3b82f6");
+                        line.classList.add("animate-dash");
+                    } else {
+                        const isDark = document.documentElement.classList.contains('dark');
+                        line.setAttribute("stroke", isDark ? "rgba(71, 85, 105, 0.4)" : "rgba(203, 213, 225, 0.6)");
+                    }
+                    this.dom.linksSvg.appendChild(line);
+                });
+            }
+
+            renderStep(index) {
+                this.currentIndex = index;
+                const data = labTimeline[index];
+
+                // Stepper Sync
+                for (let i = 0; i < labTimeline.length; i++) {
+                    const btn = document.getElementById(`step-btn-${i}`);
+                    if (!btn) continue;
+                    if (i < index) {
+                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-500 text-white border-blue-500 cursor-pointer shadow hover:bg-blue-600`;
+                    } else if (i === index) {
+                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-500 border-blue-300 dark:border-blue-700 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/50`;
+                    } else {
+                        btn.className = `relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700`;
+                    }
+                }
+                
+                const progressPercentage = (index / (labTimeline.length - 1)) * 100;
+                this.dom.timelineProgress.style.width = `${progressPercentage}%`;
+
+                // Text Content
+                this.dom.phaseBadge.textContent = data.phase;
+                this.dom.timeBadge.innerHTML = `<i class="far fa-clock mr-1"></i>${data.time}`;
+                this.dom.stepTitle.textContent = data.title;
+                this.dom.stepDesc.innerHTML = `<strong>Tiến trình:</strong> ${data.description}`;
+                this.dom.cliLogs.textContent = data.cli_logs;
+
+                // Multi-Node Updates
+                Object.keys(data.nodes).forEach(nodeId => {
+                    const nodeData = data.nodes[nodeId];
+                    const stateEl = document.getElementById(`state-${nodeId}`);
+                    const cardEl = document.getElementById(`node-${nodeId}`);
+                    
+                    if (stateEl && cardEl) {
+                        stateEl.textContent = nodeData.state;
+                        stateEl.className = `text-xs md:text-sm font-black tracking-widest px-2 py-1 mt-2 rounded transition-colors ${this.getColorClasses(nodeData.color, 'bg')} border`;
+                        
+                        cardEl.className = `absolute w-36 md:w-56 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-5 border-2 shadow-lg flex flex-col items-center transition-all duration-300 z-10 ${index === labTimeline.length - 1 ? 'border-emerald-500 shadow-emerald-500/20 sync-pulse' : 'border-slate-200 dark:border-slate-700'}`;
+                    }
+                });
+
+                if (this.dom.linkStatusText) this.dom.linkStatusText.textContent = data.link_state;
+
+                // Draw SVG Links
+                this.drawLinks(data.links);
+
+                // Packet Animation
+                this.handlePacketAnimation(data.animated_packet);
+
+                if (this.dom.btnPrev) this.dom.btnPrev.disabled = index === 0;
+                if (this.dom.btnNext) this.dom.btnNext.disabled = index === labTimeline.length - 1;
+                
+                if (index === labTimeline.length - 1 && this.isPlaying) {
+                    this.pause();
+                }
+            }
+
+            handlePacketAnimation(packetData) {
+                if (this.currentAnimation) {
+                    this.currentAnimation.cancel();
+                }
+                
+                if (!packetData) {
+                    this.dom.animatedPacket.classList.add('hidden');
+                    if (this.dom.decodePanel) this.dom.decodePanel.classList.add('hidden');
+                    return;
+                }
+                
+                // Decode Panel Update
+                if (packetData.packet_decode && this.dom.decodePanel) {
+                    this.dom.decodePanel.classList.remove('hidden');
+                    this.dom.decodeBody.innerHTML = Object.entries(packetData.packet_decode).map(([key, val]) => `
+                        <tr class="w-full flex">
+                            <td class="py-2 px-4 font-semibold text-slate-400 w-1/3 min-w-[120px] whitespace-nowrap">${key}</td>
+                            <td class="py-2 pr-4 text-emerald-400 w-2/3 break-words">${val}</td>
+                        </tr>
+                    `).join('');
+                } else if (this.dom.decodePanel) {
+                    this.dom.decodePanel.classList.add('hidden');
+                }
+
+                this.dom.packetLabel.textContent = packetData.label;
+                this.dom.packetIcon.className = `fas ${packetData.icon}`;
+                this.dom.animatedPacket.className = `absolute z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-bold text-white whitespace-nowrap ${packetData.color} shadow-lg`;
+                
+                // Web Animations API for dynamic Node-to-Node routing
+                const srcNode = document.getElementById('node-' + packetData.from);
+                const tgtNode = document.getElementById('node-' + packetData.to);
+                
+                if (srcNode && tgtNode) {
+                    this.dom.animatedPacket.classList.remove('hidden');
+                    const canvasRect = this.dom.topologyCanvas.getBoundingClientRect();
+                    const sRect = srcNode.getBoundingClientRect();
+                    const tRect = tgtNode.getBoundingClientRect();
+
+                    const sx = sRect.left - canvasRect.left + sRect.width / 2;
+                    const sy = sRect.top - canvasRect.top + sRect.height / 2;
+                    const tx = tRect.left - canvasRect.left + tRect.width / 2;
+                    const ty = tRect.top - canvasRect.top + tRect.height / 2;
+
+                    // Ensure element is positioned at 0,0 originally so translate works from canvas origin
+                    this.dom.animatedPacket.style.left = "0px";
+                    this.dom.animatedPacket.style.top = "0px";
+
+                    this.currentAnimation = this.dom.animatedPacket.animate([
+                        { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(0.8)`, opacity: 0 },
+                        { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(1)`, opacity: 1, offset: 0.1 },
+                        { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(1)`, opacity: 1, offset: 0.9 },
+                        { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(0.8)`, opacity: 0, offset: 1 }
+                    ], {
+                        duration: 2500,
+                        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                        fill: 'forwards'
+                    });
+                }
+            }
+
+            nextStep() {
+                if (this.currentIndex < labTimeline.length - 1) {
+                    this.renderStep(this.currentIndex + 1);
+                }
+            }
+
+            prevStep() {
+                if (this.currentIndex > 0) {
+                    this.renderStep(this.currentIndex - 1);
+                }
+            }
+
+            togglePlay() {
+                if (this.isPlaying) {
+                    this.pause();
+                } else {
+                    this.play();
+                }
+            }
+
+            play() {
+                if (this.currentIndex === labTimeline.length - 1) {
+                    this.renderStep(0);
+                }
+                this.isPlaying = true;
+                if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-pause';
+                if (this.dom.btnPlay) {
+                    this.dom.btnPlay.classList.replace('bg-blue-600', 'bg-amber-500');
+                    this.dom.btnPlay.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
+                    this.dom.btnPlay.classList.replace('shadow-blue-500/30', 'shadow-amber-500/30');
+                }
+                this.intervalId = setInterval(() => {
+                    if (this.currentIndex < labTimeline.length - 1) {
+                        this.nextStep();
+                    }
+                }, 4500); // Slightly longer for the multi-node animation
+            }
+
+            pause() {
+                this.isPlaying = false;
+                clearInterval(this.intervalId);
+                if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-play ml-1';
+                if (this.dom.btnPlay) {
+                    this.dom.btnPlay.classList.replace('bg-amber-500', 'bg-blue-600');
+                    this.dom.btnPlay.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
+                    this.dom.btnPlay.classList.replace('shadow-amber-500/30', 'shadow-blue-500/30');
+                }
+            }
+
+            reset() {
+                this.pause();
+                this.renderStep(0);
+            }
+        }
+
+        let app;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new MultiNodeSimulator();
+        });
+    </script>
+</body>
+</html>
