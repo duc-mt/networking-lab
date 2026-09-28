@@ -483,7 +483,9 @@ Requirements:
    `nodes`: Array of devices:
      [{ id, name, role, zone, icon, x, y, specs: { ip, loopback, asn, vlans, fhrp, ... },
         tableType: "routing" | "vlans" | "bgp" | "interfaces" | "policies",
-        tableData: [...] }]
+        tableData: [...],
+        health: "green" | "amber" | "red", state: "active" | "inactive",
+        risks: [ "SPOF" | "No HA" | ... ] }]   // màu theo Section 13.6
    `links`: Array of connections:
      [{ from, to, label, type: "trunk" | "routed" | "overlay" | "peer", metric, vlan, bandwidth }]
 
@@ -507,6 +509,8 @@ Requirements:
    - Trace end-to-end traffic path across hops, highlight active links on the canvas, and list the hop-by-hop forwarding decisions (e.g. LACP ➔ SVI ➔ Route Lookup ➔ Tunnel Encap ➔ Destination).
 
 7. All visible UI text in Vietnamese, adhering to the Bilingual Standards (Section 11).
+8. Node health / inactive / risk / highlight colors MUST follow the Semantic Color
+   Contract (Section 13.6) — one color, one meaning.
 ```
 
 ---
@@ -866,10 +870,11 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 ### 4. Node Card UI & Semantic Colors (Giao diện Thẻ Thiết Bị)
 
 - **Role Badge (Nhãn Vai trò - Phía trên cùng):** Dùng màu xám/slate trung tính (`bg-slate-100 text-slate-600`). CẤM dùng màu sắc sặc sỡ phân chia theo Region.
-- **Node Border & Glow:** Viền thẻ và hiệu ứng đổ bóng phát sáng (Outer Glow) PHẢI ĐƯỢC set theo trạng thái sức khỏe (Health state).
+- **Node Border & Glow:** Viền thẻ và hiệu ứng đổ bóng phát sáng (Outer Glow) CHỈ thể hiện **tình trạng vận hành thực tế** (Health state). Không dùng viền để biểu thị rủi ro kiến trúc hay trạng thái tắt chủ động — xem **Section 13.6 (Semantic Color Contract)**.
     - Khỏe mạnh (`health: green`): `border-emerald-500` và `shadow-[0_0_15px_rgba(16,185,129,0.3)]`
-    - Cảnh báo (`health: yellow`): dùng dải màu Amber/Yellow
-    - Lỗi (`health: red`): dùng dải màu Red/Rose
+    - Suy giảm / cấu hình sai (`health: amber`): `border-amber-500` và `shadow-[0_0_15px_rgba(245,158,11,0.3)]` — chỉ dùng cho thiết bị **đang chạy nhưng có lỗi** (trùng IP, orphaned gateway, mismatch…)
+    - Lỗi / DOWN (`health: red`): dùng dải màu Red/Rose
+    - Tắt chủ động (`state: inactive`): viền `border-slate-400 border-dashed`, `opacity-60`, **không glow** — dùng cho `DISABLED`, admin-down, chưa cấp phép
 - **Status Badge (Nhãn Trạng thái - Phía dưới cùng):** Mỗi thiết bị phải có thêm một huy hiệu nhỏ xíu (pill badge) ở gáy dưới báo cáo trạng thái vận hành hiện tại (Ví dụ: `ONLINE`, `BGP UP`, `DOWN`).
 - **Primary Spec (Thông số cốt lõi):** Dòng text phụ ngay dưới tên thiết bị phải là thông số quan trọng nhất:
     - Máy chủ (Compute/Host): Hiển thị IP Address.
@@ -881,3 +886,31 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 - **Resize Listener (QUAN TRỌNG):** Vì thiết bị đã dùng `%`, Bắt buộc phải có `window.addEventListener('resize', drawLinks);` để tính toán lại tọa độ Pixel thực tế (dựa vào `container.clientWidth` và `clientHeight`) rồi cập nhật lại nét vẽ của các thẻ `<svg><path>` mỗi khi trình duyệt co giãn.
 - **Line Animation:** Các liên kết mạng đang active phải có hiệu ứng luồng dữ liệu chạy (Traffic Flowing). Dùng `stroke-dasharray` kết hợp class `.animate-dash` gọi tới CSS `@keyframes dash { to { stroke-dashoffset: -N; } }`.
 - **Port Labels (Nhãn Cổng Vật Lý/Logic):** Bất kỳ thông số cổng nào (như `Gi1/0/24`, `eth0`) PHẢI được gắn vào 2 đầu của cáp. Dùng toán học nội suy trên JS để đẩy khoảng cách Badge ra cách tâm Node một lượng an toàn tương đối khi màn hình bị thu nhỏ (VD: `px = sx + (dx - sx) * 0.2`).. Đồng thời, CẤM ghim nhãn nằm chết tại tâm đường link, phải tính vector pháp tuyến (Normal Vector) và tịnh tiến (Shift) nhãn sang hai bên đường link khoảng `18px` để né xung đột (Anchor Collision) với các nhãn khác ở Top/Bottom của thiết bị.
+
+### 6. Semantic Color Contract (Một màu — một nghĩa)
+
+> **MỤC TIÊU:** Mỗi màu ngữ nghĩa (emerald / amber / rose / violet / blue) chỉ được mang **đúng một ý nghĩa** trên toàn trang. Không gộp các trạng thái có bản chất khác nhau vào cùng một màu chỉ vì "đều là cảnh báo".
+
+| Trục | Trả lời câu hỏi | Thể hiện | Màu |
+| :--- | :--- | :--- | :--- |
+| **Health** (viền + glow) | Thiết bị đang chạy thế nào? | `green` = UP · `amber` = chạy nhưng lỗi/suy giảm · `red` = DOWN | emerald / amber / rose |
+| **Inactive** | Có bị tắt chủ động không? | Viền `slate` nét đứt, `opacity-60`, không glow | slate |
+| **Risk** | Thiết kế có điểm yếu không? (SPOF, No HA, single uplink) | **Chip riêng** ở góc thẻ hoặc dưới Status Badge, KHÔNG đổi viền | violet |
+| **Highlight** | Đang chọn / đang trace? | Đường trace, node được chọn, hover | blue / cyan |
+
+**Quy tắc phân loại (áp dụng theo thứ tự):**
+
+1. Bị tắt chủ động (`DISABLED`, admin-down, chưa cấp phép) → `inactive`, không phải `amber`.
+2. Đang chạy nhưng cấu hình sai (`DUP IP`, gateway orphaned, DHCP bật trên interface disabled) → `health: amber`.
+3. Đang chạy đúng nhưng thiết kế có rủi ro (`NO HA · SPOF`) → `health: green` + **risk chip violet**. Viền vẫn xanh vì thiết bị hoạt động bình thường.
+4. Ngừng hoạt động / mất kết nối → `health: red`.
+
+**Các màu bị cấm dùng sai chỗ:**
+
+- **Zone Bounding Box / nhãn layer:** chỉ dùng `blue`, `indigo`, `sky`, `cyan`, `slate`. CẤM dùng `emerald`, `amber`, `rose`, `violet` cho zone (tránh nhầm với health/risk).
+- **Path Tracer / highlight:** dùng `blue` hoặc `cyan`. CẤM dùng `amber`.
+- **Nhãn mức ưu tiên (`HIGH` / `MEDIUM` / `LOW`):** dùng `rose` cho HIGH, `slate` cho MEDIUM/LOW. CẤM dùng `amber` (đã dành cho health).
+- **Chỉ báo node đang chọn (Selected):** dùng `outline` cyan tách khỏi thẻ bằng `outline-offset` (≥ 6px), CẤM dùng `ring` / `border` / `shadow` đè sát viền health — màu cyan chồng lên viền amber/rose sẽ làm sai màu trạng thái. Khi có outline, `clampNodes()` phải chừa `EDGE_PX ≥ outline-offset + độ dày` để không bị cắt bởi `overflow-hidden`.
+- **Status Badge (pill dưới thẻ):** màu pill phải khớp với trục mà text mô tả. `DISABLED` → slate; `DUP MGMT IP` → amber; `NO HA` → violet.
+
+**Tự kiểm tra trước khi xuất file:** liệt kê mọi vị trí dùng `amber`, `rose`, `violet`. Nếu một màu xuất hiện với hơn một ý nghĩa (ví dụ amber vừa là "disabled" vừa là "SPOF"), phải sửa lại theo bảng trên.
