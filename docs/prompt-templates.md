@@ -891,12 +891,12 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 
 > **MỤC TIÊU:** Mỗi màu ngữ nghĩa (emerald / amber / rose / violet / blue) chỉ được mang **đúng một ý nghĩa** trên toàn trang. Không gộp các trạng thái có bản chất khác nhau vào cùng một màu chỉ vì "đều là cảnh báo".
 
-| Trục | Trả lời câu hỏi | Thể hiện | Màu |
-| :--- | :--- | :--- | :--- |
-| **Health** (viền + glow) | Thiết bị đang chạy thế nào? | `green` = UP · `amber` = chạy nhưng lỗi/suy giảm · `red` = DOWN | emerald / amber / rose |
-| **Inactive** | Có bị tắt chủ động không? | Viền `slate` nét đứt, `opacity-60`, không glow | slate |
-| **Risk** | Thiết kế có điểm yếu không? (SPOF, No HA, single uplink) | **Chip riêng** ở góc thẻ hoặc dưới Status Badge, KHÔNG đổi viền | violet |
-| **Highlight** | Đang chọn / đang trace? | Đường trace, node được chọn, hover | blue / cyan |
+| Trục                     | Trả lời câu hỏi                                          | Thể hiện                                                        | Màu                    |
+| :----------------------- | :------------------------------------------------------- | :-------------------------------------------------------------- | :--------------------- |
+| **Health** (viền + glow) | Thiết bị đang chạy thế nào?                              | `green` = UP · `amber` = chạy nhưng lỗi/suy giảm · `red` = DOWN | emerald / amber / rose |
+| **Inactive**             | Có bị tắt chủ động không?                                | Viền `slate` nét đứt, `opacity-60`, không glow                  | slate                  |
+| **Risk**                 | Thiết kế có điểm yếu không? (SPOF, No HA, single uplink) | **Chip riêng** ở góc thẻ hoặc dưới Status Badge, KHÔNG đổi viền | violet                 |
+| **Highlight**            | Đang chọn / đang trace?                                  | Đường trace, node được chọn, hover                              | blue / cyan            |
 
 **Quy tắc phân loại (áp dụng theo thứ tự):**
 
