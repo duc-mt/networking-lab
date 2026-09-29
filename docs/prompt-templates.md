@@ -74,9 +74,10 @@ Requirements:
    playback controls in the main body/stepper area.
 
 3. Multi-Node Visual topology Engine (CRITICAL):
-   - The topology area must be a `relative` canvas container (e.g. `min-h-[450px] w-full`).
+   - Golden Standard Wrapper: Wrap the canvas inside `<div class="w-full overflow-x-auto"><section id="topology-canvas" style="min-width: 900px;" class="relative min-h-[450px] w-full ...">` to ensure mobile viewports pan smoothly without collapsing node coordinates.
    - Nodes (cards) must be `absolute` positioned. Set their `left` and `top` coordinates (e.g. using percentages) so they form a proper layout (e.g. triangle for 3 nodes, diamond for 4).
-   - Links: Draw SVG lines `<svg>` in the background connecting the nodes based on the `links` array. Update link colors dynamically if their state changes.
+   - Mandatory `clampNodes()`: Must implement `clampNodes()` (Section 10) and invoke it inside the resize listener and 50ms after every `render()` to prevent role badges and borders from clipping.
+   - Links: Draw SVG lines `<svg>` in the background connecting the nodes based on the `links` array. Update link colors dynamically if their state changes. Normal links must use structural colors (indigo/blue/slate), never amber or rose.
    - Dynamic Packet Animation: Do NOT use hardcoded CSS `@keyframes` (like `animate-lr`). Use the JavaScript Web Animations API (`element.animate()`) inside `handlePacketAnimation(packetData)`. Dynamically calculate the center (X, Y) of the `from` node and the `to` node, and animate the packet moving from start X,Y to end X,Y.
 
 4. Interactive timeline stepper: must be located inside the main body container
@@ -151,6 +152,8 @@ Requirements:
 4. Topology view: the affected devices/segments, with a visual fault
    indicator (red highlight/pulse) on whatever is actually broken, updating
    as the investigation narrows in.
+   - Golden Standard Wrapper & clampNodes(): Wrap the canvas inside `<div class="w-full overflow-x-auto"><section id="topology-canvas" style="min-width: 900px;" ...>` and implement `clampNodes()` (Section 10) to prevent role badges and borders from clipping.
+   - Link colors: Normal links use structural colors (indigo/blue/slate). Never use amber for healthy links.
 
 5. Timeline stepper + CLI terminal: same pattern as existing labs.
 
@@ -493,10 +496,12 @@ Requirements:
    Include architectural badges / indicators (e.g. "Campus LAN", "Spine-Leaf", "Hybrid Cloud").
 
 3. Topology Map Canvas (centerpiece):
+   - Golden Standard Wrapper: Wrap the canvas inside `<div class="w-full overflow-x-auto"><section id="topology-canvas" style="min-width: 900px;" class="relative w-full min-h-[500px] md:min-h-[580px] bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden">`.
+   - Mandatory `clampNodes()`: Must implement `clampNodes()` (Section 10) to dynamically resolve node positioning and prevent role badges from clipping.
    - All devices positioned with clear layer hierarchy (e.g. Spine on top, Leaf in middle, Compute below; or Core ➔ Distribution ➔ Access).
-   - SVG links layer displaying link labels, speeds, and status.
-   - Background zones visually grouping components with distinct colors and borders.
-   - Interactive Node Clicks: Clicking any device opens its Inspector Panel.
+   - SVG links layer displaying link labels, speeds, and status. Normal links must use structural colors (indigo/blue/slate), never amber or rose.
+   - Background zones visually grouping components with distinct colors and borders (Section 13.3).
+   - Interactive Node Clicks: Clicking any device opens its Inspector Panel. Selected node MUST be highlighted using `outline outline-2 outline-cyan-500 outline-offset-4` (never modify border/shadow).
 
 4. Multi-Layer Perspective / View Toggle (Recommended):
    - Allow toggling views between Physical/L2 (VLANs, Trunks, LACP) and Logical/L3 (IPs, Subnets, Routing Protocols) or Security Zones.
@@ -848,10 +853,13 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 
 > **MỤC TIÊU:** Đảm bảo toàn bộ các trang mô phỏng Topology (đặc biệt là dạng `topology-design`) đều nhất quán tuyệt đối về khoảng cách, màu sắc, cấu trúc hiển thị trên màn hình siêu rộng (Ultra-wide) và tuân thủ các chuẩn mực trực quan.
 
-### 1. Canvas and Layout Widths (Responsive Auto-Scale Support)
+### 1. Canvas and Layout Widths (Golden Standard Wrapper)
 
 - **Main Container**: Thẻ `<main>` bọc ngoài cùng bắt buộc dùng `class="flex-1 w-full max-w-[1600px] mx-auto ..."` (KHÔNG dùng `max-w-7xl`).
-- **Topology Canvas**: Khung chứa sơ đồ `<div id="topology-container">` dùng `class="relative w-full max-w-[1400px] mx-auto overflow-hidden ..."` với chiều cao tối thiểu (ví dụ `min-h-[500px]` hoặc `min-h-[600px]`). Loại bỏ chế độ cuộn ngang tĩnh (overflow-x-auto), sơ đồ phải tự động co giãn chủ động (responsive) lấp đầy chiều rộng.
+- **Golden Standard Canvas Wrapper**: Để sơ đồ mạng hiển thị hoàn hảo trên cả desktop siêu rộng và mobile mà không bị xén nhãn, đè chữ hay dồn cục node:
+    - Khung bao ngoài: `<div class="w-full overflow-x-auto">`
+    - Canvas bên trong: `<section id="topology-canvas" style="min-width: 900px;" class="relative w-full min-h-[500px] md:min-h-[580px] bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden">`
+    - Nhờ đó, trên desktop màn hình lớn canvas co giãn tự nhiên theo tỉ lệ %; trên thiết bị di động, người dùng có thể vuốt ngang mượt mà với `min-width: 900px` giữ nguyên tỉ lệ không gian hình học chuẩn.
 
 ### 2. Node Positioning & Symmetry (Tọa độ Tương đối)
 
@@ -883,7 +891,8 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 
 ### 5. Topology Links & Event Listeners (Cáp Mạng và Co Giãn)
 
-- **Resize Listener (QUAN TRỌNG):** Vì thiết bị đã dùng `%`, Bắt buộc phải có `window.addEventListener('resize', drawLinks);` để tính toán lại tọa độ Pixel thực tế (dựa vào `container.clientWidth` và `clientHeight`) rồi cập nhật lại nét vẽ của các thẻ `<svg><path>` mỗi khi trình duyệt co giãn.
+- **Resize Listener (QUAN TRỌNG):** Vì thiết bị đã dùng `%`, Bắt buộc phải có `window.addEventListener('resize', () => { this.clampNodes(); this.drawLinks(...); });` để tính toán lại tọa độ Pixel thực tế (dựa vào `container.clientWidth` và `clientHeight`) rồi cập nhật lại nét vẽ của các thẻ `<svg><path>` mỗi khi trình duyệt co giãn.
+- **Link Color & Semantic Rule:** Các liên kết mạng bình thường (Trunk, Routed, MPLS WAN, Overlay tunnel) BẮT BUỘC dùng màu hạ tầng kiến trúc: `indigo`, `blue`, `sky`, `purple`, hoặc `slate`. **CẤM DÙNG `amber` hoặc `rose` cho đường link bình thường** — màu `amber` chỉ dùng khi link bị nghẽn/lỗi chập chờn (degraded), màu `rose` chỉ dùng khi đứt cáp (down).
 - **Line Animation:** Các liên kết mạng đang active phải có hiệu ứng luồng dữ liệu chạy (Traffic Flowing). Dùng `stroke-dasharray` kết hợp class `.animate-dash` gọi tới CSS `@keyframes dash { to { stroke-dashoffset: -N; } }`.
 - **Port Labels (Nhãn Cổng Vật Lý/Logic):** Bất kỳ thông số cổng nào (như `Gi1/0/24`, `eth0`) PHẢI được gắn vào 2 đầu của cáp. Dùng toán học nội suy trên JS để đẩy khoảng cách Badge ra cách tâm Node một lượng an toàn tương đối khi màn hình bị thu nhỏ (VD: `px = sx + (dx - sx) * 0.2`).. Đồng thời, CẤM ghim nhãn nằm chết tại tâm đường link, phải tính vector pháp tuyến (Normal Vector) và tịnh tiến (Shift) nhãn sang hai bên đường link khoảng `18px` để né xung đột (Anchor Collision) với các nhãn khác ở Top/Bottom của thiết bị.
 
@@ -908,9 +917,10 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 **Các màu bị cấm dùng sai chỗ:**
 
 - **Zone Bounding Box / nhãn layer:** chỉ dùng `blue`, `indigo`, `sky`, `cyan`, `slate`. CẤM dùng `emerald`, `amber`, `rose`, `violet` cho zone (tránh nhầm với health/risk).
+- **Topology Links / WAN transit:** chỉ dùng `indigo`, `blue`, `sky`, `purple`, `slate`. CẤM dùng `amber` (tránh nhầm với Degraded link) hoặc `rose` (tránh nhầm với Link Down) cho trạng thái bình thường.
 - **Path Tracer / highlight:** dùng `blue` hoặc `cyan`. CẤM dùng `amber`.
 - **Nhãn mức ưu tiên (`HIGH` / `MEDIUM` / `LOW`):** dùng `rose` cho HIGH, `slate` cho MEDIUM/LOW. CẤM dùng `amber` (đã dành cho health).
-- **Chỉ báo node đang chọn (Selected):** dùng `outline` cyan tách khỏi thẻ bằng `outline-offset` (≥ 6px), CẤM dùng `ring` / `border` / `shadow` đè sát viền health — màu cyan chồng lên viền amber/rose sẽ làm sai màu trạng thái. Khi có outline, `clampNodes()` phải chừa `EDGE_PX ≥ outline-offset + độ dày` để không bị cắt bởi `overflow-hidden`.
+- **Chỉ báo node đang chọn (Selected):** dùng `outline` cyan tách khỏi thẻ bằng `outline-offset` (≥ 4px, ví dụ `outline outline-2 outline-cyan-500 outline-offset-4`), CẤM dùng `ring` / `border` / `shadow` đè sát viền health — màu cyan chồng lên viền amber/rose sẽ làm sai màu trạng thái. Khi có outline, `clampNodes()` phải chừa `EDGE_PX ≥ outline-offset + độ dày` để không bị cắt bởi `overflow-hidden`.
 - **Status Badge (pill dưới thẻ):** màu pill phải khớp với trục mà text mô tả. `DISABLED` → slate; `DUP MGMT IP` → amber; `NO HA` → violet.
 
 **Tự kiểm tra trước khi xuất file:** liệt kê mọi vị trí dùng `amber`, `rose`, `violet`. Nếu một màu xuất hiện với hơn một ý nghĩa (ví dụ amber vừa là "disabled" vừa là "SPOF"), phải sửa lại theo bảng trên.
