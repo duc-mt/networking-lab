@@ -262,7 +262,7 @@ const TIMELINE = [
             { label: 'Payload', val: 'HTTP GET /index.html' }
         ],
         afterFields: [
-            { label: 'Outer Src', val: '113.161.45.12 (Public Client IP)' },
+            { label: 'Outer Src', val: '198.51.100.12 (Public Client IP)' },
             { label: 'Outer Port', val: '58210' },
             { label: 'Outer Dst', val: '203.0.113.1 (pfSense WAN)' },
             { label: 'Outer Port', val: '51820 (WireGuard UDP)' },
@@ -271,7 +271,7 @@ const TIMELINE = [
         ],
         layerCapsules: [
             { text: 'Eth L2', color: 'bg-slate-700' },
-            { text: 'Outer IP: 113.161.45.12 ➔ 203.0.113.1', color: 'bg-blue-600' },
+            { text: 'Outer IP: 198.51.100.12 ➔ 203.0.113.1', color: 'bg-blue-600' },
             { text: 'UDP :51820', color: 'bg-indigo-600' },
             { text: 'WG Type 4 (ChaCha20)', color: 'bg-rose-600 font-bold' },
             { text: 'Encrypted Inner IP/TCP Payload', color: 'bg-emerald-800' }
@@ -279,7 +279,7 @@ const TIMELINE = [
         wiresharkFilter: 'wireguard.type == 4',
         wiresharkTree: `▶ Frame 1: 174 bytes on wire (1392 bits)
 ▶ Ethernet II, Src: 00:0c:29:84:11:22, Dst: 00:50:56:c0:00:01
-▼ Internet Protocol Version 4, Src: 113.161.45.12, Dst: 203.0.113.1
+▼ Internet Protocol Version 4, Src: 198.51.100.12, Dst: 203.0.113.1
     Protocol: UDP (17), Length: 160
 ▼ User Datagram Protocol, Src Port: 58210, Dst Port: 51820
     Length: 140, Checksum: 0x4a1b
@@ -310,7 +310,7 @@ const TIMELINE = [
         afterBadge: 'Packet Passed to if_wg',
         beforeFields: [
             { label: 'Interface', val: 'WAN (vtnet0)' },
-            { label: 'Src IP', val: '113.161.45.12' },
+            { label: 'Src IP', val: '198.51.100.12' },
             { label: 'Dst IP', val: '203.0.113.1 (WAN IP)' },
             { label: 'Dst Port', val: '51820 (UDP)' },
             { label: 'PF State', val: 'Evaluate Inbound Rules' }
@@ -319,7 +319,7 @@ const TIMELINE = [
             { label: 'WAN Rule Match', val: 'Pass Inbound WG (Rule #1004)' },
             { label: 'Action', val: 'ACCEPT / PASS' },
             { label: 'Next-Hop', val: 'FreeBSD Kernel Module (if_wg)' },
-            { label: 'State Created', val: 'udp 203.0.113.1:51820 <- 113.161.45.12:58210' }
+            { label: 'State Created', val: 'udp 203.0.113.1:51820 <- 198.51.100.12:58210' }
         ],
         layerCapsules: [
             { text: 'WAN Ingress (vtnet0)', color: 'bg-blue-600' },
@@ -335,13 +335,13 @@ const TIMELINE = [
     Rule ID: 1004 (Description: "Allow WireGuard Inbound")
     Tracker: 1692847101
 ▼ State Table Insertion
-    Key: 113.161.45.12:58210 -> 203.0.113.1:51820 (State: MULTIPLE:MULTIPLE)
+    Key: 198.51.100.12:58210 -> 203.0.113.1:51820 (State: MULTIPLE:MULTIPLE)
     Expires: 60s (UDP Single State)`,
         subsystem: 'pfSense Packet Filter (pf) Engine',
         rule: 'Rule #1004: Pass IPv4 UDP from any to WAN_Address:51820',
         cryptokey: 'N/A (Lớp ngoài IP Public)',
-        session: 'PF State Created: 113.161.45.12:58210 ➔ 203.0.113.1:51820',
-        log: 'pf: rule 1004/0(match): pass in on vtnet0: 113.161.45.12.58210 > 203.0.113.1.51820: UDP, length 140',
+        session: 'PF State Created: 198.51.100.12:58210 ➔ 203.0.113.1:51820',
+        log: 'pf: rule 1004/0(match): pass in on vtnet0: 198.51.100.12.58210 > 203.0.113.1.51820: UDP, length 140',
         verdict: 'PASS',
         proTipTitle: 'Lỗi thường gặp: Bật WireGuard nhưng quên mở Rule WAN',
         proTipDesc: 'Người dùng thường nhầm tưởng tạo tunnel trong tab VPN là firewall tự mở cổng. Trên pfSense, WireGuard không tự inject rule ẩn — bạn bắt buộc phải tự thêm rule mở cổng 51820 trên tab WAN, nếu không gói tin sẽ bị Drop âm thầm do luật Default Deny.'
@@ -387,7 +387,7 @@ const TIMELINE = [
         subsystem: 'FreeBSD Kernel Module (if_wg)',
         rule: 'Noise_IK Cryptographic Handshake Verification',
         cryptokey: 'Key Verified for Peer "Remote-Laptop"',
-        session: 'Active Tunnel Session (Dynamic Endpoint updated: 113.161.45.12:58210)',
+        session: 'Active Tunnel Session (Dynamic Endpoint updated: 198.51.100.12:58210)',
         log: 'wireguard: tun_wg0: packet decrypted successfully from peer 1 (Remote-Laptop)',
         verdict: 'PASS',
         proTipTitle: 'Cơ chế Silent Drop (Bảo mật tàng hình của WireGuard)',
