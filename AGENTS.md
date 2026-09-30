@@ -1,40 +1,72 @@
 ---
 name: design-system-rules
-description: Mandatory UI/UX and lab-authoring rules for the networking-lab project.
+description: Quy định bắt buộc về UI/UX và phong cách thiết kế cho dự án networking-lab.
 trigger: always_on
 ---
 
-# networking-lab rules
+# Bắt buộc tuân thủ Design System (UI/UX)
 
-The global `AGENTS.md` and the global `modern-ui` skill already cover the git workflow, secrets, and the base design system (palette, typography, layout, semantic status colors). This file only adds what is specific to this project. Where they conflict, this file wins.
+Mỗi khi khởi tạo, chỉnh sửa HTML/CSS hoặc các thành phần giao diện trong dự án này, AI LUÔN LUÔN phải tuân thủ nghiêm ngặt các quy định sau để giữ phong cách hiện đại, tinh tế và đồng nhất trên toàn dự án:
 
-## UI work
+## 1. Không gian màu (Color Palette)
 
-- Every HTML/CSS or UI change in this project applies the global `modern-ui` skill.
-- Transitions: use the project's `.transition-all-fast` class.
-- Base surfaces: `<body>` must strictly use `bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200`. Never use `bg-slate-100` or `dark:bg-slate-900` for `<body>` (cards within the body use `bg-slate-900` in dark mode).
-- Strict color tokens: Strictly use Tailwind Slate tokens (`bg-slate-900`, `border-slate-800`, `text-slate-400`). Never hardcode ad-hoc neutral hex like `#1e1e1e`, `#2d2d2d`, `#0f172a`, or `border-black/50`.
-- Hardware & Telemetry Aesthetics: Avoid flat, lifeless cards. Terminal/CLI windows must use `bg-slate-950 border border-slate-800 font-mono text-xs`. Nodes and cards should use subtle depth (e.g. status LED indicators with `animate-pulse`, subtle health glow).
+- **Không dùng màu trắng/đen thuần:** Tuyệt đối không dùng `#ffffff` hay `#000000`. Bắt buộc dùng hệ màu trung tính `Slate` của Tailwind.
+- **Nền (Background):** Light mode luôn dùng `bg-slate-50`. Dark mode luôn dùng `bg-slate-950`.
+- **Thẻ (Cards/Surfaces):** Trên Dark mode, thẻ phải dùng `bg-slate-900` kết hợp viền mỏng `border-slate-800` để tạo chiều sâu.
+- **Điểm nhấn (Accents):** Thay vì tô màu phẳng (flat color) gắt, hãy dùng gradient tinh tế (VD: `bg-gradient-to-br from-blue-500 to-indigo-600`) cho logo, icon hoặc nút bấm chính.
 
-## Lab authoring
+## 2. Typography (Nghệ thuật Kiểu chữ)
 
-- When asked to create a new lab, read `docs/prompt-templates.md` first and choose exactly one of the 8 existing templates (e.g. Protocol Simulator, Troubleshooting).
-- Canvas wrapper: Always wrap topology canvases in `<div class="w-full overflow-x-auto">` with an inner `<section id="topology-canvas" style="min-width: 900px;" ...>` to guarantee responsive horizontal scrolling on small viewports without breaking node coordinates.
-- Follow the invariants in the template: how `clampNodes()` is used, how the `Mode Toggle` button is built, and the bilingual standards noted there.
-- Selected node indicator: Always use `outline outline-2 outline-cyan-500 outline-offset-4` (or `outline-offset-[6px]`). Never use `border` or `box-shadow` for selection, as those are reserved for health state.
-- Classification rules for semantic status colors: `docs/prompt-templates.md`, section 13.6. Structural and transit links (e.g. MPLS, WAN, Trunk) must never use `amber`, `rose`, or `emerald` for normal state.
+- **Văn bản/UI chính:** Bắt buộc dùng font sans-serif `Inter`. Linh hoạt độ nặng: `font-extrabold` cho tiêu đề chính, `font-medium` cho văn bản phụ.
+- **Code/Technical/Tags:** Bắt buộc dùng font Monospace `Fira Code` cho các nhãn trạng thái, huy hiệu, thông số kỹ thuật.
+- **Khoảng cách (Tracking):** Tiêu đề lớn phải ép hẹp khoảng cách (`tracking-tight`). Nhãn phụ/nhãn nhỏ phải in hoa và kéo giãn khoảng cách (`uppercase tracking-widest text-xs`).
 
-## Bilingual standard (English + Vietnamese)
+## 3. Hiệu ứng, Bố cục & Khoảng trắng
 
-UI text mixes English and Vietnamese following network-engineer convention:
+- **Header:** Luôn sử dụng hiệu ứng Glassmorphism (`backdrop-blur-md bg-white/80 dark:bg-slate-900/80`).
+- **Khoảng trắng (Whitespace):** Cố ý giữ padding và margin lớn (VD: `gap-20`, `py-24`) giữa các khối nội dung. Không nhồi nhét thành phần UI.
+- **Tương tác (Micro-interactions):** Sử dụng class `.transition-all-fast` của dự án. Hover lên thẻ phải nảy nhẹ (`hover:-translate-y-1 hover:shadow-lg`), không đổi màu quá đột ngột.
 
-- **Keep in English:** the main lab title (H1), system states (e.g. `ONLINE`, `ERR-DISABLE`), Stepper labels (e.g. `INIT`, `VERIFY`), role and device names (e.g. `Core Switch`), and all CLI/console output. Never translate technical terms (Routing, OSPF, Payload, Failover, ...).
-- **Write in Vietnamese:** detailed descriptions, step explanations, subheadings and analysis sections. Keep the tone professional and concise.
+## 4. Bảo mật dữ liệu (Global Security Rule)
 
-## Data sanitization
+- **TUYỆT ĐỐI ẨN DANH DỮ LIỆU THẬT:** Nếu prompt của người dùng có chứa IP thật, MAC thật, hostname thật của công ty/khách hàng, hoặc dữ liệu nhạy cảm... AI **PHẢI** tự động làm sạch và thay thế bằng dữ liệu giả (dummy data) trước khi tạo ra HTML.
+- Thay IP thật bằng IP giả (VD: `10.x.x.x`, `192.168.x.x`, `1.1.1.1`).
+- Thay hostname thật bằng tên chung chung (VD: `FW-CORE`, `SW-ACCESS-01`, `R1`).
+- Che đi toàn bộ password, token, domain name, VLAN IDs thật. **Không bao giờ** được output raw data nhạy cảm vào file code.
 
-Even if a prompt contains real IPs, MACs, hostnames, domains, passwords, tokens or VLAN IDs, replace them with dummy data before generating any HTML:
+## 5. Cấu trúc mã nguồn Lab (Engine & Templates)
 
-- **Public IPs:** Strictly use RFC 5737 documentation ranges (`198.51.100.x`, `203.0.113.x`, `192.0.2.x`). Never use real ISP public IPs.
-- **Private IPs:** Strictly use RFC 1918 ranges (`10.x.x.x`, `172.16.x.x`, `192.168.x.x`).
-- **Device & Hostnames:** Use standard dummy naming (`FW-CORE`, `SW-ACCESS-01`, `R1`). Never write raw sensitive data into code files.
+- Bất cứ khi nào được yêu cầu tạo bài Lab mới, AI **PHẢI** đọc qua file `docs/prompt-templates.md` để chọn đúng 1 trong 9 cấu trúc có sẵn (Ví dụ: Protocol Simulator, Troubleshooting, Algorithm Visualizer, v.v.).
+- Bắt buộc tuân thủ các quy tắc bất biến trong template như: cách dùng hàm `clampNodes()`, cách làm nút `Mode Toggle`, và các Quy ước song ngữ Anh-Việt (Bilingual Standards) đã ghi chú trong đó.
+
+### Bảng 9 template — chọn nhanh:
+
+| Template | `type` key | Dùng khi |
+| -------- | ---------- | -------- |
+| Protocol Simulator | `protocol` | Giải thích protocol hoạt động theo thời gian (FSM, packet exchange) |
+| Troubleshooting Lab | `troubleshooting` | Tái hiện quy trình xử lý sự cố: symptom → root cause → fix |
+| Security Packet Walk | `packet-walk` | Trace packet qua firewall/NAT pipeline |
+| Change / MOP Flow | `change-mop` | Lập tài liệu maintenance window: pre-check → execute → rollback |
+| Automation Workflow | `automation` | Minh họa script/API: payload → response → error handling |
+| Failover / HA Drill | `failover` | Resilience test: trigger → timer countdown → convergence |
+| Topology Design Reference | `topology-design` | HLD/blueprint kiến trúc mạng hoàn chỉnh, không có timeline |
+| Diagnostic Playbook | `diagnostic-playbook` | Catalog N failure mode trên cùng topology — flip tab để so sánh |
+| **Algorithm Visualizer** | **`algorithm-viz`** | **Graph algorithm chạy live trên topology có thể tương tác (Dijkstra SPF, Bellman-Ford, CSPF…)** |
+
+### Khi nào chọn Algorithm Visualizer (type: `algorithm-viz`):
+
+Dùng khi mục tiêu học là **quan sát thuật toán tính toán trên graph** và người học cần **tự thay đổi topology** để thấy kết quả thay đổi ngay lập tức. Khác với Protocol Simulator (timeline tuyến tính, passive), Algorithm Visualizer là **reactive**: người dùng click link để shutdown hoặc đổi cost → thuật toán tự chạy lại → path/table cập nhật real-time.
+
+Ví dụ lab phù hợp:
+- OSPF SPF / Dijkstra — click link để shutdown hoặc đổi cable type, xem path thay đổi
+- IS-IS SPF trên dual-topology (L1/L2)
+- MPLS-TE CSPF với bandwidth constraint
+- BGP best-path selection với multiple attributes
+- STP Bellman-Ford / port role election khi link thay đổi
+
+## 6. Quy ước Song ngữ (Bilingual Standards)
+
+Khi viết nội dung hiển thị trên UI, bắt buộc pha trộn Anh - Việt theo quy chuẩn Kỹ sư mạng:
+
+- **Tiếng Anh (Giữ nguyên):** Tiêu đề Lab chính (H1), các trạng thái hệ thống (VD: `ONLINE`, `ERR-DISABLE`), nhãn thanh Stepper (VD: `INIT`, `VERIFY`), tên Role/Thiết bị (VD: `Core Switch`), và toàn bộ output CLI/Console. Tuyệt đối không dịch các thuật ngữ chuyên ngành (như Routing, OSPF, Payload, Failover).
+- **Tiếng Việt:** Mô tả chi tiết, nội dung giải thích các bước, tiêu đề phụ, và các phần phân tích. Văn phong phải chuyên nghiệp, súc tích.
