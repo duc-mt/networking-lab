@@ -801,7 +801,8 @@ const App = (() => {
             autoPlayInterval = null;
             document.getElementById('btn-play').innerHTML = '<i class="fas fa-play"></i>';
         } else {
-            const speed = parseInt(document.getElementById('speed-slider').value);
+            const speedEl = document.getElementById('speed-slider');
+            const speed = speedEl ? parseInt(speedEl.value) : 1000;
             const interval = 2200 - speed + 200;
             
             document.getElementById('btn-play').innerHTML = '<i class="fas fa-pause"></i>';
