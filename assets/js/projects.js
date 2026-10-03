@@ -347,4 +347,16 @@ const PROJECTS = [
         tags: ['OSPF', 'LSA', 'Multi-Area', 'ABR', 'ASBR', 'Flooding Scope'],
         href: 'projects/diagnostic-playbook/ospf-lsa-propagation.html',
     },
+    {
+        id: 'ospf-spf-dijkstra',
+        title: 'OSPF SPF (Dijkstra) Visualization',
+        category: 'algorithm-viz',
+        type: 'algorithm-viz',
+        status: 'live',
+        dateAdded: '2026-10-03',
+        description:
+            'Mô phỏng trực quan thuật toán OSPF SPF (Dijkstra): tính toán đường đi ngắn nhất, xây dựng SPF tree và routing table trên mô hình OSPF Đa Vùng.',
+        tags: ['OSPF', 'Dijkstra', 'SPF', 'Algorithm', 'LSDB', 'Routing Table'],
+        href: 'projects/algorithm-viz/ospf-spf.html',
+    },
 ];
