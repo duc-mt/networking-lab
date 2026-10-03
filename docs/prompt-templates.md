@@ -95,7 +95,7 @@ Requirements:
    and apply it in a tiny synchronous script at the very top of <head> (before
    Tailwind loads) so there's no flash of the wrong theme on load.
 
-8. All visible UI text in Vietnamese.
+8. All visible UI text must be in English.
 
 9. OPTIONAL — Cumulative/Delta pattern: use this sub-pattern instead of plain
    per-step snapshots when the lab's subject matter is a database/table that
@@ -233,7 +233,7 @@ Requirements:
 6. Final step: show root cause + fix + a "verification" command/output
    proving it's resolved.
 
-7. All visible UI text in Vietnamese.
+7. All visible UI text must be in English.
 
 Populate `troubleshootingTimeline` with realistic, detailed CLI output and a
 believable sequence of ruled-out hypotheses before landing on the real cause.
@@ -302,7 +302,7 @@ Requirements:
 
 7. Timeline stepper + theme toggle: same pattern as existing labs.
 
-8. All visible UI text in Vietnamese.
+8. All visible UI text must be in English.
 
 Populate `packetWalkTimeline` with a realistic, platform-appropriate sequence
 for the given scenario, including believable rule IDs and session states.
@@ -369,7 +369,7 @@ Requirements:
 6. Rollback tab: hidden/collapsed by default, auto-expands and is highlighted
    if any `postChecks` item has `status: "fail"`.
 
-7. All visible UI text in Vietnamese.
+7. All visible UI text must be in English.
 
 Populate all four arrays with realistic, detailed commands and outputs for
 the given change.
@@ -436,7 +436,7 @@ Requirements:
 6. Timeline stepper: same horizontal step pattern as existing labs, but
    labeled by `phase` rather than a device state.
 
-7. All visible UI text in Vietnamese.
+7. All visible UI text must be in English.
 
 Populate `automationTimeline` with a realistic script/payload/response
 sequence for the given tooling and failure mode, including a believable
@@ -503,7 +503,7 @@ Requirements:
 7. Timeline stepper (usable after the outage is triggered) + theme toggle:
    same pattern as existing labs.
 
-8. All visible UI text in Vietnamese.
+8. All visible UI text must be in English.
 
 Populate `failoverTimeline` with realistic timer values and a believable
 convergence sequence for the given mechanism and trigger event.
@@ -693,7 +693,7 @@ Requirements:
    - Two dropdowns (Source, Destination) + "Trace Flow" button.
    - Trace end-to-end traffic path across hops, highlight active links on the canvas, and list the hop-by-hop forwarding decisions (e.g. LACP ➔ SVI ➔ Route Lookup ➔ Tunnel Encap ➔ Destination).
 
-7. All visible UI text in Vietnamese, adhering to the Bilingual Standards (Section 11).
+7. All visible UI text must be in English, adhering to the Bilingual Standards (Section 11).
 8. Node health / inactive / risk / highlight colors MUST follow the Semantic Color
    Contract (Section 13.6) — one color, one meaning.
 ```
@@ -800,7 +800,7 @@ perfectly healthy node.
    and command output in a dark monospace terminal block; right = the
    `takeaways` as a bullet list.
 
-7. All visible UI text in Vietnamese.
+7. All visible UI text must be in English.
 
 Populate `playbookCases` with technically accurate command output for each
 case — exit codes, timing, and DNS response codes should be realistic and
@@ -882,28 +882,28 @@ const SCENARIOS = [{
 let graph = deepClone(BASE_GRAPH);
 ```
 
-**Quy tắc bất biến:** `BASE_GRAPH` không bao giờ bị mutate. Mọi thay đổi (click popup, load scenario) đều tạo bản sao mới từ `BASE_GRAPH` + áp patches. Điều này đảm bảo "Reset Topology" luôn hoạt động chính xác.
+**Invariant Rule:** `BASE_GRAPH` is never mutated. Any change (clicking a popup, loading a scenario) creates a new clone from `BASE_GRAPH` + applies patches. This ensures "Reset Topology" always works correctly.
 
-### 2. Algorithm engine — implement thực, không hardcode
+### 2. Algorithm engine — real implementation, no hardcoding
 
-Implement thuật toán thực trong JavaScript. KHÔNG hardcode kết quả path. Mọi thay đổi topology phải trigger `runAlgorithm()` → kết quả tính lại từ đầu.
+Implement the actual algorithm in JavaScript. DO NOT hardcode path results. Any topology change must trigger `runAlgorithm()` → recalculating results from scratch.
 
-**Chuẩn Dijkstra cho OSPF SPF:**
+**Dijkstra Standard for OSPF SPF:**
 
 ```javascript
 function dijkstra(nodes, links, srcId) {
-    // Build adjacency từ active links (state === 'up') only
-    // Record TỪNG BƯỚC: { action, processing, settled[], candidates[], dist{}, prev{}, desc }
+    // Build adjacency from active links (state === 'up') only
+    // Record EVERY STEP: { action, processing, settled[], candidates[], dist{}, prev{}, desc }
     // Return { dist, prev, prevLink, steps }
 }
 ```
 
-**Yêu cầu bắt buộc của engine:**
+**Engine Mandatory Requirements:**
 
-- Loại link `state: 'down'` khỏi adjacency trước khi chạy — không chỉ ẩn chúng trên UI.
-- Record từng iteration của thuật toán vào mảng `steps[]` để SPF step-by-step panel hiển thị.
-- Xử lý ECMP: khi hai path có cùng cost, lưu cả hai vào `prevMulti{}` và highlight cả hai trên topology.
-- Xử lý unreachable: node không đến được có `dist = Infinity` — routing table phải hiện "UNREACHABLE".
+- Exclude `state: 'down'` links from adjacency before running — do not just hide them on UI.
+- Record each algorithm iteration into `steps[]` array for the SPF step-by-step panel to display.
+- Handle ECMP: when two paths have the same cost, save both into `prevMulti{}` and highlight both on the topology.
+- Handle unreachable: unreachable nodes have `dist = Infinity` — routing table must display "UNREACHABLE".
 
 ### 3. Layout — 3 zone bắt buộc
 
@@ -925,22 +925,22 @@ function dijkstra(nodes, links, srcId) {
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 4. Topology canvas — quy tắc bất biến
+### 4. Topology canvas — invariant rules
 
-- Tọa độ node dùng hệ tham chiếu ảo `REF_W × REF_H` (ví dụ 960×360), render ra `%` khi paint: `el.style.left = (n.x / REF_W * 100) + '%'`.
-- Bắt buộc gọi `clampNodes()` sau mỗi render (xem Section 10).
-- SVG links chia thành 2 layer: `<g id="svg-links-hit">` (stroke transparent, stroke-width lớn để dễ click) và `<g id="svg-links-vis">` (visual). Người dùng click vào hit layer để mở popup.
-- Cost label dùng `<foreignObject>` trong SVG — pill HTML clickable, không phải `<text>`.
-- `window.addEventListener('resize', ...)` bắt buộc để redraw links sau khi viewport thay đổi.
+- Node coordinates use a virtual reference system `REF_W × REF_H` (e.g. 960×360), rendered as `%` on paint: `el.style.left = (n.x / REF_W * 100) + '%'`.
+- Must call `clampNodes()` after every render (see Section 10).
+- SVG links are split into 2 layers: `<g id="svg-links-hit">` (transparent stroke, large stroke-width for easy clicking) and `<g id="svg-links-vis">` (visual). Users click the hit layer to open popups.
+- Cost labels use `<foreignObject>` in SVG — clickable HTML pills, not `<text>`.
+- `window.addEventListener('resize', ...)` is required to redraw links after viewport changes.
 - Zone bounding boxes: `position: absolute`, `border: 2px dashed`, `pointer-events: none`, `z-index: 0`.
 
-### 5. Link interaction popup — UI pattern bắt buộc
+### 5. Link interaction popup — mandatory UI pattern
 
-Khi click vào link (hit area hoặc cost label), hiện floating popup với:
+When clicking a link (hit area or cost label), display a floating popup with:
 
 ```
 ┌─────────────────────────────────┐
-│  Đổi loại cáp / băng thông      │
+│  Change cable type / bandwidth  │
 │  ○ GigabitEthernet (cost 1)     │
 │  ○ FastEthernet (cost 1)        │
 │  ○ Ethernet 10M (cost 10)       │
@@ -951,123 +951,123 @@ Khi click vào link (hit area hoặc cost label), hiện floating popup với:
 └─────────────────────────────────┘
 ```
 
-- Popup đóng khi click ra ngoài (`document.addEventListener('click', closePopup)`).
-- Sau mỗi thay đổi: `runAlgorithm()` → `renderTopology()` → panel tự cập nhật.
-- Popup không được block phần topology bên dưới — dùng `position: fixed`, z-index cao.
+- Popup closes when clicking outside (`document.addEventListener('click', closePopup)`).
+- After each change: `runAlgorithm()` → `renderTopology()` → panel auto-updates.
+- Popup must not block the topology underneath — use `position: fixed`, high z-index.
 
-### 6. Node states — màu sắc trong quá trình algorithm chạy
+### 6. Node states — colors during algorithm execution
 
-| State        | Ý nghĩa                                   | Border + Glow                        |
+| State        | Meaning                                   | Border + Glow                        |
 | ------------ | ----------------------------------------- | ------------------------------------ |
-| `source`     | Node nguồn được chọn                      | Blue `#3b82f6`                       |
-| `dest`       | Node đích được chọn                       | Amber `#f59e0b`                      |
-| `processing` | Đang được expand trong iteration hiện tại | Pink `#ec4899` + pulse animation     |
-| `candidate`  | Trong candidate list, chưa settle         | Violet `#a78bfa`                     |
-| `settled`    | Đã settle vào SPF tree                    | Emerald `#10b981`                    |
-| `path`       | Nằm trên best path src→dst                | Emerald `#34d399` (sáng hơn settled) |
-| `normal`     | Chưa được xét                             | Slate `#334155`                      |
+| `source`     | Selected source node                      | Blue `#3b82f6`                       |
+| `dest`       | Selected destination node                 | Amber `#f59e0b`                      |
+| `processing` | Being expanded in current iteration       | Pink `#ec4899` + pulse animation     |
+| `candidate`  | In candidate list, not yet settled        | Violet `#a78bfa`                     |
+| `settled`    | Settled into SPF tree                     | Emerald `#10b981`                    |
+| `path`       | On best path src→dst                      | Emerald `#34d399` (brighter than settled) |
+| `normal`     | Unvisited                                 | Slate `#334155`                      |
 
-Hiển thị cost hiện tại của node (từ `step.dist`) dưới dạng badge nhỏ dưới card, cập nhật theo từng bước.
+Display node's current cost (from `step.dist`) as a small badge under the card, updated per step.
 
 ### 7. Right panel — 3 tab cố định
 
 **Tab "Algorithm Steps" (default):**
 
-- Card highlight bước hiện tại: action type + node đang processing + English description.
-- Candidate list: danh sách node + cost, màu violet.
-- Settled set: danh sách node + cost, màu emerald.
-- Distance vector table: tất cả node, cost hiện tại, via (prev node).
+- Highlight card for current step: action type + processing node + English description.
+- Candidate list: node list + cost, violet color.
+- Settled set: node list + cost, emerald color.
+- Distance vector table: all nodes, current cost, via (prev node).
 
-**Tab "State DB" (LSDB / Link State DB):**
+**"State DB" tab (LSDB / Link State DB):**
 
-- Một card per node: Type 1 LSA (OSPF) hoặc tương đương — liệt kê active neighbors + cost.
-- Highlight link DOWN bằng card riêng màu đỏ.
-- Cập nhật ngay khi topology thay đổi.
+- One card per node: Type 1 LSA (OSPF) or equivalent — lists active neighbors + cost.
+- Highlight DOWN links with a separate red card.
+- Update immediately when topology changes.
 
-**Tab "Routing Table":**
+**"Routing Table" tab:**
 
-- Một row per destination node: next-hop + total cost.
-- So sánh với baseline (BASE_GRAPH + src mặc định): row "CHANGED" highlight emerald, row "UNREACHABLE" highlight đỏ.
-- Row nào có path từ previous scenario bị mất → hiện text gạch ngang + cost cũ.
+- One row per destination node: next-hop + total cost.
+- Compare with baseline (BASE_GRAPH + default src): "CHANGED" rows highlight emerald, "UNREACHABLE" rows highlight red.
+- Rows missing paths from the previous scenario → show strikethrough text + old cost.
 
-**Teaching note (pinned bottom của right panel):**
+**Teaching note (pinned bottom of right panel):**
 
-- Hiện `scenario.note` khi load scenario — mô tả ngắn gọn điều gì đang xảy ra và tại sao.
-- Không tự ẩn — người dùng phải load scenario khác mới thay.
+- Display `scenario.note` when loading scenario — briefly describing what is happening and why.
+- Does not auto-hide — user must load another scenario to change it.
 
 ### 8. Control bar — bottom sticky
 
 ```javascript
-// Các nút:
+// Buttons:
 spfPrev(); // spfStepIdx-- → renderTopology() + renderPanel()
-spfPlayPause(); // toggle interval, tốc độ từ speed-slider
+spfPlayPause(); // toggle interval, speed from speed-slider
 spfNext(); // spfStepIdx++ → renderTopology() + renderPanel()
 spfReset(); // spfStepIdx = 0 → renderTopology() + renderPanel()
-resetTopology(); // reload active scenario từ BASE_GRAPH + patches
+resetTopology(); // reload active scenario from BASE_GRAPH + patches
 ```
 
 - Speed slider: `min=200 max=1800 step=200`, interval = `2000 - value + 200` ms.
-- Step indicator: `Bước N / Total` cập nhật mỗi khi step thay đổi.
-- Auto-play dừng tự động khi đến bước cuối cùng.
+- Step indicator: `Step N / Total` updates whenever step changes.
+- Auto-play stops automatically at the final step.
 
-### 9. Scenario bar — trong header
+### 9. Scenario bar — in header
 
-- Pills ngang, scroll nếu cần. Active pill: `border-indigo-500 text-indigo-400 bg-indigo-500/10`.
+- Horizontal pills, scroll if needed. Active pill: `border-indigo-500 text-indigo-400 bg-indigo-500/10`.
 - Click pill → `loadScenario(id)`: deepClone BASE_GRAPH + apply patches + set src/dst + runAlgorithm() + renderTopology() + showTeachingNote().
-- `loadScenario()` phải reset `spfStepIdx = 0` và dừng auto-play nếu đang chạy.
+- `loadScenario()` must reset `spfStepIdx = 0` and stop auto-play if running.
 
-### 10. Quy tắc bắt buộc kế thừa từ Design System
+### 10. Inherited mandatory rules from Design System
 
-- `clampNodes()` bắt buộc — xem Section 10 (tài liệu gốc).
-- Không hardcode pixel tọa độ node — dùng `%` từ REF system.
-- `window.addEventListener('resize', ...)` bắt buộc.
-- Theme toggle với `localStorage('portfolio-theme')` + no-FOUC head script.
+- `clampNodes()` is mandatory — see Section 10 (original doc).
+- Do not hardcode node pixel coordinates — use `%` from REF system.
+- `window.addEventListener('resize', ...)` is mandatory.
+- Theme toggle with `localStorage('portfolio-theme')` + no-FOUC head script.
 - Header glassmorphism: `backdrop-blur-md bg-white/80 dark:bg-slate-900/80`.
 - Bilingual: H1 title in English, description/explanation in English (Section 11).
-- Semantic Color Contract: không dùng amber cho path highlight — chỉ dùng emerald/violet/blue/pink (Section 13.6).
+- Semantic Color Contract: do not use amber for path highlights — only use emerald/violet/blue/pink (Section 13.6).
 
-### 11. All visible UI text in Vietnamese (ngoại trừ H1 title và technical labels).
+### 11. All visible UI text must be in English.
 
-Populate `BASE_GRAPH` và `SCENARIOS` với dữ liệu kỹ thuật chính xác cho topology được yêu cầu.
+Populate `BASE_GRAPH` and `SCENARIOS` with accurate technical data for the requested topology.
 
 ````
 
 ---
 
-## 10. Mode Toggle (Bộ chuyển chế độ)
+## 10. Mode Toggle
 
-> **Quy tắc tự động quyết định:** Khi thiết kế một lab mới, AI phải tự đánh giá xem có nên bổ sung Mode Toggle hay không dựa trên tiêu chí sau — **không cần hỏi người dùng**.
+> **Auto-decision rule:** When designing a new lab, AI must self-evaluate whether to add a Mode Toggle based on the following criteria — **no need to ask the user**.
 
-### Khi nào NÊN dùng Mode Toggle
+### When to USE Mode Toggle
 
-Dùng khi lab có **≥ 2 biến thể/chế độ** thể hiện **cùng một topology nhưng hành vi khác nhau**, và người dùng cần so sánh trực tiếp. Ví dụ:
+Use when the lab has **≥ 2 variants/modes** showing **the same topology but different behavior**, and the user needs to compare them directly. Example:
 
-| Ngữ cảnh                            | Nên Toggle? | Lý do                                                     |
-| ----------------------------------- | ----------- | --------------------------------------------------------- |
-| DHCP Local vs DHCP Relay            | ✅ Có       | Cùng thiết bị, nhưng số node và packet flow khác nhau     |
-| STP vs PVST+ vs RSTP vs MSTP        | ✅ Có       | Cùng topology tam giác, nhưng cơ chế chặn cáp khác nhau   |
-| OSPF P2P vs Broadcast               | ✅ Có       | Cùng 2 router, nhưng DR/BDR election và LSDB khác         |
-| BGP iBGP vs eBGP                    | ✅ Có       | Cùng router pair, nhưng AS path và next-hop khác          |
-| NAT Static vs PAT (Overload)        | ✅ Có       | Cùng topology, nhưng translation table và port usage khác |
-| OSPF Adjacency (7 bước FSM)         | ❌ Không    | Chỉ có 1 kịch bản, dùng stepper thông thường              |
-| BGP FSM (5 trạng thái)              | ❌ Không    | Tuyến tính, không có biến thể để so sánh                  |
-| Troubleshooting / MOP / Packet Walk | ❌ Không    | Các bước tuyến tính theo thời gian, không có "chế độ"     |
-| **Algorithm Visualizer**            | ❌ Không    | **Dùng Scenario Pills thay thế — cùng chức năng, UX tốt hơn cho > 3 biến thể** |
+| Context                             | Should Toggle? | Reason                                                    |
+| ----------------------------------- | -------------- | --------------------------------------------------------- |
+| DHCP Local vs DHCP Relay            | ✅ Yes          | Same devices, but different node count and packet flow    |
+| STP vs PVST+ vs RSTP vs MSTP        | ✅ Yes          | Same triangle topology, but different blocking mechanism  |
+| OSPF P2P vs Broadcast               | ✅ Yes          | Same 2 routers, but different DR/BDR election and LSDB    |
+| BGP iBGP vs eBGP                    | ✅ Yes          | Same router pair, but different AS path and next-hop      |
+| NAT Static vs PAT (Overload)        | ✅ Yes          | Same topology, but different translation table and ports  |
+| OSPF Adjacency (7 steps FSM)        | ❌ No           | Only 1 scenario, use standard stepper                     |
+| BGP FSM (5 states)                  | ❌ No           | Linear, no variants to compare                            |
+| Troubleshooting / MOP / Packet Walk | ❌ No           | Linear steps over time, no "modes"                        |
+| **Algorithm Visualizer**            | ❌ No           | **Use Scenario Pills instead — same function, better UX for > 3 variants** |
 
-### Khi nào KHÔNG nên dùng
+### When NOT to use
 
-- Lab chỉ có **1 kịch bản tuyến tính** → dùng Stepper thông thường.
-- Các biến thể có **topology hoàn toàn khác nhau** (số lượng node chênh lệch nhiều) → tạo 2 lab riêng.
-- Có **> 5 biến thể** → dùng KB Tabs (Diagnostic Playbook format) hoặc Scenario Pills (Algorithm Visualizer) thay vì Toggle.
+- Lab has only **1 linear scenario** → use standard Stepper.
+- Variants have **completely different topologies** (significant node count difference) → create 2 separate labs.
+- Have **> 5 variants** → use KB Tabs (Diagnostic Playbook format) or Scenario Pills (Algorithm Visualizer) instead of Toggle.
 
 ---
 
-### Form HTML chuẩn (copy y chang, không sáng tạo thêm)
+### Standard HTML Form (copy exactly, do not invent)
 
-Đặt ngay **phía trên** section Timeline Stepper, bên trong `<main>`:
+Place it immediately **above** the Timeline Stepper section, inside `<main>`:
 
 ```html
-<!-- Mode Toggle — chỉ dùng khi có >= 2 chế độ/biến thể -->
+<!-- Mode Toggle — only use when there are >= 2 modes/variants -->
 <div class="flex items-center justify-center">
     <div
         class="flex flex-wrap justify-center items-center bg-slate-200/50 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700"
@@ -1077,36 +1077,36 @@ Dùng khi lab có **≥ 2 biến thể/chế độ** thể hiện **cùng một 
             onclick="app.switchMode('A')"
             class="mode-btn px-5 py-2 text-sm font-bold rounded-md transition-all"
         >
-            Tên Chế Độ A
+            Mode A Name
         </button>
         <button
             id="mode-btn-B"
             onclick="app.switchMode('B')"
             class="mode-btn px-5 py-2 text-sm font-bold rounded-md transition-all"
         >
-            Tên Chế Độ B
+            Mode B Name
         </button>
     </div>
 </div>
 ````
 
-**Quy tắc HTML bất biến:**
+**Invariant HTML Rules:**
 
-- Container class: `bg-slate-200/50 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700` — không thay `rounded-xl`, không thêm `gap-1` hay `p-1.5`.
-- Button class base: `px-5 py-2 text-sm font-bold rounded-md` — không dùng `rounded-lg`, không dùng `px-4`.
-- **Không đặt icon `<i class="fas...">` bên trong nút.** Tên nút là text thuần. Có thể thêm chú thích chuẩn nhỏ: `STP <span class="font-normal text-[11px] opacity-70">802.1D</span>`.
+- Container class: `bg-slate-200/50 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700` — do not change to `rounded-xl`, do not add `gap-1` or `p-1.5`.
+- Button class base: `px-5 py-2 text-sm font-bold rounded-md` — do not use `rounded-lg`, do not use `px-4`.
+- **Do not place `<i class="fas...">` icons inside buttons.** Button name is pure text. Can add a small standard annotation: `STP <span class="font-normal text-[11px] opacity-70">802.1D</span>`.
 
 ---
 
-### Logic JS chuẩn (copy y chang, không sáng tạo thêm)
+### Standard JS Logic (copy exactly, do not invent)
 
 ```javascript
-// Class không thay đổi theo chế độ — tất cả dùng chung 1 màu Active
+// Classes do not change based on mode — all use the same Active color
 const TOGGLE_ACTIVE   = 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400';
 const TOGGLE_INACTIVE = 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200';
 
 updateModeToggleUI() {
-  const allModes = ['A', 'B']; // Liệt kê đúng tất cả key
+  const allModes = ['A', 'B']; // List all keys correctly
   allModes.forEach(key => {
     const btn = document.getElementById(`mode-btn-${key}`);
     if (!btn) return;
@@ -1124,45 +1124,49 @@ switchMode(mode) {
   this.updateModeToggleUI();
   this.buildStepper();
   this.renderStep(0);
-  // Nếu số node thay đổi: setTimeout(() => { this.init(); }, 300)
+  // If node count changes: setTimeout(() => { this.init(); }, 300)
 }
 ```
 
-**Quy tắc JS bất biến:**
+**Invariant JS Rules:**
 
-- Active class **luôn là `text-blue-600`** — tuyệt đối không đổi màu theo từng chế độ (ví dụ: không làm RSTP xanh lá, MSTP tím). Sự khác biệt thể hiện qua Topology/Animation, không qua màu nút.
-- `switchMode()` phải gọi `this.pause()` trước tiên để tránh bug auto-play chạy tiếp sau khi đổi chế độ.
-- Nếu số node thay đổi giữa các chế độ: ẩn node thừa bằng `opacity-0 pointer-events-none scale-75`, hiện lại bằng `opacity-100 scale-100`, dùng `setTimeout(..., 300)` trước `drawLinks()`.
+- Active class **must always be `text-blue-600`** — absolutely do not change colors per mode (e.g., do not make RSTP green, MSTP purple). Differences are shown through Topology/Animation, not button colors.
+- `switchMode()` must call `this.pause()` first to prevent auto-play bugs running after mode change.
+- If node count changes between modes: hide excess nodes with `opacity-0 pointer-events-none scale-75`, reveal with `opacity-100 scale-100`, use `setTimeout(..., 300)` before `drawLinks()`.
 
 ---
 
 ## 11. Mandatory Engine Method: `clampNodes()`
 
-> **CRITICAL:** Bất kỳ lab nào có Topology Canvas (`id="topology-canvas"` với `overflow-hidden`) đều **PHẢI** implement method này trong class simulator. Không cần tính tay `top%` nữa — engine tự hiệu chỉnh.
+> **CRITICAL:** Any lab with a Topology Canvas (`id="topology-canvas"` with `overflow-hidden`) **MUST** implement this method in the simulator class. No need to manually calculate `top%` anymore — the engine will self-adjust.
 
-### Vấn đề cần giải quyết
+### Problem to solve
 
-Các node dùng `position: absolute` + `transform: translate(-50%, -50%)`. Role badge có `absolute -top-3` (~12px phía trên card). Khi `top%` quá nhỏ, badge bị `overflow-hidden` của canvas cắt mất. Tương tự với bottom/left/right edge.
+Nodes use `position: absolute` + `transform: translate(-50%, -50%)`. Role badge has `absolute -top-3` (~12px above card). When `top%` is too small, the badge gets cut off by the canvas's `overflow-hidden`. Similar issues happen with bottom/left/right edges.
 
-### Implementation (copy nguyên vào mọi simulator class)
+### Implementation (copy exactly into every simulator class)
 
 ```javascript
-// Gọi ở cuối render(): setTimeout(() => { this.clampNodes(); this.drawLinks(...); }, 50);
-// Gọi trong resize handler trước drawLinks.
-// KHÔNG cần biết trước ID của node — tự discover qua querySelectorAll.
+// Call at the end of render(): setTimeout(() => { this.clampNodes(); this.drawLinks(...); }, 50);
+// Call in resize handler before drawLinks.
+// DO NOT need to know node IDs beforehand — self-discover via querySelectorAll.
 
 clampNodes() {
     if (!this.dom.canvas) return;
     const cr  = this.dom.canvas.getBoundingClientRect();
-    const BADGE_PX = 20;  // clearance cho role badge -top-3 (~12px) + padding
-    const EDGE_PX  = 6;   // padding các cạnh còn lại
+    const BADGE_PX = 20;  // clearance for role badge -top-3 (~12px) + padding
+    const EDGE_PX  = 6;   // padding for remaining edges
 
     this.dom.canvas.querySelectorAll('[id^="node-"]').forEach(node => {
         const nr  = node.getBoundingClientRect();
         const hPx = cr.height / 100;
         const wPx = cr.width  / 100;
-        let top  = parseFloat(node.style.top)  || 50;
-        let left = parseFloat(node.style.left) || 50;
+        if (!node.dataset.rawTop) {
+                    node.dataset.rawTop = parseFloat(node.style.top) || 50;
+                    node.dataset.rawLeft = parseFloat(node.style.left) || 50;
+                }
+                let top = parseFloat(node.dataset.rawTop);
+                let left = parseFloat(node.dataset.rawLeft);
 
         const topClip   = (cr.top  + BADGE_PX) - nr.top;    if (topClip   > 0) top  += topClip   / hPx;
         const botClip   = nr.bottom - (cr.bottom - EDGE_PX); if (botClip   > 0) top  -= botClip   / hPx;
@@ -1175,25 +1179,25 @@ clampNodes() {
 }
 ```
 
-### Cách tích hợp
+### How to integrate
 
 ```javascript
-// 1. Cuối mỗi render():
+// 1. End of every render():
 setTimeout(() => {
     this.clampNodes();
     this.drawLinks(currentStep.links);
 }, 50);
 
-// 2. Trong resize handler:
+// 2. In resize handler:
 window.addEventListener('resize', () => {
     this.clampNodes();
     this.drawLinks(currentStep.links);
 });
 ```
 
-### Tại sao `setTimeout 50ms`?
+### Why `setTimeout 50ms`?
 
-Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chưa kịp reflow/repaint. Nếu gọi `getBoundingClientRect()` ngay lập tức, kết quả trả về tọa độ cũ. 50ms đủ để browser commit layout mới trước khi `clampNodes()` đọc vị trí thực.
+When `render()` changes a node's class (e.g., `border-red-500`), the browser hasn't had time to reflow/repaint yet. If `getBoundingClientRect()` is called immediately, the result returns old coordinates. 50ms is enough for the browser to commit the new layout before `clampNodes()` reads the actual position.
 
 ---
 

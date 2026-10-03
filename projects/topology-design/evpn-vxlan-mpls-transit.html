@@ -387,21 +387,27 @@
     }
 
     function clampNodes() {
-      // Giữ node (và role badge -top-3) không bị overflow-hidden của canvas cắt mất (docs Section 11).
       const canvas = document.getElementById('topology-container');
       if (!canvas) return;
       const cr = canvas.getBoundingClientRect();
       if (!cr.width || !cr.height) return;
       const BADGE_PX = 22, EDGE_PX = 6;
-      canvas.querySelectorAll('[id^="node-"]').forEach(node => {
-        if (!node.style.left || !node.style.top) return;
+      
+            canvas.querySelectorAll('[id^="node-"]').forEach(node => {
         const nr = node.getBoundingClientRect();
         const hPx = cr.height / 100, wPx = cr.width / 100;
-        let top = parseFloat(node.style.top), left = parseFloat(node.style.left);
+        if (!node.dataset.rawTop) {
+                    node.dataset.rawTop = parseFloat(node.style.top) || 50;
+                    node.dataset.rawLeft = parseFloat(node.style.left) || 50;
+                }
+                let top = parseFloat(node.dataset.rawTop);
+                let left = parseFloat(node.dataset.rawLeft);
+        
         const topClip = (cr.top + BADGE_PX) - nr.top;      if (topClip > 0)   top  += topClip / hPx;
-        const botClip = nr.bottom - (cr.bottom - EDGE_PX);  if (botClip > 0)   top  -= botClip / hPx;
-        const leftClip = (cr.left + EDGE_PX) - nr.left;     if (leftClip > 0)  left += leftClip / wPx;
-        const rightClip = nr.right - (cr.right - EDGE_PX);  if (rightClip > 0) left -= rightClip / wPx;
+        const botClip = nr.bottom - (cr.bottom - EDGE_PX); if (botClip > 0)   top  -= botClip / hPx;
+        const leftClip = (cr.left + EDGE_PX) - nr.left;    if (leftClip > 0)  left += leftClip / wPx;
+        const rightClip = nr.right - (cr.right - EDGE_PX); if (rightClip > 0) left -= rightClip / wPx;
+        
         if (topClip > 0 || botClip > 0) node.style.top = top + '%';
         if (leftClip > 0 || rightClip > 0) node.style.left = left + '%';
       });

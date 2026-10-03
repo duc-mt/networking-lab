@@ -552,8 +552,12 @@ class TroubleshootingApp {
         this.dom.canvas.querySelectorAll('[id^="node-"]').forEach(node => {
             const nr = node.getBoundingClientRect();
             const hPx = cr.height / 100, wPx = cr.width / 100;
-            let top = parseFloat(node.style.top) || 50;
-            let left = parseFloat(node.style.left) || 50;
+            if (!node.dataset.rawTop) {
+                    node.dataset.rawTop = parseFloat(node.style.top) || 50;
+                    node.dataset.rawLeft = parseFloat(node.style.left) || 50;
+                }
+                let top = parseFloat(node.dataset.rawTop);
+                let left = parseFloat(node.dataset.rawLeft);
             const topClip = (cr.top + BADGE_PX) - nr.top;       if (topClip > 0) top += topClip / hPx;
             const botClip = nr.bottom - (cr.bottom - EDGE_PX);   if (botClip > 0) top -= botClip / hPx;
             const leftClip = (cr.left + EDGE_PX) - nr.left;      if (leftClip > 0) left += leftClip / wPx;

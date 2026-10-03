@@ -844,8 +844,12 @@ const App = (() => {
     canvas.querySelectorAll('[id^="node-"]').forEach(node => {
       const nr = node.getBoundingClientRect();
       const hPx=cr.height/100, wPx=cr.width/100;
-      let top=parseFloat(node.style.top)||50;
-      let left=parseFloat(node.style.left)||50;
+      if (!node.dataset.rawTop) {
+                    node.dataset.rawTop = parseFloat(node.style.top) || 50;
+                    node.dataset.rawLeft = parseFloat(node.style.left) || 50;
+                }
+                let top = parseFloat(node.dataset.rawTop);
+                let left = parseFloat(node.dataset.rawLeft);
       const tc=(cr.top+BADGE)-nr.top; if(tc>0) top+=tc/hPx;
       const bc=nr.bottom-(cr.bottom-EDGE); if(bc>0) top-=bc/hPx;
       const lc=(cr.left+EDGE)-nr.left; if(lc>0) left+=lc/wPx;

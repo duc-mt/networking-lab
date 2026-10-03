@@ -537,8 +537,12 @@ Ping statistics for 10.1.100.20:
                 if (!node) return;
                 
                 // Read inline percent styles
-                let top = parseFloat(node.style.top);
-                let left = parseFloat(node.style.left);
+                if (!node.dataset.rawTop) {
+                    node.dataset.rawTop = parseFloat(node.style.top) || 50;
+                    node.dataset.rawLeft = parseFloat(node.style.left) || 50;
+                }
+                let top = parseFloat(node.dataset.rawTop);
+                let left = parseFloat(node.dataset.rawLeft);
                 
                 const nr = node.getBoundingClientRect();
                 

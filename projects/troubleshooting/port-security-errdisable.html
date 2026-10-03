@@ -513,8 +513,12 @@ class TroubleshootingSimulator {
             const nr  = node.getBoundingClientRect();
             const hPx = cr.height / 100;
             const wPx = cr.width  / 100;
-            let top  = parseFloat(node.style.top)  || 50;
-            let left = parseFloat(node.style.left) || 50;
+            if (!node.dataset.rawTop) {
+                    node.dataset.rawTop = parseFloat(node.style.top) || 50;
+                    node.dataset.rawLeft = parseFloat(node.style.left) || 50;
+                }
+                let top = parseFloat(node.dataset.rawTop);
+                let left = parseFloat(node.dataset.rawLeft);
 
             // Top: include badge clearance above the card
             const topClip = (cr.top + BADGE_PX) - nr.top;
