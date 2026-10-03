@@ -44,16 +44,16 @@ Whenever generating or editing HTML/CSS or interface components in this project,
 
 ### Table of 9 Templates — Quick Selection:
 
-| Template                  | `type` key            | When to Use                                                                                         |
-| ------------------------- | --------------------- | ------------------------------------------------------------------------------------------------ |
-| Protocol Simulator        | `protocol`            | Explaining protocol operations over time (FSM, packet exchange)                              |
-| Troubleshooting Lab       | `troubleshooting`     | Recreating the incident response process: symptom → root cause → fix                                       |
-| Security Packet Walk      | `packet-walk`         | Tracing packets through firewall/NAT pipelines                                                           |
-| Change / MOP Flow         | `change-mop`          | Documenting a maintenance window: pre-check → execute → rollback                                  |
-| Automation Workflow       | `automation`          | Illustrating scripts/APIs: payload → response → error handling                                         |
-| Failover / HA Drill       | `failover`            | Resilience testing: trigger → timer countdown → convergence                                         |
-| Topology Design Reference | `topology-design`     | HLD/blueprint of a complete network architecture, without a timeline                                       |
-| Diagnostic Playbook       | `diagnostic-playbook` | Catalog of N failure modes on the same topology — flip tabs to compare                                  |
+| Template                  | `type` key            | When to Use                                                                                     |
+| ------------------------- | --------------------- | ----------------------------------------------------------------------------------------------- |
+| Protocol Simulator        | `protocol`            | Explaining protocol operations over time (FSM, packet exchange)                                 |
+| Troubleshooting Lab       | `troubleshooting`     | Recreating the incident response process: symptom → root cause → fix                            |
+| Security Packet Walk      | `packet-walk`         | Tracing packets through firewall/NAT pipelines                                                  |
+| Change / MOP Flow         | `change-mop`          | Documenting a maintenance window: pre-check → execute → rollback                                |
+| Automation Workflow       | `automation`          | Illustrating scripts/APIs: payload → response → error handling                                  |
+| Failover / HA Drill       | `failover`            | Resilience testing: trigger → timer countdown → convergence                                     |
+| Topology Design Reference | `topology-design`     | HLD/blueprint of a complete network architecture, without a timeline                            |
+| Diagnostic Playbook       | `diagnostic-playbook` | Catalog of N failure modes on the same topology — flip tabs to compare                          |
 | **Algorithm Visualizer**  | **`algorithm-viz`**   | **Live graph algorithm running on an interactive topology (Dijkstra SPF, Bellman-Ford, CSPF…)** |
 
 ### When to choose Algorithm Visualizer (type: `algorithm-viz`):
@@ -61,6 +61,7 @@ Whenever generating or editing HTML/CSS or interface components in this project,
 Use this when the learning objective is to **observe algorithm computations on a graph** and the learner needs to **manually modify the topology** to see immediate changes. Unlike Protocol Simulator (linear timeline, passive), the Algorithm Visualizer is **reactive**: the user clicks a link to shut it down or change its cost → the algorithm reruns → paths/tables update in real-time.
 
 Suitable lab examples:
+
 - OSPF SPF / Dijkstra — click links to shutdown or change cable type, see paths change
 - IS-IS SPF on dual-topology (L1/L2)
 - MPLS-TE CSPF with bandwidth constraints
@@ -74,10 +75,10 @@ When writing content displayed on the UI, you must mix English and Vietnamese ac
 - **English (Keep As-Is):** Main Lab Titles (H1), system states (e.g., `ONLINE`, `ERR-DISABLE`), Stepper labels (e.g., `INIT`, `VERIFY`), Role/Device names (e.g., `Core Switch`), and all CLI/Console output. Absolutely do not translate specialized terminology (like Routing, OSPF, Payload, Failover).
 - **Vietnamese:** Detailed descriptions, step explanations, subheadings, and analysis sections. The tone must be professional and concise.
 
-*(Translator note: If the user explicitly asks for an all-English lab, Vietnamese can be omitted. However, the default bilingual rule remains for standard project labs).*
+_(Translator note: If the user explicitly asks for an all-English lab, Vietnamese can be omitted. However, the default bilingual rule remains for standard project labs)._
 
 ## 7. Principle of Restraint
 
 - **Avoid Feature Bloat:** When creating a new page, DO NOT try to cram all existing patterns (macOS terminals, floating shadow-xl cards, pill tabs, live Dijkstra engines, etc.) into a single interface.
-- **Selective Application:** Only use UI components or engine features that genuinely benefit the user experience or align with the specific learning objective of that lab. 
+- **Selective Application:** Only use UI components or engine features that genuinely benefit the user experience or align with the specific learning objective of that lab.
 - Prioritize a clean, focused, and purposeful interface over showing off every available design feature, to prevent the UI from becoming cluttered or overwhelming.
