@@ -14,7 +14,7 @@
 .mono{font-family:'Fira Code',monospace}
 
 /* ── Topology canvas ── */
-#canvas{position:relative;width:100%;overflow:hidden;min-height:480px; flex: 1;background:#f8fafc;}
+#canvas{position:relative;width:100%;overflow:hidden;min-height:480px;background:#f8fafc;}
 .dark #canvas{background:#0f172a;}
 #topo-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 #node-layer{position:absolute;inset:0;z-index:10}
@@ -25,8 +25,8 @@
 .ninner{
   border:2px solid #e2e8f0;border-radius:14px;padding:8px 13px;min-width:88px;text-align:center;
   transition:all .35s ease;background:#ffffff;box-shadow:0 4px 12px rgba(0,0,0,0.06);
-;filter:drop-shadow(0 10px 15px rgba(0,0,0,0.1));}
-.dark .ninner{background:#1e293b;border-color:#334155;box-shadow:0 4px 16px rgba(0,0,0,0.35);;filter:drop-shadow(0 10px 15px rgba(0,0,0,0.1));}
+}
+.dark .ninner{background:#1e293b;border-color:#334155;box-shadow:0 4px 16px rgba(0,0,0,0.35);}
 .nrole{
   position:absolute;top:-11px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;padding:1px 7px;
   border-radius:999px;white-space:nowrap;letter-spacing:.05em;background:#f1f5f9;border:1px solid #cbd5e1;color:#475569;
@@ -52,23 +52,23 @@
 /* node state styles */
 .ns-normal .ninner{border-color:#cbd5e1}
 .dark .ns-normal .ninner{border-color:#334155}
-.ns-master .ninner{border-color:#10b981;box-shadow:0 0 16px rgba(16,185,129,.35);filter:drop-shadow(0 10px 15px rgba(0,0,0,0.1));}
+.ns-master .ninner{border-color:#10b981;box-shadow:0 0 16px rgba(16,185,129,.35)}
 .ns-standby .ninner{border-color:#3b82f630;opacity:.7}
-.ns-failing .ninner{border-color:#ef4444;box-shadow:0 0 18px rgba(239,68,68,.45);animation:pulse-red .5s infinite alternate;filter:drop-shadow(0 10px 15px rgba(0,0,0,0.1));}
+.ns-failing .ninner{border-color:#ef4444;box-shadow:0 0 18px rgba(239,68,68,.45);animation:pulse-red .5s infinite alternate}
 .ns-failed  .ninner{border-color:#cbd5e1;opacity:.4}
 .dark .ns-failed  .ninner{border-color:#334155;}
-.ns-takeover .ninner{border-color:#f59e0b;box-shadow:0 0 18px rgba(245,158,11,.5);animation:pulse-amber .5s infinite alternate;filter:drop-shadow(0 10px 15px rgba(0,0,0,0.1));}
-.ns-newmaster .ninner{border-color:#10b981;box-shadow:0 0 20px rgba(16,185,129,.5);animation:pulse-green .7s infinite alternate;filter:drop-shadow(0 10px 15px rgba(0,0,0,0.1));}
-.ns-ospf-reconverge .ninner{border-color:#6366f1;box-shadow:0 0 16px rgba(99,102,241,.4);animation:pulse-indigo .6s infinite alternate;filter:drop-shadow(0 10px 15px rgba(0,0,0,0.1));}
+.ns-takeover .ninner{border-color:#f59e0b;box-shadow:0 0 18px rgba(245,158,11,.5);animation:pulse-amber .5s infinite alternate}
+.ns-newmaster .ninner{border-color:#10b981;box-shadow:0 0 20px rgba(16,185,129,.5);animation:pulse-green .7s infinite alternate}
+.ns-ospf-reconverge .ninner{border-color:#6366f1;box-shadow:0 0 16px rgba(99,102,241,.4);animation:pulse-indigo .6s infinite alternate}
 .ns-wan{border-radius:10px}
 .ns-wan .ninner{border-radius:10px;background:#f0f9ff;border-color:#bae6fd}
 .dark .ns-wan .ninner{background:#0c1a2e;border-color:#1e3a5f}
 .ns-host .ninner{border-radius:10px;background:#f0fdf4;border-color:#bbf7d0}
 .dark .ns-host .ninner{background:#0f1a12;border-color:#14532d}
-.ns-host-affected .ninner{border-radius:10px;background:#fef2f2;border-color:#fecaca;box-shadow:0 0 14px rgba(239,68,68,.3);filter:drop-shadow(0 10px 15px rgba(0,0,0,0.1));}
+.ns-host-affected .ninner{border-radius:10px;background:#fef2f2;border-color:#fecaca;box-shadow:0 0 14px rgba(239,68,68,.3)}
 .dark .ns-host-affected .ninner{background:#1a0f0f;border-color:#7f1d1d}
 
-@keyframes pulse-red{from{box-shadow:0 0 10px rgba(239,68,68,.3);filter:drop-shadow(0 10px 15px rgba(0,0,0,0.1));}to{box-shadow:0 0 24px rgba(239,68,68,.7)}}
+@keyframes pulse-red{from{box-shadow:0 0 10px rgba(239,68,68,.3)}to{box-shadow:0 0 24px rgba(239,68,68,.7)}}
 @keyframes pulse-amber{from{box-shadow:0 0 10px rgba(245,158,11,.3)}to{box-shadow:0 0 24px rgba(245,158,11,.6)}}
 @keyframes pulse-green{from{box-shadow:0 0 12px rgba(16,185,129,.3)}to{box-shadow:0 0 22px rgba(16,185,129,.6)}}
 @keyframes pulse-indigo{from{box-shadow:0 0 10px rgba(99,102,241,.2)}to{box-shadow:0 0 22px rgba(99,102,241,.55)}}
@@ -177,17 +177,17 @@
 </header>
 
 <!-- stepper -->
-<div class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-6 overflow-x-auto shadow-inner">
-  <div class="w-full relative min-h-[60px]" id="stepper">
+<div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 overflow-x-auto shadow-sm">
+  <div class="flex items-center gap-2 min-w-max" id="stepper">
     <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">Bấm "Trigger Outage" để bắt đầu mô phỏng failover</span>
   </div>
 </div>
 
 <!-- ═══ MAIN ═══ -->
-<main class="flex-1 flex flex-col overflow-hidden relative bg-slate-50">
+<main class="flex-1 flex flex-col xl:flex-row overflow-y-auto xl:overflow-hidden xl:h-[calc(100vh-95px)]">
 
   <!-- LEFT: topology + impact -->
-  <div class="flex-1 flex flex-col w-full h-full relative">
+  <div class="flex-1 flex flex-col min-h-[480px] xl:min-h-0 bg-white dark:bg-slate-950 border-b xl:border-b-0 xl:border-r border-slate-200 dark:border-slate-800/60">
 
     <!-- impact banner -->
     <div class="px-4 pt-3 pb-1 shrink-0">
@@ -232,26 +232,34 @@
     </div>
   </div>
 
-  <!-- OVERLAYS (Floating Cards) -->
-    <div class="absolute top-4 left-4 z-40 flex flex-col gap-4 pointer-events-none">
-      <div id="vrrp-card" class="bg-white rounded-xl shadow-xl border border-slate-200 p-4 w-[380px] pointer-events-auto transition-all"></div>
-      <div id="ospf-card" class="bg-white rounded-xl shadow-xl border border-slate-200 p-4 w-[380px] pointer-events-auto transition-all"></div>
-    </div>
-    
-    <!-- TERMINAL (Anchored Bottom) -->
-    <div class="absolute bottom-4 left-4 right-4 z-40 pointer-events-none flex justify-center">
-      <div class="bg-slate-900 rounded-xl shadow-2xl border border-slate-800 w-full max-w-5xl pointer-events-auto flex flex-col h-48 overflow-hidden">
-        <div class="flex items-center space-x-2 px-4 py-2.5 bg-slate-800/80 border-b border-slate-700/80 shrink-0">
-          <div class="w-3 h-3 rounded-full bg-rose-500/90"></div>
-          <div class="w-3 h-3 rounded-full bg-amber-500/90"></div>
-          <div class="w-3 h-3 rounded-full bg-emerald-500/90"></div>
-          <div class="ml-4 text-[10px] text-slate-400 font-mono tracking-widest uppercase" id="term-title">Console</div>
+  <!-- RIGHT: detail panel -->
+  <div class="w-full xl:w-[420px] flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <!-- panel header -->
+    <div class="p-3.5 pb-2.5 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold uppercase tracking-widest border border-pink-200 dark:border-pink-800 bg-pink-50 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300">
+            <i class="fas fa-heart-pulse mr-1.5"></i> Protocol State
+          </span>
+          <h3 class="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Failover Telemetry</h3>
         </div>
-        <div class="text-sky-400 font-mono text-xs p-4 overflow-y-auto flex-1 whitespace-pre-wrap" id="term-out"></div>
+        <span class="text-xs font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+          VRRP + OSPF
+        </span>
+      </div>
+
+      <!-- tabs -->
+      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-full mb-2 w-max border border-slate-200 dark:border-slate-700/50">
+        <button class="tab-btn active flex-1 text-center" id="tab-vrrp" onclick="app.setTab('vrrp')">VRRP State</button>
+        <button class="tab-btn flex-1 text-center" id="tab-ospf" onclick="app.setTab('ospf')">OSPF Routing</button>
+        <button class="tab-btn flex-1 text-center" id="tab-cli"  onclick="app.setTab('cli')">CLI Console</button>
       </div>
     </div>
+    <div class="flex-1 overflow-y-auto p-3.5 space-y-3" id="panel-body"></div>
 
-  </div> <!-- end of flex-1 (was left side) -->
+    <!-- teaching note -->
+    <div id="teaching-note" class="m-3 p-3.5 rounded-xl text-xs text-slate-700 dark:text-slate-300 leading-relaxed border-l-4 border-indigo-500 bg-indigo-50/80 dark:bg-indigo-950/30 shadow-sm hidden shrink-0 font-sans"></div>
+  </div>
 </main>
 
 <script>
@@ -640,33 +648,14 @@ class VrrpFailoverSimulator {
       el.innerHTML = '<span class="text-xs text-slate-500 dark:text-slate-400 font-mono">Bấm "Trigger Outage" để bắt đầu mô phỏng failover</span>';
       return;
     }
-    
-    let html = '<div class="flex items-center w-full max-w-4xl mx-auto">';
+    el.innerHTML = '';
     TIMELINE.forEach((s, i) => {
-      const isActive = i === this.cur;
-      const isPast = i < this.cur;
-      const colorCls = isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/40 ring-4 ring-blue-500/20' 
-                     : isPast ? 'bg-slate-800 text-white' 
-                     : 'bg-white text-slate-400 border-2 border-slate-200';
-      
-      html += `
-        <div class="relative flex flex-col items-center flex-1 cursor-pointer group" onclick="app.seek(${i})">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold font-mono transition-all z-10 ${colorCls}">
-            ${i}
-          </div>
-          <div class="absolute top-10 w-32 text-center">
-            <div class="text-[10px] font-bold uppercase tracking-widest ${isActive ? 'text-blue-600' : 'text-slate-500'} transition-colors">${s.event}</div>
-          </div>
-        </div>
-      `;
-      
-      if (i < TIMELINE.length - 1) {
-        const lineActive = i < this.cur ? 'bg-slate-800' : 'bg-slate-200';
-        html += `<div class="flex-1 h-0.5 ${lineActive} -mx-4 z-0 transition-colors"></div>`;
-      }
+      const btn = document.createElement('button');
+      btn.className = `sbtn ${i===this.cur?'active':''}`;
+      btn.innerHTML = `<span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold ${i===this.cur?'bg-white/25 text-white':'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}">${i}</span><span>${s.event}</span>`;
+      btn.onclick = () => this.seek(i);
+      el.appendChild(btn);
     });
-    html += '</div>';
-    el.innerHTML = html;
   }
 
   // ── Impact banner ────────────────────────────
@@ -874,69 +863,114 @@ class VrrpFailoverSimulator {
   }
 
   // ── Panel ─────────────────────────────────────
+  setTab(t) {
+    this.activeTab = t;
+    ['vrrp','ospf','cli'].forEach(x => {
+      document.getElementById('tab-'+x).className = `tab-btn${x===t?' active':''}`;
+    });
+    this.renderPanel(TIMELINE[this.cur]);
+  }
+
   renderPanel(s) {
-    if (!this.triggered) {
-      document.getElementById('vrrp-card').innerHTML = '<div class="text-xs text-slate-500 text-center py-4">Waiting for trigger...</div>';
-      document.getElementById('ospf-card').innerHTML = '';
-      document.getElementById('term-out').innerHTML = '';
-      return;
-    }
-    
-    // VRRP Table
-    let vrrpHtml = `
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 dark:border-slate-700/50 pb-2">
-        <i class="fas fa-shield-halved mr-1"></i> VRRP State
-      </div>
-      <div class="space-y-1">
-    `;
-    
+    const body = document.getElementById('panel-body');
+    if (this.activeTab === 'cli')  { this.renderCLI(body, s);  return; }
+    if (this.activeTab === 'ospf') { this.renderOSPF(body, s); return; }
+    this.renderVRRP(body, s);
+  }
+
+  renderVRRP(body, s) {
+    if (!s.vrrp) { body.innerHTML=''; return; }
+    let html = `<div class="text-[9px] uppercase tracking-widest text-slate-500 mono mb-2">VRRP State — Step ${s.step}</div>`;
+
+    html += `<div class="vt-row text-[9px] text-slate-500 uppercase tracking-wider mb-1">
+      <span>Router</span><span>State / VIP</span><span>Priority</span><span>Track</span>
+    </div>`;
+
     s.vrrp.forEach(v => {
-      let isMaster = v.state.includes('MASTER');
-      let stColor = isMaster ? 'text-emerald-500' : v.state.includes('BACKUP') ? 'text-slate-500 dark:text-slate-400' : 'text-amber-500';
-      vrrpHtml += `
-        <div class="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-slate-700/30 last:border-0">
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full ${isMaster ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300 dark:bg-slate-600'}"></div>
-            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 mono">${v.node}</span>
-          </div>
-          <span class="text-[10px] font-bold ${stColor} uppercase tracking-widest">${v.state}</span>
-          <span class="text-[10px] text-slate-400 dark:text-slate-500 mono">Pri:${v.pri}</span>
-        </div>
-      `;
-    });
-    vrrpHtml += '</div>';
-    document.getElementById('vrrp-card').innerHTML = vrrpHtml;
+      const isMaster = v.state === 'MASTER';
+      const stColor = isMaster ? '#10b981' : v.state.includes('BACKUP') ? '#475569' : '#f59e0b';
+      const priColor = v.pri >= 150 ? '#10b981' : v.pri >= 100 ? '#60a5fa' : '#f87171';
+      const priWidth = (v.pri/254*100).toFixed(0);
 
-    // OSPF Table
-    let ospfHtml = `
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 dark:border-slate-700/50 pb-2">
-        <i class="fas fa-route mr-1"></i> OSPF Routing
+      html += `<div class="vt-row rounded-lg ${isMaster?'bg-emerald-900/10 border border-emerald-800/30':'bg-slate-800/40'} mb-1">
+        <span class="mono font-bold text-xs" style="color:${stColor}">${v.node}</span>
+        <div>
+          <div class="text-xs font-bold mono" style="color:${stColor}">${v.state}</div>
+          <div class="text-[10px] mono text-slate-400">${v.vip} · G${v.group}</div>
+        </div>
+        <div>
+          <div class="text-xs font-bold mono" style="color:${priColor}">${v.pri}</div>
+          <div class="pri-bar mt-1" style="width:${priWidth}%;background:${priColor}"></div>
+        </div>
+        <div class="text-[9px] mono text-slate-500 leading-tight">${v.track}</div>
+      </div>`;
+    });
+
+    html += `<div class="mt-3 rounded-xl bg-indigo-500/8 border border-indigo-500/20 p-3">
+      <div class="text-[9px] uppercase tracking-widest text-indigo-400 mb-2 mono">VyOS Track Config</div>
+      <pre class="text-[10.5px] mono text-slate-400 leading-relaxed">set interfaces ethernet eth0 vrrp \\
+  vrrp-group 1 track interface eth1 \\
+  weight 60
+<span style="color:#34d399">! eth1 down → priority 150-60=90</span>
+<span style="color:#34d399">! VyOS-1B (100) > 90 → preempt</span></pre>
+    </div>`;
+
+    body.innerHTML = html;
+  }
+
+  renderOSPF(body, s) {
+    if (!s.ospf) { body.innerHTML=''; return; }
+    const o = s.ospf;
+    let html = '';
+
+    html += `<div class="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 overflow-hidden mb-3">
+      <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 text-[9px] uppercase tracking-widest text-slate-400 mono">OSPF Neighbors</div>
+      <div class="divide-y divide-slate-700/30">
+        ${o.neighbors.map(n => {
+          const fc = n.state==='FULL'?'#34d399':'#f59e0b';
+          return `<div class="flex items-center gap-2 px-3 py-2 text-xs">
+            <span class="mono font-bold" style="color:${fc}">${n.state}</span>
+            <span class="mono text-slate-400">${n.from} ↔ ${n.to}</span>
+            <span class="ml-auto text-[9px] mono text-slate-500">${n.role}</span>
+          </div>`;
+        }).join('')}
       </div>
-      <div class="space-y-2">
-    `;
-    s.ospf.neighbors.forEach(n => {
-      ospfHtml += `
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-700 dark:text-slate-300 mono">${n.from} ↔ ${n.to}</span>
-          <span class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400">${n.role}</span>
-        </div>
-      `;
-    });
-    ospfHtml += '<div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700/50 space-y-1">';
-    s.ospf.routes.forEach(r => {
-      let rCol = r.includes('!') ? 'text-amber-500' : 'text-slate-600 dark:text-slate-400';
-      ospfHtml += `<div class="text-[10.5px] font-mono ${rCol}">${r}</div>`;
-    });
-    ospfHtml += '</div></div>';
-    document.getElementById('ospf-card').innerHTML = ospfHtml;
+    </div>`;
 
-    // Terminal
-    let termOut = s.cli || '';
-    termOut = termOut.replace(/^(VyOS.*?#.*)$/gm, '<span class="text-slate-500">$1</span>');
-    termOut = termOut.replace(/^(!.*)$/gm, '<span class="text-slate-400 italic">$1</span>');
-    
-    document.getElementById('term-out').innerHTML = termOut;
-    document.getElementById('term-title').textContent = s.event;
+    html += `<div class="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 overflow-hidden mb-3">
+      <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 text-[9px] uppercase tracking-widest text-slate-400 mono">Routing Table</div>
+      <div class="px-3 py-2 space-y-1">
+        ${o.routes.map(r => `<div class="text-[10.5px] mono ${r.startsWith('!')?'text-slate-500':'text-slate-300'}">${r}</div>`).join('')}
+      </div>
+    </div>`;
+
+    html += `<div class="rounded-xl p-3 border ${s.step<4?'bg-red-900/10 border-red-800/40':'bg-emerald-900/10 border-emerald-800/40'}">
+      <div class="text-[9px] uppercase tracking-widest mono mb-1 ${s.step<4?'text-red-400':'text-sky-400'}">ECMP Status</div>
+      <div class="text-[11px] mono ${s.step<4?'text-red-300':'text-emerald-300'}">${o.ecmp}</div>
+    </div>`;
+
+    body.innerHTML = html;
+  }
+
+  renderCLI(body, s) {
+    body.innerHTML = `<div class="rounded-xl bg-slate-950 border border-slate-800 overflow-hidden">
+      <div class="flex items-center gap-1.5 px-3 py-2 border-b border-slate-800">
+        <span class="w-2.5 h-2.5 rounded-full bg-red-500/70"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/70"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-green-500/70"></span>
+        <span class="ml-2 text-[10px] mono text-slate-500">VyOS — ${s.event}</span>
+      </div>
+      <pre class="cli p-4 text-[11px]">${this.colorCLI(s.cli||'')}</pre>
+    </div>`;
+  }
+
+  colorCLI(txt) {
+    return txt
+      .replace(/^(.*#\s*run.*)$/gm,'<span class="cmd">$1</span>')
+      .replace(/\b(FULL|MASTER|UP|Converged|stable)\b/g,'<span class="ok">$1</span>')
+      .replace(/\b(BACKUP|STANDBY|DROTHER)\b/g,'<span class="hi">$1</span>')
+      .replace(/\b(DOWN|fail|FAILING|drop|DROP)\b/gi,'<span class="err">$&</span>')
+      .replace(/!.*/g,'<span class="warn">$&</span>');
   }
 
   toggleTheme() {
