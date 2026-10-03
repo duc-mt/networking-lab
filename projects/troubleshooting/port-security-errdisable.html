@@ -83,6 +83,14 @@
             <!-- Golden Standard Wrapper -->
             <div class="w-full overflow-x-auto">
                 <section id="topology-canvas" style="min-width: 900px;" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[500px] md:min-h-[580px]">
+                
+                <!-- Diagnostic Scenario Selector (Pill Tabs) -->
+                <div class="absolute top-4 left-4 z-30 flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <button id="case-btn-shutdown" onclick="app.switchCase('shutdown')" class="px-3 py-1 text-[11px] font-bold rounded-full transition-all bg-amber-500 text-white shadow-sm">Case 1: Shutdown</button>
+                    <button id="case-btn-restrict" onclick="app.switchCase('restrict')" class="px-3 py-1 text-[11px] font-bold rounded-full transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Case 2: Restrict</button>
+                    <button id="case-btn-recovery" onclick="app.switchCase('recovery')" class="px-3 py-1 text-[11px] font-bold rounded-full transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Case 3: Recovery</button>
+                </div>
+
                 <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
 
                 <!-- Node: Core Switch — Top Center -->

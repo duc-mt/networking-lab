@@ -86,6 +86,16 @@
         <!-- Convergence Time Badge -->
         <div id="converge-badge" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2"></div>
 
+        <!-- Interactive Link Outage Control (Live Interactive Feature) -->
+        <div class="absolute bottom-4 right-4 z-30 flex flex-wrap gap-2">
+            <button onclick="app.toggleLinkOutage('sw3-c1')" class="px-3 py-1.5 rounded-lg bg-slate-900/80 text-white text-[11px] font-bold border border-slate-700 hover:bg-red-600 transition-all shadow-md flex items-center gap-1.5 backdrop-blur-sm cursor-pointer">
+                <i class="fas fa-scissors text-red-400"></i> Toggle SW3 ↔ Core1
+            </button>
+            <button onclick="app.toggleLinkOutage('sw3-c2')" class="px-3 py-1.5 rounded-lg bg-slate-900/80 text-white text-[11px] font-bold border border-slate-700 hover:bg-red-600 transition-all shadow-md flex items-center gap-1.5 backdrop-blur-sm cursor-pointer">
+                <i class="fas fa-scissors text-red-400"></i> Toggle SW3 ↔ Core2
+            </button>
+        </div>
+
         <!-- Node: Core 1 (Root Bridge) -->
         <div id="node-Core1" class="absolute w-36 md:w-52 bg-white dark:bg-slate-800 rounded-xl p-4 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:25%;top:22%;transform:translate(-50%,-50%)">
             <div id="role-Core1" class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700/50">Root Bridge</div>
@@ -744,6 +754,60 @@ class StpConvergenceSimulator {
             { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(1)`,   opacity: 1, offset: 0.88 },
             { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(0.8)`, opacity: 0 },
         ], { duration: 2600, easing: 'cubic-bezier(0.4,0,0.2,1)', fill: 'forwards' });
+    }
+
+    toggleLinkOutage(linkId) {
+        const step = MODES[this.currentMode].steps[this.idx];
+        const link = step.links.find(l => l.id === linkId);
+        if (!link) return;
+
+        // Toggle link state
+        if (link.st === 'ACTIVE') {
+            link.st = 'DOWN';
+        } else {
+            link.st = 'ACTIVE';
+        }
+
+        // Re-evaluate port labels & state dynamically
+        const c1Active = step.links.find(l => l.id === 'sw3-c1')?.st === 'ACTIVE';
+        const c2Active = step.links.find(l => l.id === 'sw3-c2')?.st === 'ACTIVE';
+
+        if (c1Active && c2Active) {
+            step.portLabels.sw3c1 = "Gi0/1 — Root Port (FWD) ✅";
+            step.portLabels.sw3c2 = "Gi0/2 — Alt Port (BLK) 🛑";
+            step.portLabels.c1col = "emerald";
+            step.portLabels.c2col = "amber";
+            step.linkStatus = "Link SW3 ↔ Core1 Active (Primary Root Path)";
+            step.nodes.SW3.state = "FORWARDING";
+            step.nodes.SW3.color = "emerald";
+        } else if (!c1Active && c2Active) {
+            step.portLabels.sw3c1 = "Gi0/1 — DOWN ❌";
+            step.portLabels.sw3c2 = "Gi0/2 — NEW Root Port (FWD) ✅";
+            step.portLabels.c1col = "red";
+            step.portLabels.c2col = "emerald";
+            step.linkStatus = "Failover! SW3 routing via Core 2";
+            step.nodes.SW3.state = "RE-CONVERGED";
+            step.nodes.SW3.color = "emerald";
+        } else if (c1Active && !c2Active) {
+            step.portLabels.sw3c1 = "Gi0/1 — Root Port (FWD) ✅";
+            step.portLabels.sw3c2 = "Gi0/2 — DOWN ❌";
+            step.portLabels.c1col = "emerald";
+            step.portLabels.c2col = "red";
+            step.linkStatus = "Backup link down; Primary link active";
+            step.nodes.SW3.state = "FORWARDING";
+            step.nodes.SW3.color = "emerald";
+        } else {
+            step.portLabels.sw3c1 = "Gi0/1 — DOWN ❌";
+            step.portLabels.sw3c2 = "Gi0/2 — DOWN ❌";
+            step.portLabels.c1col = "red";
+            step.portLabels.c2col = "red";
+            step.linkStatus = "TOTAL ISOLATION! Both uplinks down!";
+            step.nodes.SW3.state = "ISOLATED";
+            step.nodes.SW3.color = "red";
+        }
+
+        // Re-render current step
+        this.render(this.idx);
     }
 
     nextStep() { const len = MODES[this.currentMode].steps.length; if (this.idx < len - 1) this.render(this.idx + 1); }
