@@ -90,7 +90,7 @@
         </div>
 
         <!-- Topology Canvas -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 mb-4 shadow-sm relative overflow-hidden h-[480px]" id="topology-canvas">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 mb-8 shadow-sm relative overflow-hidden h-[480px]" id="topology-canvas">
             <!-- SVG Paths -->
             <svg class="absolute inset-0 w-full h-full pointer-events-none" id="svg-layer">
                 <!-- Areas -->
@@ -109,14 +109,14 @@
             
             <!-- Nodes will be injected here by JS -->
             <div id="nodes-layer" class="absolute inset-0"></div>
-        </div>
 
-        <!-- Legend (Placed below Topology Canvas) -->
-        <div class="flex flex-wrap items-center justify-center gap-6 text-xs mb-8">
-            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-indigo-500"></span><span class="text-slate-500 font-medium uppercase tracking-wider">Nguồn phát sinh (Origin)</span></span>
-            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-emerald-500"></span><span class="text-slate-500 font-medium uppercase tracking-wider">Trong vùng Scope (Receives)</span></span>
-            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-amber-500"></span><span class="text-slate-500 font-medium uppercase tracking-wider">Dịch thuật (Translates)</span></span>
-            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-slate-500 opacity-50"></span><span class="text-slate-500 font-medium uppercase tracking-wider">Ngoài vùng (Blocked)</span></span>
+            <!-- Legend (Embedded Overlay Inside Topology Canvas) -->
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-4 text-[11px] px-4 py-2 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg">
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-indigo-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Nguồn phát sinh</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Trong vùng Scope</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Dịch thuật (T7→T5)</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-slate-500 opacity-50"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Ngoài vùng</span></span>
+            </div>
         </div>
 
         <!-- Details Panel -->
