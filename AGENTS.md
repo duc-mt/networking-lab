@@ -84,11 +84,11 @@ Whenever building or editing a lab interface, the AI MUST strictly follow these 
 - **Header Bar Alignment:** Must use standard sticky header (`sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800`), containing a type icon gradient badge (`w-10 h-10 rounded-lg`), `Portfolio` link back to `../../index.html`, page H1, and right-aligned theme toggle button.
 - **Mode Toggle Bar:** Use container `flex bg-slate-200/50 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner` with `.mode-btn` buttons (`bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 font-bold`).
 - **5-Layer Node Card Standard:**
-  1. Top absolute role badge (`absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border`).
-  2. Circular gradient icon housing (`w-12 h-12 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner`).
-  3. Device title (`h3 text-sm font-extrabold text-slate-800 dark:text-white`).
-  4. Monospace IP/Subnet badge (`text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded`).
-  5. Bottom status pill (`text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full uppercase border`).
+    1. Top absolute role badge (`absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border`).
+    2. Circular gradient icon housing (`w-12 h-12 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner`).
+    3. Device title (`h3 text-sm font-extrabold text-slate-800 dark:text-white`).
+    4. Monospace IP/Subnet badge (`text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded`).
+    5. Bottom status pill (`text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full uppercase border`).
 - **Terminal Console Standard:** Must use macOS terminal header (`bg-[#1e1e1e]` container with `bg-[#2d2d2d]` header, red/yellow/green traffic dots, `#cli-title`, `vt100` tag, and `text-emerald-400` monospace output).
 - **FontAwesome Icon Verification:** Never invent icon class names like `fa-router`. Use verified FontAwesome 6 Free classes (`fa-route`, `fa-network-wired`, `fa-server`, `fa-diagram-project`, `fa-microchip`, `fa-globe`).
 - **Legend & Topology Geometry (Zero Overlap):** Topology canvas height must be at least `h-[540px]`. Area SVG bounding rects must be set to `height="78%"` or less at `y="5%"`, ensuring Area bottom borders end above `83%` so embedded bottom Legend overlays (`bottom-3.5`) never overlap Area borders or Node cards.
