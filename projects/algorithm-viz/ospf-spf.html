@@ -143,19 +143,11 @@
             </div>
         </div>
         
-        <!-- Scenarios -->
-        <div class="flex-1 flex justify-center overflow-x-auto px-4 hide-scrollbar">
-            <div id="scenario-pills" class="flex items-center gap-2">
-                <!-- Injected via JS -->
-            </div>
-        </div>
+        <!-- Spacer -->
+        <div class="flex-1"></div>
         
         <div class="flex items-center gap-3">
-            <div class="hidden md:flex items-center gap-2 text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
-                <span class="text-blue-600 dark:text-blue-400 font-bold">Src: <span id="hdr-src">R4</span></span>
-                <span class="text-slate-300 dark:text-slate-600">→</span>
-                <span class="text-amber-500 font-bold">Dst: <span id="hdr-dst">R5</span></span>
-            </div>
+
 
             <!-- Step Counter -->
             <div id="step-counter" class="text-xs font-mono font-bold px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
@@ -185,8 +177,17 @@
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col xl:flex-row overflow-hidden w-full max-w-[1600px] mx-auto" style="height: calc(100vh - 64px);">
+    <!-- Main Content Layout -->
+    <div class="flex-1 flex flex-col w-full max-w-[1600px] mx-auto overflow-hidden">
+        
+        <!-- Mode Toggle Bar -->
+        <div class="flex items-center justify-center py-4 bg-slate-50 dark:bg-slate-950 shrink-0">
+            <div id="scenario-pills" class="flex flex-wrap justify-center items-center bg-slate-200/50 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <main class="flex-1 flex flex-col xl:flex-row overflow-hidden w-full relative">
         
         <!-- LEFT: Topology Canvas -->
         <div id="topology-container" class="flex-1 relative overflow-hidden bg-slate-50 dark:bg-slate-950 min-h-[500px]">
@@ -225,6 +226,13 @@
                 <div class="flex items-center gap-1.5"><div class="w-3 h-0.5 bg-emerald-400 border-t border-dashed"></div> Best Path</div>
                 <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-blue-500 outline outline-2 outline-offset-1 outline-blue-500/50"></div> Source</div>
                 <div class="flex items-center gap-1.5"><div class="w-3 h-3 border-2 border-dashed border-red-500 opacity-50"></div> Down Link</div>
+            </div>
+
+            <!-- Src/Dst Indicator -->
+            <div class="absolute bottom-4 right-4 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg text-sm font-semibold flex items-center gap-3 pointer-events-auto">
+                <span class="text-blue-600 dark:text-blue-400 font-bold">Src: <span id="hdr-src">R4</span></span>
+                <span class="text-slate-300 dark:text-slate-600">→</span>
+                <span class="text-amber-500 font-bold">Dst: <span id="hdr-dst">R5</span></span>
             </div>
         </div>
         
@@ -295,30 +303,7 @@
                 <span id="teaching-note-content"></span>
             </div>
         </div>
-    </main>
-
-    
-        
-        <div class="flex items-center gap-3">
-            <button onclick="App.spfReset()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all">
-                <i class="fas fa-step-backward"></i>
-            </button>
-            <button onclick="App.spfPrev()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all">
-                <i class="fas fa-backward"></i>
-            </button>
-            <button onclick="App.spfPlayPause()" id="btn-play" class="w-12 h-12 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-all shadow-md hover:shadow-lg">
-                <i class="fas fa-play"></i>
-            </button>
-            <button onclick="App.spfNext()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all">
-                <i class="fas fa-forward"></i>
-            </button>
-        </div>
-        
-        <div class="flex items-center gap-3 w-[200px]">
-            <i class="fas fa-tachometer-alt text-slate-400 text-xs"></i>
-            <input type="range" id="speed-slider" min="200" max="1800" step="200" value="1000" class="w-full accent-blue-500">
-            <i class="fas fa-fighter-jet text-slate-400 text-xs"></i>
-        </div>
+        </main>
     </div>
 
     <!-- Popup for Link Edit -->

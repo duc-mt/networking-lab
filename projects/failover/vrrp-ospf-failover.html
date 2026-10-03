@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRRP + OSPF Failover Simulator</title>
+    <script src="../../assets/js/theme-init.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui','sans-serif'], mono: ['Fira Code','ui-monospace','SFMono-Regular','monospace'] } } } }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+    <style>
+        @keyframes dash { to { stroke-dashoffset: -24; } }
+        .animate-dash { animation: dash 1.2s linear infinite; }
+        @keyframes activePulse { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0);} 50%{box-shadow:0 0 0 16px rgba(16,185,129,0.25);} }
+        .active-pulse { animation: activePulse 2s infinite; }
+        @keyframes warnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0);} 50%{box-shadow:0 0 0 16px rgba(245,158,11,0.3);} }
+        .warn-pulse { animation: warnPulse 1.5s infinite; }
+        @keyframes dangerPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0);} 50%{box-shadow:0 0 0 16px rgba(239,68,68,0.3);} }
+        .danger-pulse { animation: dangerPulse 1.2s infinite; }
+        @keyframes timerShrink { from { width: 100%; } to { width: 0%; } }
+        .timer-bar { animation: timerShrink linear forwards; }
+        @keyframes packetFly {
+            0% { transform: translate(-50%, -50%) scale(0.75); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.75); opacity: 0; }
+        }
+        
+        #btn-trigger {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.4);
+            animation: pulse-trigger 1.5s infinite;
+        }
+        #btn-trigger.fired {
+            animation: none;
+            background: #1e293b;
+            color: #64748b;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        @keyframes pulse-trigger {
+            0%, 100% { box-shadow: 0 0 16px rgba(220, 38, 38, 0.35); }
+            50% { box-shadow: 0 0 28px rgba(220, 38, 38, 0.65); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0">
+                <i class="fas fa-network-wired"></i>
+            </a>
+            <div>
+                <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                </a>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">VRRP + OSPF Failover</h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+            <button id="btn-prev" onclick="app.prevStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-backward"></i></button>
+            <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i id="icon-play" class="fas fa-play ml-1"></i></button>
+            <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-forward"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i id="theme-icon" class="fas fa-sun"></i></button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
+
+    <!-- Impact Banner -->
+    <div id="impact-banner" class="rounded-2xl px-6 py-4 flex items-center gap-4 border transition-all duration-500">
+        <div id="impact-icon" class="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
+            <i id="impact-icon-i" class="fas fa-circle-check text-xl"></i>
+        </div>
+        <div class="flex-1">
+            <div class="text-xs font-bold uppercase tracking-widest mb-0.5 opacity-70" id="impact-label">Trạng thái mạng</div>
+            <div class="font-bold text-base" id="impact-text">Bình thường</div>
+        </div>
+        <!-- Trigger Button -->
+        <button id="btn-trigger" onclick="app.triggerOutage()" class="h-9 px-4 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all">
+            <i class="fas fa-bolt text-[11px]"></i>
+            <span id="trigger-text">Trigger WAN Failure</span>
+        </button>
+    </div>
+
+    <!-- Stepper -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="relative flex justify-between items-center w-full">
+            <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
+            <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out" style="width:0%"></div>
+            <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-1"></div>
+        </div>
+    </section>
+
+    <!-- Topology + Details -->
+    <div class="grid grid-cols-1 xl:grid-cols-5 gap-6">
+        <!-- Topology Canvas — 3 columns -->
+        <div class="xl:col-span-3 flex flex-col gap-6">
+            <div class="w-full overflow-x-auto">
+                <section id="topology-canvas" style="min-width: 800px;" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[500px] md:min-h-[540px]">
+                <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
+
+                <!-- VIP Label -->
+                <div id="vip-label" class="absolute z-20 bg-indigo-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 transition-all duration-500" style="left:50%;top:38%;transform:translate(-50%,-50%)">
+                    <i class="fas fa-circle-dot text-indigo-200"></i>
+                    <span id="vip-text">VIP: 10.10.10.1 — Active on R1</span>
+                </div>
+
+                <!-- Node: Internet -->
+                <div id="node-Internet" class="absolute w-28 md:w-32 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 border-slate-200 dark:border-slate-700 shadow-lg flex flex-col items-center z-10 transition-all duration-500" style="left:50%;top:10%;transform:translate(-50%,-50%)">
+                    <div id="role-Internet" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">Upstream</div>
+                    <div class="w-10 h-10 mb-1 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-cloud text-lg text-slate-600 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">WAN</h3>
+                </div>
+
+                <!-- Node: R1 (Left) -->
+                <div id="node-R1" class="absolute w-32 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10 transition-all duration-500" style="left:25%;top:50%;transform:translate(-50%,-50%)">
+                    <div id="role-R1" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-200 dark:border-blue-700">VyOS-1</div>
+                    <div class="w-12 h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-router text-xl text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">VyOS Primary</h3>
+                    <div class="text-[10px] font-mono text-slate-500 mt-0.5">Pri: <span id="pri-R1">150</span></div>
+                    <span id="state-R1" class="text-[9px] font-black tracking-widest px-2.5 py-0.5 mt-1.5 rounded-full uppercase border border-emerald-300 bg-emerald-50 text-emerald-700">MASTER</span>
+                </div>
+
+                <!-- Node: R2 (Right) -->
+                <div id="node-R2" class="absolute w-32 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10 transition-all duration-500" style="left:75%;top:50%;transform:translate(-50%,-50%)">
+                    <div id="role-R2" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-200 dark:border-blue-700">VyOS-2</div>
+                    <div class="w-12 h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-router text-xl text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">VyOS Secondary</h3>
+                    <div class="text-[10px] font-mono text-slate-500 mt-0.5">Pri: <span id="pri-R2">100</span></div>
+                    <span id="state-R2" class="text-[9px] font-black tracking-widest px-2.5 py-0.5 mt-1.5 rounded-full uppercase border border-slate-300 bg-slate-100 text-slate-600">BACKUP</span>
+                </div>
+
+                <!-- Node: LAN -->
+                <div id="node-LAN" class="absolute w-32 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10 transition-all duration-500 border-slate-200 dark:border-slate-700" style="left:50%;top:85%;transform:translate(-50%,-50%)">
+                    <div id="role-LAN" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-600">Core Switch</div>
+                    <div class="w-10 h-10 mb-1 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-server text-lg text-slate-600 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">10.10.10.0/24</h3>
+                </div>
+
+                <!-- Animated Packet -->
+                <div id="animated-packet" class="absolute z-50 hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold text-white whitespace-nowrap shadow-lg" style="left:0;top:0;transform:translate(-50%,-50%)">
+                    <i id="packet-icon" class="fas fa-envelope"></i>
+                    <span id="packet-label">Traffic</span>
+                </div>
+            </section>
+            </div>
+
+            <!-- Timer bar -->
+            <div id="timer-section" class="hidden bg-white dark:bg-slate-900 rounded-xl px-5 py-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                        <i class="fas fa-stopwatch text-amber-500"></i>
+                        <span id="timer-label">Timer</span>
+                    </span>
+                    <span id="timer-value" class="text-sm font-black font-mono text-amber-600 dark:text-amber-400"></span>
+                </div>
+                <div class="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div id="timer-bar-fill" class="h-full rounded-full transition-none bg-amber-500" style="width:100%"></div>
+                </div>
+            </div>
+
+            <!-- CLI -->
+            <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-56">
+                <div class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none">
+                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-500"></div><div class="w-3 h-3 rounded-full bg-amber-500"></div><div class="w-3 h-3 rounded-full bg-emerald-500"></div></div>
+                    <span class="text-xs font-mono text-slate-400" id="cli-title">vyos@VyOS-1:~$</span>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1 font-mono text-[13px] text-emerald-400 whitespace-pre-wrap leading-relaxed" id="cli-logs"></div>
+            </section>
+        </div>
+
+        <!-- Right panel — 2 columns -->
+        <div class="xl:col-span-2 flex flex-col gap-5 relative pb-20">
+            <!-- Phase + desc -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center gap-2 mb-3">
+                    <span id="phase-badge" class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border"></span>
+                    <span id="step-counter" class="text-xs text-slate-400 font-mono"></span>
+                </div>
+                <h3 id="step-title" class="text-xl font-extrabold text-slate-900 dark:text-white mb-3 leading-snug"></h3>
+                <p id="step-desc" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300"></p>
+            </section>
+
+            <!-- Node State Table -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-server text-blue-500 text-sm"></i>
+                    <span class="font-bold text-slate-700 dark:text-slate-300 text-sm">Trạng thái Router</span>
+                </div>
+                <table class="w-full text-xs">
+                    <thead><tr class="text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                        <th class="pb-2 text-left font-bold">Router</th>
+                        <th class="pb-2 text-center font-bold">VRRP</th>
+                        <th class="pb-2 text-center font-bold">OSPF</th>
+                    </tr></thead>
+                    <tbody id="state-tbody"></tbody>
+                </table>
+            </section>
+            
+            <!-- Teaching Note Box (Pinned) -->
+            <div id="teaching-note" class="absolute bottom-0 left-0 right-0 mx-3 mb-3 px-3 py-2.5 rounded-xl text-[11.5px] text-slate-600 dark:text-slate-400 leading-relaxed border-l-2 border-indigo-500" style="background:#6366f115">
+                <i class="fas fa-lightbulb text-indigo-500 mr-1.5"></i>
+                <b class="text-indigo-700 dark:text-indigo-400" id="note-title">Mechanism:</b>
+                <span id="note-body">...</span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const failoverTimeline = [
+        {
+            step: 0,
+            event: "Normal Operation",
+            impact: "None",
+            impact_scope: "Network is operating normally.",
+            timer: null,
+            vip: "R1",
+            nodes: {
+                R1: { role: "MASTER", state: "MASTER", priority: "150", color: "emerald", vrrp: "MASTER", ospf: "FULL" },
+                R2: { role: "BACKUP", state: "BACKUP", priority: "100", color: "slate", vrrp: "BACKUP", ospf: "FULL" }
+            },
+            links: [
+                { source: "Internet", target: "R1", state: "ACTIVE" },
+                { source: "Internet", target: "R2", state: "STANDBY" },
+                { source: "R1", target: "R2", state: "STANDBY" },
+                { source: "R1", target: "LAN", state: "ACTIVE" },
+                { source: "R2", target: "LAN", state: "STANDBY" }
+            ],
+            cli_title: "vyos@VyOS-1:~$",
+            description: `Primary VyOS router (VyOS-1) is the VRRP Master and handles all traffic. OSPF is fully converged with the core. WAN link is UP.`,
+            cli_logs: `vyos@VyOS-1:~$ show vrrp
+Name    Interface      VRID  State    Last Transition
+------  -------------  ----  -------  -----------------
+vrrp    eth1           10    MASTER   2d 10h 15m
+
+vyos@VyOS-1:~$ show ip ospf neighbor
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+10.10.10.2        1   Full/BDR        00:00:32    10.10.10.2      eth1`,
+            note_title: "Preemption & Tracking",
+            note_body: "In normal state, VyOS-1 has a higher base priority (150 > 100) and owns the VIP. It also tracks the WAN interface (eth0)."
+        },
+        {
+            step: 1,
+            event: "WAN Link Failure",
+            impact: "Degraded",
+            impact_scope: "VyOS-1 lost WAN link. Traffic is blackholed temporarily.",
+            timer: { name: "Detection Delay", duration: 1 },
+            vip: "R1",
+            nodes: {
+                R1: { role: "MASTER (WAN DOWN)", state: "MASTER", priority: "150", color: "rose", vrrp: "MASTER", ospf: "FULL" },
+                R2: { role: "BACKUP", state: "BACKUP", priority: "100", color: "slate", vrrp: "BACKUP", ospf: "FULL" }
+            },
+            links: [
+                { source: "Internet", target: "R1", state: "DOWN" },
+                { source: "Internet", target: "R2", state: "STANDBY" },
+                { source: "R1", target: "R2", state: "STANDBY" },
+                { source: "R1", target: "LAN", state: "ACTIVE" },
+                { source: "R2", target: "LAN", state: "STANDBY" }
+            ],
+            cli_title: "vyos@VyOS-1:~$",
+            description: `Primary router loses its WAN interface (eth0). The physical link goes down, triggering an immediate event in the kernel.`,
+            cli_logs: `vyos@VyOS-1:~$ 
+[kernel] eth0: link down
+[ospf] Interface eth0 going Down`,
+            note_title: "Physical Layer Fault",
+            note_body: "A severed cable or upstream switch failure causes eth0 to lose carrier. VyOS-1 is still VRRP Master for the LAN, creating a routing blackhole."
+        },
+        {
+            step: 2,
+            event: "VRRP Priority Drop",
+            impact: "Degraded",
+            impact_scope: "VRRP tracking lowers VyOS-1 priority. VyOS-2 prepares to preempt.",
+            timer: { name: "VRRP Preemption", duration: 1 },
+            vip: "R1",
+            nodes: {
+                R1: { role: "MASTER", state: "PRIO DROP", priority: "90 (150-60)", color: "amber", vrrp: "MASTER", ospf: "FULL" },
+                R2: { role: "BACKUP", state: "BACKUP", priority: "100", color: "slate", vrrp: "BACKUP", ospf: "FULL" }
+            },
+            links: [
+                { source: "Internet", target: "R1", state: "DOWN" },
+                { source: "Internet", target: "R2", state: "STANDBY" },
+                { source: "R1", target: "R2", state: "STANDBY" },
+                { source: "R1", target: "LAN", state: "ACTIVE" },
+                { source: "R2", target: "LAN", state: "STANDBY" }
+            ],
+            cli_title: "vyos@VyOS-1:~$",
+            description: `VRRP track script detects eth0 is down and decrements VyOS-1's priority by 60 (150 -> 90). VyOS-1 sends VRRP advertisements with priority 90.`,
+            cli_logs: `vyos@VyOS-1:~$ 
+[vrrpd] track eth0 down, decrementing priority by 60
+[vrrpd] VRRP_Instance(vrrp) sending Advert with Priority 90`,
+            note_title: "Interface Tracking",
+            note_body: "Without tracking, VyOS-1 would remain Master despite having no WAN access. Tracking dynamically adjusts priority based on uplink health."
+        },
+        {
+            step: 3,
+            event: "VIP Failover & GARP",
+            impact: "None",
+            impact_scope: "VyOS-2 becomes Master. Outbound traffic resumes.",
+            timer: { name: "GARP Update", duration: 1 },
+            vip: "R2",
+            nodes: {
+                R1: { role: "BACKUP", state: "BACKUP", priority: "90", color: "slate", vrrp: "BACKUP", ospf: "FULL" },
+                R2: { role: "MASTER", state: "MASTER", priority: "100", color: "emerald", vrrp: "MASTER", ospf: "FULL" }
+            },
+            links: [
+                { source: "Internet", target: "R1", state: "DOWN" },
+                { source: "Internet", target: "R2", state: "ACTIVE" },
+                { source: "R1", target: "R2", state: "STANDBY" },
+                { source: "R1", target: "LAN", state: "STANDBY" },
+                { source: "R2", target: "LAN", state: "ACTIVE" }
+            ],
+            cli_title: "vyos@VyOS-2:~$",
+            description: `VyOS-2 sees VyOS-1's lower priority and preempts to become Master. It takes ownership of the VIP and broadcasts a Gratuitous ARP (GARP) to update MAC tables.`,
+            cli_logs: `vyos@VyOS-2:~$ 
+[vrrpd] VRRP_Instance(vrrp) Transition to MASTER STATE
+[vrrpd] VRRP_Instance(vrrp) Entering MASTER STATE
+[vrrpd] VRRP_Instance(vrrp) sending Gratuitous ARPs on eth1 for 10.10.10.1`,
+            note_title: "Gratuitous ARP (GARP)",
+            note_body: "VyOS-2 sends an unsolicited ARP reply for the VIP, forcing the Core Switch and LAN hosts to update their ARP cache to VyOS-2's MAC address."
+        },
+        {
+            step: 4,
+            event: "OSPF Re-convergence",
+            impact: "None",
+            impact_scope: "Routing tables update to reflect new topology.",
+            timer: { name: "OSPF SPF Calculation", duration: 1 },
+            vip: "R2",
+            nodes: {
+                R1: { role: "BACKUP", state: "BACKUP", priority: "90", color: "slate", vrrp: "BACKUP", ospf: "EXSTART" },
+                R2: { role: "MASTER", state: "MASTER", priority: "100", color: "emerald", vrrp: "MASTER", ospf: "FULL" }
+            },
+            links: [
+                { source: "Internet", target: "R1", state: "DOWN" },
+                { source: "Internet", target: "R2", state: "ACTIVE" },
+                { source: "R1", target: "R2", state: "STANDBY" },
+                { source: "R1", target: "LAN", state: "STANDBY" },
+                { source: "R2", target: "LAN", state: "ACTIVE" }
+            ],
+            cli_title: "vyos@VyOS-1:~$",
+            description: `OSPF detects the topology change. VyOS-1 withdraws its default route advertisement. VyOS-2 remains the optimal path to the Internet.`,
+            cli_logs: `vyos@VyOS-1:~$ show ip ospf route
+[ospfd] SPF recalculation triggered
+[ospfd] Route 0.0.0.0/0 removed from routing table
+[ospfd] Neighbor 10.10.10.2 state change Full -> ExStart`,
+            note_title: "Dynamic Routing Convergence",
+            note_body: "While VRRP handles the LAN-side gateway redundancy, OSPF ensures that the wider network is aware of the broken WAN link and routes accordingly."
+        },
+        {
+            step: 5,
+            event: "Converged State",
+            impact: "None",
+            impact_scope: "Network is fully operational via backup path.",
+            timer: null,
+            vip: "R2",
+            nodes: {
+                R1: { role: "BACKUP", state: "BACKUP", priority: "90", color: "slate", vrrp: "BACKUP", ospf: "FULL" },
+                R2: { role: "MASTER", state: "MASTER", priority: "100", color: "emerald", vrrp: "MASTER", ospf: "FULL" }
+            },
+            links: [
+                { source: "Internet", target: "R1", state: "DOWN" },
+                { source: "Internet", target: "R2", state: "ACTIVE" },
+                { source: "R1", target: "R2", state: "STANDBY" },
+                { source: "R1", target: "LAN", state: "STANDBY" },
+                { source: "R2", target: "LAN", state: "ACTIVE" }
+            ],
+            cli_title: "vyos@VyOS-2:~$",
+            description: `The network is fully converged. VyOS-2 acts as both the VRRP gateway for the LAN and the primary OSPF path to the Internet.`,
+            cli_logs: `vyos@VyOS-2:~$ show vrrp
+Name    Interface      VRID  State    Last Transition
+------  -------------  ----  -------  -----------------
+vrrp    eth1           10    MASTER   00:01:23
+
+vyos@VyOS-2:~$ show ip route 0.0.0.0/0
+Routing entry for 0.0.0.0/0
+  Known via "static", distance 1, metric 0, best
+  * via 203.0.113.1, eth0`,
+            note_title: "Stability",
+            note_body: "The secondary router carries all traffic. When VyOS-1's WAN link is restored, its priority will return to 150 and it will preempt back to Master."
+        }
+    ];
+
+    class VRRPFailoverSimulator {
+        constructor() {
+            this.currentStep = 0;
+            this.timerInterval = null;
+            this.isPlaying = false;
+            this.triggered = false;
+            this.playTimer = null;
+            this.initUI();
+            this.renderStep(0);
+        }
+
+        initUI() {
+            const c = document.getElementById('stepper-container');
+            c.innerHTML = '';
+            failoverTimeline.forEach((d, i) => {
+                const btn = document.createElement('button');
+                btn.id = `step-btn-${i}`;
+                btn.innerHTML = `<span class="hidden lg:block text-[11px]">${d.step}. ${d.event}</span><span class="lg:hidden">${d.step}</span>`;
+                btn.className = 'relative w-9 h-9 lg:w-auto lg:px-3 lg:py-1.5 rounded-full font-bold text-xs border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm hover:scale-105';
+                btn.onclick = () => { this.pause(); this.goToStep(i); };
+                c.appendChild(btn);
+            });
+            this.drawLinks();
+            window.addEventListener('resize', () => this.drawLinks());
+        }
+
+        drawLinks() {
+            const svg = document.getElementById('links-svg');
+            const data = failoverTimeline[this.currentStep].links;
+            let svgHTML = '';
+            
+            const getCenter = (id) => {
+                const el = document.getElementById('node-' + id);
+                if(!el) return null;
+                const r = el.getBoundingClientRect();
+                const p = document.getElementById('topology-canvas').getBoundingClientRect();
+                return { x: r.left - p.left + r.width/2, y: r.top - p.top + r.height/2 };
+            };
+
+            data.forEach(link => {
+                const s = getCenter(link.source);
+                const t = getCenter(link.target);
+                if(!s || !t) return;
+                
+                let baseColor = 'rgba(203, 213, 225, 0.45)'; // slate-300
+                if(document.documentElement.classList.contains('dark')) baseColor = 'rgba(51, 65, 85, 0.55)'; // slate-700
+                
+                svgHTML += `<line x1="${s.x}" y1="${s.y}" x2="${t.x}" y2="${t.y}" stroke="${baseColor}" stroke-width="6" stroke-linecap="round" />`;
+                
+                if (link.state === 'ACTIVE') {
+                    svgHTML += `<line x1="${s.x}" y1="${s.y}" x2="${t.x}" y2="${t.y}" stroke="#10b981" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 8" class="animate-dash" style="filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.75))" />`;
+                } else if (link.state === 'DOWN') {
+                    svgHTML += `<line x1="${s.x}" y1="${s.y}" x2="${t.x}" y2="${t.y}" stroke="rgba(239, 68, 68, 0.85)" stroke-width="4" stroke-dasharray="4 12" stroke-linecap="round" />`;
+                }
+            });
+            svg.innerHTML = svgHTML;
+        }
+
+        renderStep(index) {
+            this.currentStep = index;
+            const data = failoverTimeline[index];
+            
+            // Stepper UI
+            document.getElementById('timeline-progress').style.width = `${(index / (failoverTimeline.length - 1)) * 100}%`;
+            failoverTimeline.forEach((t, i) => {
+                const btn = document.getElementById(`step-btn-${i}`);
+                if (i < index) {
+                    btn.className = 'relative w-9 h-9 lg:w-auto lg:px-3 lg:py-1.5 rounded-full font-bold text-xs border-2 transition-all duration-300 z-10 flex items-center justify-center shadow-sm hover:scale-105 border-blue-500 bg-blue-500 text-white cursor-pointer';
+                } else if (i === index) {
+                    btn.className = 'relative w-9 h-9 lg:w-auto lg:px-3 lg:py-1.5 rounded-full font-bold text-xs border-2 transition-all duration-300 z-10 flex items-center justify-center shadow-md scale-110 border-blue-600 bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 ring-4 ring-blue-100 dark:ring-blue-900/30 cursor-default';
+                } else {
+                    btn.className = 'relative w-9 h-9 lg:w-auto lg:px-3 lg:py-1.5 rounded-full font-bold text-xs border-2 transition-all duration-300 z-10 flex items-center justify-center shadow-sm hover:scale-105 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-pointer';
+                }
+            });
+
+            // Update Step Counter
+            const stepCounter = document.getElementById('step-counter');
+            if (stepCounter) stepCounter.innerText = `${index + 1} / ${failoverTimeline.length}`;
+            
+            // Impact Banner
+            const ib = document.getElementById('impact-banner');
+            const ii = document.getElementById('impact-icon');
+            const ii_i = document.getElementById('impact-icon-i');
+            document.getElementById('impact-text').innerText = data.impact_scope;
+            
+            ib.className = "rounded-2xl px-6 py-4 flex items-center gap-4 border transition-all duration-500";
+            ii.className = "w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white";
+            
+            if (data.impact === 'None') {
+                ib.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-900', 'dark:bg-emerald-900/10', 'dark:border-emerald-900/50', 'dark:text-emerald-100');
+                ii.classList.add('bg-emerald-500');
+                ii_i.className = "fas fa-check-circle text-xl";
+            } else if (data.impact === 'Degraded') {
+                ib.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-900', 'dark:bg-amber-900/10', 'dark:border-amber-900/50', 'dark:text-amber-100');
+                ii.classList.add('bg-amber-500');
+                ii_i.className = "fas fa-exclamation-triangle text-xl";
+            } else {
+                ib.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-900', 'dark:bg-rose-900/10', 'dark:border-rose-900/50', 'dark:text-rose-100');
+                ii.classList.add('bg-rose-500');
+                ii_i.className = "fas fa-times-circle text-xl";
+            }
+
+            // Text content
+            document.getElementById('phase-badge').innerText = `Step ${index}`;
+            document.getElementById('phase-badge').className = data.impact === 'None' ? 'px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-400 dark:border-emerald-800' : 'px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-400 dark:border-amber-800';
+            document.getElementById('step-title').innerText = data.event;
+            document.getElementById('step-desc').innerText = data.description;
+            
+            // CLI
+            document.getElementById('cli-title').innerText = data.cli_title;
+            document.getElementById('cli-logs').innerText = data.cli_logs;
+            
+            // Note
+            if(data.note_title) {
+                document.getElementById('teaching-note').style.display = 'block';
+                document.getElementById('note-title').innerText = data.note_title + ": ";
+                document.getElementById('note-body').innerText = data.note_body;
+            } else {
+                document.getElementById('teaching-note').style.display = 'none';
+            }
+
+            // Nodes
+            ['R1', 'R2'].forEach(id => {
+                const n = data.nodes[id];
+                document.getElementById(`role-${id}`).innerText = n.role;
+                document.getElementById(`state-${id}`).innerText = n.state;
+                document.getElementById(`pri-${id}`).innerText = n.priority;
+                
+                const c = n.color;
+                document.getElementById(`role-${id}`).className = `absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-${c}-100 text-${c}-700 dark:bg-${c}-900/50 dark:text-${c}-300 border-${c}-200 dark:border-${c}-700`;
+                document.getElementById(`state-${id}`).className = `text-[9px] font-black tracking-widest px-2.5 py-0.5 mt-1.5 rounded-full uppercase border border-${c}-300 bg-${c}-50 text-${c}-700`;
+                
+                const card = document.getElementById(`node-${id}`);
+                card.classList.remove('border-emerald-400', 'border-rose-400', 'border-amber-400', 'shadow-emerald-500/30', 'shadow-rose-500/30', 'shadow-amber-500/30');
+                if(c !== 'slate') {
+                    card.classList.add(`border-${c}-400`, `shadow-${c}-500/30`);
+                }
+            });
+
+            // VIP
+            const vip = document.getElementById('vip-label');
+            document.getElementById('vip-text').innerText = `VIP: 10.10.10.1 — Active on ${data.vip}`;
+            if(data.vip === 'R1') {
+                vip.style.left = '32%'; vip.style.top = '38%';
+            } else {
+                vip.style.left = '68%'; vip.style.top = '38%';
+            }
+
+            // Links
+            this.drawLinks();
+
+            // Table
+            let tbody = '';
+            ['R1', 'R2'].forEach(id => {
+                const n = data.nodes[id];
+                const c = n.color === 'emerald' ? 'text-emerald-600' : (n.color === 'rose' ? 'text-rose-600' : 'text-slate-500');
+                const vrrpColor = n.vrrp === 'MASTER' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-500 bg-slate-50 dark:bg-slate-800';
+                tbody += `<tr class="border-b border-slate-50 dark:border-slate-800/50">
+                    <td class="py-2.5 font-bold ${c}">VyOS-${id.replace('R','')}<br><span class="text-[10px] font-mono text-slate-400 font-normal">Pri: ${n.priority}</span></td>
+                    <td class="py-2.5 text-center"><span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${vrrpColor}">${n.vrrp}</span></td>
+                    <td class="py-2.5 text-center"><span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">${n.ospf}</span></td>
+                </tr>`;
+            });
+            document.getElementById('state-tbody').innerHTML = tbody;
+
+            // Timer
+            if (data.timer) {
+                document.getElementById('timer-section').style.display = 'block';
+                document.getElementById('timer-label').innerText = data.timer.name;
+                document.getElementById('timer-value').innerText = data.timer.duration + 's';
+                
+                const fill = document.getElementById('timer-bar-fill');
+                fill.style.animation = 'none';
+                fill.offsetHeight; // trigger reflow
+                fill.style.animation = `timerShrink ${data.timer.duration}s linear forwards`;
+            } else {
+                document.getElementById('timer-section').style.display = 'none';
+            }
+
+            // Packet animation
+            this.animatePacket(data.vip);
+
+            // Controls update
+            document.getElementById('btn-prev').disabled = index === 0;
+            document.getElementById('btn-next').disabled = index === failoverTimeline.length - 1;
+            document.getElementById('btn-play').disabled = index === failoverTimeline.length - 1;
+        }
+
+        animatePacket(vipOwner) {
+            const pkt = document.getElementById('animated-packet');
+            if (this.currentStep === 1) { // WAN down, blackhole
+                pkt.classList.add('hidden');
+                return;
+            }
+            pkt.classList.remove('hidden');
+            pkt.className = `absolute z-50 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold text-white whitespace-nowrap shadow-lg bg-indigo-500`;
+            
+            const getCenter = (id) => {
+                const el = document.getElementById('node-' + id);
+                const r = el.getBoundingClientRect();
+                const p = document.getElementById('topology-canvas').getBoundingClientRect();
+                return { x: r.left - p.left + r.width/2, y: r.top - p.top + r.height/2 };
+            };
+            
+            const lan = getCenter('LAN');
+            const gw = getCenter(vipOwner);
+            const inet = getCenter('Internet');
+            
+            if(!lan || !gw || !inet) return;
+            
+            const anim = pkt.animate([
+                { left: lan.x + 'px', top: lan.y + 'px', opacity: 0, offset: 0 },
+                { left: lan.x + 'px', top: lan.y + 'px', opacity: 1, offset: 0.1 },
+                { left: gw.x + 'px', top: gw.y + 'px', opacity: 1, offset: 0.5 },
+                { left: inet.x + 'px', top: inet.y + 'px', opacity: 1, offset: 0.9 },
+                { left: inet.x + 'px', top: inet.y + 'px', opacity: 0, offset: 1 }
+            ], {
+                duration: 2000,
+                iterations: Infinity,
+                easing: 'linear'
+            });
+            this.currentAnim = anim;
+        }
+
+        triggerOutage() {
+            if (this.triggered) return;
+            this.triggered = true;
+            
+            const btn = document.getElementById('btn-trigger');
+            btn.classList.add('fired');
+            btn.innerHTML = '<i class="fas fa-bolt text-[11px]"></i><span>WAN Offline</span>';
+            
+            document.getElementById('btn-prev').disabled = false;
+            document.getElementById('btn-next').disabled = false;
+            document.getElementById('btn-play').disabled = false;
+            
+            this.goToStep(1);
+            if(!this.isPlaying) this.togglePlay();
+        }
+
+        nextStep() {
+            if (this.currentStep < failoverTimeline.length - 1) {
+                this.renderStep(this.currentStep + 1);
+            } else {
+                this.pause();
+            }
+        }
+
+        prevStep() {
+            if (this.currentStep > 0) {
+                this.renderStep(this.currentStep - 1);
+            }
+        }
+
+        goToStep(index) {
+            this.renderStep(index);
+        }
+
+        togglePlay() {
+            const icon = document.getElementById('icon-play');
+            if (this.isPlaying) {
+                this.pause();
+            } else {
+                this.isPlaying = true;
+                icon.className = 'fas fa-pause';
+                this.playTimer = setInterval(() => {
+                    const timer = failoverTimeline[this.currentStep].timer;
+                    const delay = timer ? timer.duration * 1000 + 500 : 2500;
+                    
+                    clearInterval(this.playTimer);
+                    this.playTimer = setInterval(() => {
+                        this.nextStep();
+                        if (this.currentStep === failoverTimeline.length - 1) this.pause();
+                    }, delay);
+                }, 100);
+            }
+        }
+
+        pause() {
+            this.isPlaying = false;
+            document.getElementById('icon-play').className = 'fas fa-play ml-1';
+            clearInterval(this.playTimer);
+        }
+
+        reset() {
+            this.pause();
+            this.triggered = false;
+            
+            const btn = document.getElementById('btn-trigger');
+            btn.classList.remove('fired');
+            btn.innerHTML = '<i class="fas fa-bolt text-[11px]"></i><span>Trigger WAN Failure</span>';
+            
+            this.renderStep(0);
+        }
+
+        toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-icon').className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+            this.drawLinks();
+        }
+    }
+
+    let app;
+    document.addEventListener('DOMContentLoaded', () => {
+        if(localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon').className = 'fas fa-moon';
+        }
+        app = new VRRPFailoverSimulator();
+    });
+</script>
+</body>
+</html>

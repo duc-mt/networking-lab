@@ -82,16 +82,16 @@ _(Translator note: If the user explicitly asks for an all-English lab, Vietnames
 Whenever building or editing a lab interface, the AI MUST strictly follow these verified UI patterns to guarantee visual consistency across the portfolio:
 
 - **Header Bar Alignment & Unified Control Cluster (matching `vxlan-mtu-blackhole.html`):** Must use standard sticky header (`sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800`), containing a type icon gradient badge (`w-10 h-10 rounded-lg`), `Portfolio` link back to `../../index.html`, and page H1.
-  - **Playback Controls Placement:** For timeline or interactive visualizer labs, all playback controls (`prev`, `play/pause`, `next`, `reset`) MUST be grouped with the theme toggle in the **top-right header** inside a unified rounded-full pill container (`flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner`).
-  - **STRICT PROHIBITION:** Never invent custom isolated bottom footer bars for step navigation/playback controls. All controls belong in the top-right header cluster to preserve maximum vertical canvas height and consistency.
+    - **Playback Controls Placement:** For timeline or interactive visualizer labs, all playback controls (`prev`, `play/pause`, `next`, `reset`) MUST be grouped with the theme toggle in the **top-right header** inside a unified rounded-full pill container (`flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner`).
+    - **STRICT PROHIBITION:** Never invent custom isolated bottom footer bars for step navigation/playback controls. All controls belong in the top-right header cluster to preserve maximum vertical canvas height and consistency.
 - **Dual-Layer Cable Connector Standard:**
   All SVG topology links MUST use the verified dual-layer cable architecture:
-  1. **Base Track Layer (`.link-track`):** `stroke-width: 6; stroke-linecap: round; stroke: rgba(203, 213, 225, 0.45);` (light) / `rgba(51, 65, 85, 0.55);` (dark).
-  2. **Active Flow Overlay Layer (`.link-flow-...`):** `stroke-width: 4` or `5`, `stroke-linecap: round`, using `@keyframes dash { to { stroke-dashoffset: -24; } }` and `.animate-dash` (`1.2s linear infinite`) with SVG arrow markers and glow filters.
-     - Active/Path: Emerald `#10b981` (or Blue `#3b82f6`) with `filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.75))`.
-     - Candidate/Evaluating: Violet `#818cf8` with `filter: drop-shadow(0 0 5px rgba(129, 140, 248, 0.7))`.
-     - Down/Fault: Red `rgba(239, 68, 68, 0.85); stroke-dasharray: 4 12;`.
-  3. **Interactive Hit Layer (`.topology-hit`):** `stroke: transparent; stroke-width: 24; cursor: pointer;` on the top SVG layer for effortless click interactions.
+    1. **Base Track Layer (`.link-track`):** `stroke-width: 6; stroke-linecap: round; stroke: rgba(203, 213, 225, 0.45);` (light) / `rgba(51, 65, 85, 0.55);` (dark).
+    2. **Active Flow Overlay Layer (`.link-flow-...`):** `stroke-width: 4` or `5`, `stroke-linecap: round`, using `@keyframes dash { to { stroke-dashoffset: -24; } }` and `.animate-dash` (`1.2s linear infinite`) with SVG arrow markers and glow filters.
+        - Active/Path: Emerald `#10b981` (or Blue `#3b82f6`) with `filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.75))`.
+        - Candidate/Evaluating: Violet `#818cf8` with `filter: drop-shadow(0 0 5px rgba(129, 140, 248, 0.7))`.
+        - Down/Fault: Red `rgba(239, 68, 68, 0.85); stroke-dasharray: 4 12;`.
+    3. **Interactive Hit Layer (`.topology-hit`):** `stroke: transparent; stroke-width: 24; cursor: pointer;` on the top SVG layer for effortless click interactions.
 - **Dynamic 2D Packet Flow Engine:**
   For any lab with packet exchange or traffic delivery, use the Web Animations API engine on a floating `#animated-packet` badge (`cubic-bezier(0.4, 0, 0.2, 1)`, scale `0.75 → 1 → 0.75`, opacity fade) calculating dynamic node center coordinates via `getBoundingClientRect()`. Supports hop-by-hop recursive traversal (`animatePathSequence`) for multi-hop paths.
 - **Mode Toggle Bar:** Use container `flex bg-slate-200/50 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner` with `.mode-btn` buttons (`bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 font-bold`).
@@ -104,3 +104,4 @@ Whenever building or editing a lab interface, the AI MUST strictly follow these 
 - **Terminal Console Standard:** Must use macOS terminal header (`bg-[#1e1e1e]` container with `bg-[#2d2d2d]` header, red/yellow/green traffic dots, `#cli-title`, `vt100` tag, and `text-emerald-400` monospace output).
 - **FontAwesome Icon Verification:** Never invent icon class names like `fa-router`. Use verified FontAwesome 6 Free classes (`fa-route`, `fa-network-wired`, `fa-server`, `fa-diagram-project`, `fa-microchip`, `fa-globe`).
 - **Legend & Topology Geometry (Zero Overlap):** Topology canvas height must be at least `h-[540px]`. Area SVG bounding rects must be set to `height="78%"` or less at `y="5%"`, ensuring Area bottom borders end above `83%` so embedded bottom Legend overlays (`bottom-3.5`) never overlap Area borders or Node cards.
+- **Node vs Zone Responsive Padding:** Because node cards use fixed physical widths (`w-32` = 128px) while Zone SVG backgrounds scale responsively by percentage, all Zones must be drawn wide enough (e.g. `w >= 260` on a 1400 REF_W) to prevent fixed-width nodes from clipping out on small screens. Nodes MUST be perfectly centered on their Zone's x-axis (`node.x = zone.x + zone.w/2`).
