@@ -1320,9 +1320,22 @@ When `render()` changes a node's class (e.g., `border-red-500`), the browser has
     - Edge Router (PE Router/L3): Display **VRF Name** or **Loopback IP**.
     - **ABSOLUTELY DO NOT** place a generic interface name like `Gi0/0/0` here to cause architectural confusion.
 
-### 5. Topology Links & Event Listeners
+### 5. Topology Layer Architecture & Link Rendering Rules (Anti-Distortion Engine)
 
-- **Resize Listener (IMPORTANT):** Since devices use `%`, it is Mandatory to have `window.addEventListener('resize', drawLinks);` to recalculate actual Pixel coordinates (based on `container.clientWidth` and `clientHeight`) and update the paths of `<svg><path>` elements whenever the browser resizes.
+- **Mandatory Layer Skeleton:** Every topology canvas container MUST use explicit `relative` container positioning and `absolute inset-0` on all child layer wrappers:
+    ```html
+    <div id="topology-container" class="relative ...">
+        <div id="zones-layer" class="absolute inset-0 pointer-events-none z-0"></div>
+        <svg
+            id="links-layer"
+            class="links absolute inset-0 w-full h-full pointer-events-none z-5"
+        ></svg>
+        <div id="links-labels-layer" class="absolute inset-0 pointer-events-none z-20"></div>
+        <div id="nodes-layer" class="absolute inset-0 z-10"></div>
+    </div>
+    ```
+- **Dynamic DOM Link Calculation (Strategy A):** `drawLinks()` MUST calculate link endpoints (`sx, sy, dx, dy`) using live DOM `getBoundingClientRect()` relative to `container.getBoundingClientRect()` (e.g. `sx = srcRect.left + srcRect.width / 2 - containerRect.left`), rather than using static math offsets (`(x / REF_W) * cw`). This guarantees lines lock to the true node center even when clamped or resized.
+- **Render Buffer Delay:** `clampNodes()` and `drawLinks()` MUST be called inside a `setTimeout(..., 50)` delay after `render()` to wait for CSS reflow to complete before geometry measurements are captured.
 - **Line Animation:** Active network links must have flowing traffic animation (Traffic Flowing). Use `stroke-dasharray` combined with `.animate-dash` class calling CSS `@keyframes dash { to { stroke-dashoffset: -N; } }`.
 - **Algorithm Visualizer link states:** `link-path` (emerald, animated dash + marker-end arrow), `link-candidate` (violet, animated dash), `link-active` (slate static), `link-down` (red dashed, opacity 0.5). Use two separate `<g>` layers: hit layer and visual layer.
 - **Port Labels (Physical/Logical Port Labels):** Any port parameter (like `Gi1/0/24`, `eth0`) MUST be attached to both ends of the cable. Use JS interpolation math to push the Badge a safe relative distance from the Node center when the screen shrinks (e.g., `px = sx + (dx - sx) * 0.2`). Also, DO NOT pin the label dead center on the link, calculate the Normal Vector and Shift the label to both sides of the link about `18px` to avoid Anchor Collision with other labels at the Top/Bottom of the device.
