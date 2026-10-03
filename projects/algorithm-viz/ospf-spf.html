@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Tailwind CSS -->
+    <!-- Theme Init & Shared CSS -->
+    <script src="../../assets/js/theme-init.js"></script>
+    <link rel="stylesheet" href="../../assets/css/theme.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -38,7 +41,7 @@
         }
     </script>
     
-    <style>
+        <style>
         /* Custom scrollbar for panels */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -50,21 +53,74 @@
         /* Layout */
         body { margin: 0; padding: 0; overflow: hidden; }
         
+        /* Motion keyframes matching Golden Standard across labs */
+        @keyframes dash {
+            to { stroke-dashoffset: -24; }
+        }
+        .animate-dash {
+            animation: dash 1.2s linear infinite;
+        }
+
+        /* SVG Connectors: Golden Standard dual-layer cable architecture */
+        .link-track {
+            stroke: rgba(203, 213, 225, 0.45);
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+        .dark .link-track {
+            stroke: rgba(51, 65, 85, 0.55);
+        }
+
+        .link-flow-active {
+            stroke: rgba(148, 163, 184, 0.75);
+            stroke-width: 3.5;
+            stroke-linecap: round;
+        }
+        .dark .link-flow-active {
+            stroke: rgba(100, 116, 139, 0.7);
+        }
+
+        .link-flow-candidate {
+            stroke: #818cf8;
+            stroke-width: 4.5;
+            stroke-linecap: round;
+            stroke-dasharray: 8 8;
+            animation: dash 1s linear infinite;
+            filter: drop-shadow(0 0 5px rgba(129, 140, 248, 0.7));
+        }
+
+        .link-flow-path {
+            stroke: #10b981;
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 12 12;
+            animation: dash 1.2s linear infinite;
+            filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.75));
+        }
+
+        .link-flow-down {
+            stroke: rgba(239, 68, 68, 0.85);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 4 12;
+        }
+        
         /* Node states */
         .node-source { outline: 3px solid #3b82f6; outline-offset: 6px; }
         .node-dest { outline: 3px solid #f59e0b; outline-offset: 6px; }
-        .node-processing { box-shadow: 0 0 15px 5px rgba(236, 72, 153, 0.5); border-color: #ec4899 !important; }
-        .node-candidate { border-color: #a78bfa !important; }
+        .node-processing {
+            box-shadow: 0 0 18px 4px rgba(236, 72, 153, 0.5);
+            border-color: #ec4899 !important;
+            animation: pulse 1.2s infinite;
+        }
+        .node-candidate { border-color: #818cf8 !important; }
         .node-settled { border-color: #10b981 !important; }
-        .node-path { border-color: #34d399 !important; box-shadow: 0 0 10px rgba(52, 211, 153, 0.5); }
+        .node-path {
+            border-color: #34d399 !important;
+            box-shadow: 0 0 12px rgba(52, 211, 153, 0.55);
+        }
         .node-normal { border-color: #cbd5e1; }
         .dark .node-normal { border-color: #334155; }
-        
-        /* SVG Links */
-        .link-path { stroke: #34d399; stroke-width: 3; stroke-dasharray: 8 4; animation: dash 1s linear infinite; }
-        .link-candidate { stroke: #a78bfa; stroke-width: 2; stroke-dasharray: 6 4; animation: dash 1.5s linear infinite; }
-        .link-active { stroke: #64748b; stroke-width: 2; }
-        .link-down { stroke: #ef4444; stroke-width: 2; stroke-dasharray: 4 4; opacity: 0.5; }
         
         /* Fix for overlay */
         .topology-overlay { pointer-events: none; }
@@ -111,19 +167,26 @@
         
         <!-- LEFT: Topology Canvas -->
         <div id="topology-container" class="flex-1 relative overflow-hidden bg-slate-50 dark:bg-slate-950 min-h-[500px]">
-            <!-- SVG Layer -->
+                        <!-- SVG Layer -->
             <svg id="svg-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10">
                 <defs>
-                    <marker id="arrow-emerald" viewBox="0 -5 10 10" refX="25" refY="0" markerWidth="6" markerHeight="6" orient="auto">
-                        <path d="M0,-5L10,0L0,5" fill="#34d399"/>
+                    <marker id="arrow-emerald" viewBox="0 -5 10 10" refX="28" refY="0" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,-5L10,0L0,5" fill="#10b981"/>
                     </marker>
-                    <marker id="arrow-violet" viewBox="0 -5 10 10" refX="25" refY="0" markerWidth="6" markerHeight="6" orient="auto">
-                        <path d="M0,-5L10,0L0,5" fill="#a78bfa"/>
+                    <marker id="arrow-violet" viewBox="0 -5 10 10" refX="28" refY="0" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,-5L10,0L0,5" fill="#818cf8"/>
                     </marker>
                 </defs>
+                <g id="svg-links-track"></g>
                 <g id="svg-links-vis"></g>
-                <g id="svg-links-hit" class="topology-hit" stroke="transparent" stroke-width="20"></g>
+                <g id="svg-links-hit" class="topology-hit" stroke="transparent" stroke-width="24"></g>
             </svg>
+            
+            <!-- Dynamic Animated Packet Flow -->
+            <div id="animated-packet" class="absolute z-50 hidden flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap shadow-xl pointer-events-none transition-colors duration-200" style="left: 0; top: 0; transform: translate(-50%, -50%);">
+                <i id="packet-icon" class="fas fa-paper-plane"></i>
+                <span id="packet-label">SPF Probe</span>
+            </div>
             
             <!-- HTML Nodes Layer -->
             <div id="nodes-layer" class="absolute inset-0 z-20 pointer-events-none"></div>
