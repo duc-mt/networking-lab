@@ -120,16 +120,20 @@
         <!-- Details Panel -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- CLI Panel -->
-            <div class="bg-[#0f172a] rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-lg">
-                <div class="bg-slate-900 px-4 py-2 flex items-center border-b border-slate-800/50">
-                    <div class="flex gap-1.5 mr-4">
-                        <div class="w-3 h-3 rounded-full bg-rose-500/20 border border-rose-500/50"></div>
-                        <div class="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/50"></div>
-                        <div class="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/50"></div>
+            <div class="bg-[#1e1e1e] rounded-2xl overflow-hidden border border-slate-700 shadow-xl flex flex-col font-mono text-sm h-[380px]">
+                <div class="bg-[#2d2d2d] px-4 py-2.5 flex items-center justify-between border-b border-black/50 select-none">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
                     </div>
-                    <span class="text-xs text-slate-500 font-mono" id="cli-title">show ip ospf database</span>
+                    <div class="text-slate-400 text-xs font-mono font-bold tracking-wider flex items-center gap-2">
+                        <i class="fas fa-terminal text-slate-500 text-[10px]"></i>
+                        <span id="cli-title">show ip ospf database</span>
+                    </div>
+                    <div class="text-[10px] text-slate-500 font-mono">vt100</div>
                 </div>
-                <div class="p-5 font-mono text-sm leading-relaxed overflow-x-auto text-slate-300" id="cli-content" style="white-space: pre-wrap;">
+                <div class="p-4 font-mono text-xs md:text-sm leading-relaxed overflow-x-auto text-emerald-400 bg-[#1e1e1e] flex-1 overflow-y-auto" id="cli-content" style="white-space: pre-wrap;">
                     <!-- CLI output -->
                 </div>
             </div>
@@ -370,11 +374,27 @@ ADV Router      Age         Seq#       Checksum Tag
                 const ringClass = role === 'origin' ? 'ring-2 ring-indigo-500 ring-offset-4 dark:ring-offset-slate-900' : '';
 
                 nodesContainer.innerHTML += `
-                    <div class="absolute flex flex-col items-center ${opacityClass} ${ringClass} node-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 w-32 shadow-sm" style="left: calc(${node.x}% - 64px); top: calc(${node.y}% - 40px); z-index: 10;">
-                        <i class="fas ${node.icon} text-2xl text-slate-700 dark:text-slate-200 mb-2"></i>
-                        <span class="font-bold text-sm">${node.name}</span>
-                        <span class="text-[10px] text-slate-500 mb-2">${node.ip}</span>
-                        <div class="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${badgeClass} shadow-sm whitespace-nowrap">
+                    <div class="absolute flex flex-col items-center ${opacityClass} ${ringClass} node-card bg-white dark:bg-slate-800 rounded-xl p-3.5 w-36 border-2 border-slate-200 dark:border-slate-700 shadow-xl transition-all duration-300 select-none" style="left: calc(${node.x}% - 72px); top: calc(${node.y}% - 55px); z-index: 10;">
+                        <!-- Role Badge Top -->
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600 shadow-xs">
+                            ${node.role}
+                        </div>
+                        
+                        <!-- Circular Icon Housing -->
+                        <div class="w-12 h-12 mb-2 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                            <i class="fas ${node.icon} text-xl text-slate-700 dark:text-slate-300"></i>
+                        </div>
+                        
+                        <!-- Router Name -->
+                        <h3 class="text-sm font-extrabold text-slate-800 dark:text-white tracking-tight">${node.name}</h3>
+                        
+                        <!-- IP Subnet Box -->
+                        <div class="text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-0.5 mb-2 bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+                            ${node.ip}
+                        </div>
+                        
+                        <!-- LSA Scope Status Badge Bottom -->
+                        <div class="text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full uppercase ${badgeClass} shadow-sm whitespace-nowrap border border-white/20">
                             ${badgeText}
                         </div>
                     </div>
