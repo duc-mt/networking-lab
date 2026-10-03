@@ -126,7 +126,7 @@
 .dark .cost-path{background:#064e3b;border-color:#10b981;color:#34d399}
 
 /* right panel tabs */
-.rtab{padding:6px 12px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;transition:all .18s;letter-spacing:.02em;border:1px solid transparent}
+.rtab{padding:6px 12px;font-size:12px;font-weight:700;border-radius:999px;cursor:pointer;transition:all .18s;letter-spacing:.02em;border:1px solid transparent}
 .rtab.active{background:#ffffff;color:#2563eb;box-shadow:0 1px 3px rgba(0,0,0,.08);border-color:#e2e8f0}
 .dark .rtab.active{background:#1e293b;color:#60a5fa;box-shadow:0 1px 4px rgba(0,0,0,.3);border-color:#334155}
 .rtab:not(.active){color:#64748b}
@@ -146,12 +146,12 @@
 .dark .sc-pill:not(.active):hover{border-color:#475569;color:#f1f5f9;transform:translateY(-1px)}
 
 /* SPF step row */
-.spf-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;font-size:12px;transition:background .2s}
+.spf-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;transition:background .2s}
 .spf-row.current{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25)}
 .spf-row.done{opacity:.5}
 
 /* routing table */
-.rt-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;padding:6px 10px;border-radius:8px;font-size:12px;align-items:center}
+.rt-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;align-items:center}
 .rt-row.changed{background:rgba(6,64,64,.15);border:1px solid rgba(6,64,64,.4)}
 .rt-row.removed{opacity:.4;text-decoration:line-through}
 
@@ -178,7 +178,7 @@
   color:#334155;
 }
 .dark .bw-popup{background:#0f172a;border-color:#334155;box-shadow:0 8px 32px rgba(0,0,0,.5);color:#cbd5e1}
-.bw-opt{padding:7px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Fira Code',monospace;transition:background .15s;white-space:nowrap}
+.bw-opt{padding:7px 12px;border-radius:999px;cursor:pointer;font-size:12px;font-family:'Fira Code',monospace;transition:background .15s;white-space:nowrap}
 .bw-opt:hover{background:#f1f5f9}
 .dark .bw-opt:hover{background:#1e293b}
 
@@ -203,7 +203,7 @@
 <!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
 <header class="sticky top-0 z-50 px-4 py-2.5 flex items-center justify-between gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
   <div class="flex items-center gap-3">
-    <a href="../../index.html" class="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 hover:shadow-lg hover:scale-105 transition-all-fast"
+    <a href="../../index.html" class="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 hover:shadow-sm hover:scale-105 transition-all-fast"
          style="background:linear-gradient(135deg,#3b82f6,#6366f1)" title="Về trang chủ Portfolio">
       <i class="fas fa-share-nodes text-sm"></i>
     </a>
@@ -292,7 +292,7 @@
       </div>
 
       <!-- tabs -->
-      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-full mb-2 w-max border border-slate-200 dark:border-slate-700/50">
         <button class="rtab active flex-1 text-center" id="tab-spf" onclick="App.setTab('spf')">SPF Steps</button>
         <button class="rtab flex-1 text-center" id="tab-lsdb" onclick="App.setTab('lsdb')">LSDB</button>
         <button class="rtab flex-1 text-center" id="tab-rt" onclick="App.setTab('rt')">Routing Table</button>
@@ -308,13 +308,13 @@
 </main>
 
 <!-- ═══════════════════════════════ CONTROL BAR ═══════════════════════════════ -->
-<div id="ctrl-bar" class="sticky bottom-0 z-40 px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
+<div id="ctrl-bar" class="sticky bottom-0 z-40 px-4 py-3 flex items-center justify-between gap-3 shadow-sm">
   <!-- SPF step controls -->
   <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700">
     <button onclick="App.spfPrev()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-600 hover:shadow transition-all-fast" title="Bước trước">
       <i class="fas fa-backward-step text-xs"></i>
     </button>
-    <button onclick="App.spfPlayPause()" id="btn-play" class="h-8 px-4 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center text-white transition-all-fast text-xs font-bold gap-1.5 shadow-md shadow-blue-500/30">
+    <button onclick="App.spfPlayPause()" id="btn-play" class="h-8 px-4 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center text-white transition-all-fast text-xs font-bold gap-1.5 shadow-sm shadow-blue-500/30">
       <i class="fas fa-play text-xs" id="play-icon"></i><span id="play-lbl">Chạy SPF</span>
     </button>
     <button onclick="App.spfNext()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-600 hover:shadow transition-all-fast" title="Bước tiếp">
@@ -900,7 +900,7 @@ const App = (() => {
         <div class="text-[9px] uppercase tracking-widest text-indigo-600 dark:text-violet-400 mb-2 mono font-bold">Candidate List</div>
         <div class="flex flex-wrap gap-1.5">
           ${step.candidates.map(c=>`
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs mono font-bold bg-indigo-50 dark:bg-violet-950/40 border border-indigo-200 dark:border-violet-700/40 text-indigo-700 dark:text-violet-300">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-mono font-bold bg-indigo-50 dark:bg-violet-950/40 border border-indigo-200 dark:border-violet-700/40 text-indigo-700 dark:text-violet-300">
               ${c.id} <span class="opacity-60">cost</span> ${c.cost===Infinity?'∞':c.cost}
             </span>`).join('')}
         </div>
@@ -910,10 +910,10 @@ const App = (() => {
     // settled set
     if (step.settled && step.settled.length>0) {
       html += `<div class="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-3 shadow-sm">
-        <div class="text-[9px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2 mono font-bold">Settled (SPF Tree)</div>
+        <div class="text-[9px] uppercase tracking-widest text-emerald-600 dark:text-sky-400 mb-2 mono font-bold">Settled (SPF Tree)</div>
         <div class="flex flex-wrap gap-1.5">
           ${step.settled.map(s=>`
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs mono font-bold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-300">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-300">
               ${s} <span class="opacity-60">${step.dist&&step.dist[s]!==undefined?step.dist[s]:''}</span>
             </span>`).join('')}
         </div>
@@ -931,7 +931,7 @@ const App = (() => {
             const prev=step.prev&&step.prev[n.id];
             const settled=step.settled&&step.settled.includes(n.id);
             return `<div class="flex items-center justify-between px-3 py-1.5 text-xs hover:bg-slate-50 dark:hover:bg-slate-700/30">
-              <span class="mono font-bold ${settled?'text-emerald-600 dark:text-emerald-400':d===Infinity?'text-slate-400 dark:text-slate-600':'text-slate-800 dark:text-slate-200'}">${n.id}</span>
+              <span class="mono font-bold ${settled?'text-emerald-600 dark:text-sky-400':d===Infinity?'text-slate-400 dark:text-slate-600':'text-slate-800 dark:text-slate-200'}">${n.id}</span>
               <span class="mono font-bold ${d===Infinity?'text-slate-400 dark:text-slate-600':'text-indigo-600 dark:text-violet-300'}">${d===Infinity?'∞':d}</span>
               <span class="mono text-slate-500 text-[10px]">${prev?'via '+prev:'—'}</span>
             </div>`;
@@ -952,7 +952,7 @@ const App = (() => {
       html += `<div class="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden mb-2">
         <div class="flex items-center gap-2 px-3 py-1.5 border-b border-slate-200 dark:border-slate-700/60 bg-blue-500/5">
           <span class="text-[9px] mono font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-500/15 px-1.5 py-0.5 rounded">Type 1</span>
-          <span class="text-xs mono font-bold text-slate-800 dark:text-slate-200">${n.label}</span>
+          <span class="text-xs font-mono font-bold text-slate-800 dark:text-slate-200">${n.label}</span>
           <span class="text-[10px] mono text-slate-500 ml-auto">${n.rid}</span>
         </div>
         ${myLinks.map(l=>{
@@ -964,7 +964,7 @@ const App = (() => {
             <span class="mono text-indigo-600 dark:text-violet-300 ml-auto font-bold">cost ${bwt.cost}</span>
           </div>`;
         }).join('')}
-        ${myLinks.length===0?`<div class="px-3 py-1.5 text-[10px] text-slate-500 italic">Không có active link</div>`:''}
+        ${myLinks.length===0?`<div class="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest italic">Không có active link</div>`:''}
       </div>`;
     });
 
@@ -1002,17 +1002,17 @@ const App = (() => {
       html += `<div class="rounded-xl ${isDst?'border-amber-400 dark:border-amber-500/40 bg-amber-50/50 dark:bg-amber-500/5':'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/60'} border shadow-sm ${isChanged?'ring-2 ring-emerald-500/30':''} overflow-hidden mb-1.5">
         <div class="flex items-center gap-2 px-3 py-2 bg-slate-50/50 dark:bg-transparent">
           <span class="mono font-bold text-xs ${isUnreachable?'text-red-500 dark:text-red-400':isDst?'text-amber-600 dark:text-amber-400':'text-slate-800 dark:text-slate-200'}">${n.id}</span>
-          <span class="mono text-[10px] text-slate-500">${n.rid}</span>
+          <span class="mono text-[10px] font-semibold text-slate-400 uppercase tracking-widest">${n.rid}</span>
           ${isDst?`<span class="ml-auto text-[9px] text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-400/10 px-1.5 py-0.5 rounded mono font-bold">DST</span>`:''}
-          ${isChanged&&!isDst?`<span class="ml-auto text-[9px] text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-400/10 px-1.5 py-0.5 rounded mono font-bold">CHANGED</span>`:''}
+          ${isChanged&&!isDst?`<span class="ml-auto text-[9px] text-emerald-700 dark:text-sky-400 bg-emerald-100 dark:bg-emerald-400/10 px-1.5 py-0.5 rounded mono font-bold">CHANGED</span>`:''}
         </div>
         <div class="border-t border-slate-200 dark:border-slate-700/50 grid grid-cols-2 divide-x divide-slate-200 dark:divide-slate-700/50">
           <div class="px-3 py-1.5">
-            <div class="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5 font-bold">Next-hop</div>
+            <div class="text-[9px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Next-hop</div>
             <div class="mono text-xs font-bold ${isUnreachable?'text-red-500 dark:text-red-400':'text-indigo-600 dark:text-violet-300'}">${isUnreachable?'UNREACHABLE':prev||'—'}</div>
           </div>
           <div class="px-3 py-1.5">
-            <div class="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5 font-bold">Cost</div>
+            <div class="text-[9px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Cost</div>
             <div class="mono text-xs font-bold ${isUnreachable?'text-red-500 dark:text-red-400':'text-emerald-600 dark:text-emerald-300'}">${isUnreachable?'∞':cost}</div>
           </div>
         </div>
@@ -1035,7 +1035,7 @@ const App = (() => {
     const toggleLbl = document.getElementById('bw-toggle-lbl');
 
     opts.innerHTML = BW_TYPES.map((bwt,i)=>`
-      <div class="bw-opt ${link.bwType===i?'text-emerald-400':''}" onclick="App.setLinkBW('${linkId}',${i})">
+      <div class="bw-opt ${link.bwType===i?'text-sky-400':''}" onclick="App.setLinkBW('${linkId}',${i})">
         <i class="fas ${bwt.icon} mr-2" style="color:${bwt.color}"></i>${bwt.label}
         <span class="text-slate-500 ml-1">cost ${bwt.cost}</span>
       </div>`).join('');

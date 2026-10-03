@@ -81,10 +81,10 @@
 @keyframes dash{to{stroke-dashoffset:-28}}
 
 /* LSDB panel */
-.lsa-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;font-size:12px;transition:all .25s;border:1px solid transparent;animation:fadeIn .3s ease both}
+.lsa-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;transition:all .25s;border:1px solid transparent;animation:fadeIn .3s ease both}
 .lsa-row.new{border-color:rgba(99,102,241,.3);background:rgba(99,102,241,.06)}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-.lsa-type{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;font-family:'Fira Code',monospace;white-space:nowrap}
+.lsa-type{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;font-family:'Fira Code',monospace;white-space:nowrap}
 .lsa-origin{font-family:'Fira Code',monospace;font-size:12px;font-weight:700;}
 .lsa-scope{font-size:11px;padding:2px 6px;border-radius:4px;font-family:'Fira Code',monospace}
 
@@ -101,7 +101,7 @@
 .dark .step-btn:not(.active):hover{color:#cbd5e1;border-color:#475569;transform:translateY(-1px)}
 
 /* right panel tabs */
-.rtab{padding:6px 12px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;transition:all .18s;border:1px solid transparent}
+.rtab{padding:6px 12px;font-size:12px;font-weight:700;border-radius:999px;cursor:pointer;transition:all .18s;border:1px solid transparent}
 .rtab.active{background:#ffffff;color:#2563eb;box-shadow:0 1px 3px rgba(0,0,0,.08);border-color:#e2e8f0}
 .dark .rtab.active{background:#1e293b;color:#60a5fa;box-shadow:0 1px 4px rgba(0,0,0,.3);border-color:#334155}
 .rtab:not(.active){color:#64748b}
@@ -129,7 +129,7 @@
 
 <header class="sticky top-0 z-50 px-4 py-2.5 flex items-center justify-between gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
   <div class="flex items-center gap-3">
-    <a href="../../index.html" class="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 hover:shadow-lg hover:scale-105 transition-all-fast" style="background:linear-gradient(135deg,#3b82f6,#6366f1)" title="Về trang chủ Portfolio">
+    <a href="../../index.html" class="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 hover:shadow-sm hover:scale-105 transition-all-fast" style="background:linear-gradient(135deg,#3b82f6,#6366f1)" title="Về trang chủ Portfolio">
       <i class="fas fa-database text-sm"></i>
     </a>
     <div>
@@ -144,7 +144,7 @@
   <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
     <button onclick="app.seek(0)" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-600 hover:shadow transition-all-fast" title="Về đầu"><i class="fas fa-backward-step text-xs"></i></button>
     <button onclick="app.prev()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-600 hover:shadow transition-all-fast" title="Bước trước"><i class="fas fa-chevron-left text-xs"></i></button>
-    <button onclick="app.playPause()" id="btn-play" class="h-8 px-4 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center text-white transition-all-fast text-xs font-bold gap-1.5 shadow-md shadow-blue-500/30">
+    <button onclick="app.playPause()" id="btn-play" class="h-8 px-4 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center text-white transition-all-fast text-xs font-bold gap-1.5 shadow-sm shadow-blue-500/30">
       <i class="fas fa-play text-xs" id="play-icon"></i><span id="play-lbl" class="hidden sm:inline">Play</span>
     </button>
     <button onclick="app.next()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-600 hover:shadow transition-all-fast" title="Bước tiếp"><i class="fas fa-chevron-right text-xs"></i></button>
@@ -204,7 +204,7 @@
         </span>
       </div>
 
-      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-full mb-2 w-max border border-slate-200 dark:border-slate-700/50">
         <button class="rtab active flex-1 text-center" id="tab-lsdb" onclick="app.setTab('lsdb')">LSDB by Router</button>
         <button class="rtab flex-1 text-center" id="tab-area" onclick="app.setTab('area')">LSDB by Area</button>
         <button class="rtab flex-1 text-center" id="tab-cli" onclick="app.setTab('cli')">CLI Console</button>
@@ -775,7 +775,7 @@ class OspfLsdbSimulator {
       <span class="lsa-type" style="background:${st.bg};color:${st.color}">${st.label}</span>
       <span class="lsa-origin" style="color:${st.color}">${e.origin}</span>
       <span class="lsa-scope text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">${e.scope}</span>
-      <span class="text-[10px] text-slate-500 ml-auto">${e.desc}</span>
+      <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest ml-auto">${e.desc}</span>
       ${e.isNew?`<span class="text-[9px] font-bold" style="color:${st.color}">NEW</span>`:''}
     </div>`;
   }
