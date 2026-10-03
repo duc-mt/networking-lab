@@ -1,82 +1,83 @@
 ---
 name: design-system-rules
-description: Quy định bắt buộc về UI/UX và phong cách thiết kế cho dự án networking-lab.
+description: Mandatory UI/UX rules and design patterns for the networking-lab project.
 trigger: always_on
 ---
 
-# Bắt buộc tuân thủ Design System (UI/UX)
+# Mandatory Design System (UI/UX)
 
-Mỗi khi khởi tạo, chỉnh sửa HTML/CSS hoặc các thành phần giao diện trong dự án này, AI LUÔN LUÔN phải tuân thủ nghiêm ngặt các quy định sau để giữ phong cách hiện đại, tinh tế và đồng nhất trên toàn dự án:
+Whenever generating or editing HTML/CSS or interface components in this project, the AI MUST strictly adhere to the following rules to maintain a modern, refined, and consistent aesthetic across the entire project:
 
-## 1. Không gian màu (Color Palette)
+## 1. Color Palette
 
-- **Không dùng màu trắng/đen thuần:** Tuyệt đối không dùng `#ffffff` hay `#000000`. Bắt buộc dùng hệ màu trung tính `Slate` của Tailwind.
-- **Nền (Background):** Light mode luôn dùng `bg-slate-50`. Dark mode luôn dùng `bg-slate-950`.
-- **Thẻ (Cards/Surfaces):** Trên Dark mode, thẻ phải dùng `bg-slate-900` kết hợp viền mỏng `border-slate-800` để tạo chiều sâu.
-- **Điểm nhấn (Accents):** Thay vì tô màu phẳng (flat color) gắt, hãy dùng gradient tinh tế (VD: `bg-gradient-to-br from-blue-500 to-indigo-600`) cho logo, icon hoặc nút bấm chính.
+- **No Pure White/Black:** Never use `#ffffff` or `#000000`. You must use the Tailwind `Slate` neutral color scale.
+- **Backgrounds:** Light mode must always use `bg-slate-50`. Dark mode must always use `bg-slate-950`.
+- **Cards/Surfaces:** In Dark mode, cards must use `bg-slate-900` combined with a thin `border-slate-800` to create depth.
+- **Accents:** Instead of harsh flat colors, use subtle gradients (e.g., `bg-gradient-to-br from-blue-500 to-indigo-600`) for logos, icons, or primary buttons.
 
-## 2. Typography (Nghệ thuật Kiểu chữ)
+## 2. Typography
 
-- **Văn bản/UI chính:** Bắt buộc dùng font sans-serif `Inter`. Linh hoạt độ nặng: `font-extrabold` cho tiêu đề chính, `font-medium` cho văn bản phụ.
-- **Code/Technical/Tags:** Bắt buộc dùng font Monospace `Fira Code` cho các nhãn trạng thái, huy hiệu, thông số kỹ thuật.
-- **Khoảng cách (Tracking):** Tiêu đề lớn phải ép hẹp khoảng cách (`tracking-tight`). Nhãn phụ/nhãn nhỏ phải in hoa và kéo giãn khoảng cách (`uppercase tracking-widest text-xs`).
+- **Main UI Text:** Must use the sans-serif font `Inter`. Adjust weights appropriately: `font-extrabold` for main headings, `font-medium` for secondary text.
+- **Code/Technical/Tags:** Must use the Monospace font `Fira Code` for status badges, labels, and technical parameters.
+- **Tracking (Letter Spacing):** Large headings must have tight spacing (`tracking-tight`). Small/secondary labels must be uppercase and widely spaced (`uppercase tracking-widest text-xs`).
 
-## 3. Hiệu ứng, Bố cục & Khoảng trắng
+## 3. Effects, Layout & Whitespace
 
-- **Header:** Luôn sử dụng hiệu ứng Glassmorphism (`backdrop-blur-md bg-white/80 dark:bg-slate-900/80`).
-- **Khoảng trắng (Whitespace):** Cố ý giữ padding và margin lớn (VD: `gap-20`, `py-24`) giữa các khối nội dung. Không nhồi nhét thành phần UI.
-- **Tương tác (Micro-interactions):** Sử dụng class `.transition-all-fast` của dự án. Hover lên thẻ phải nảy nhẹ (`hover:-translate-y-1 hover:shadow-lg`), không đổi màu quá đột ngột.
+- **Header:** Always use the Glassmorphism effect (`backdrop-blur-md bg-white/80 dark:bg-slate-900/80`).
+- **Whitespace:** Intentionally maintain generous padding and margins (e.g., `gap-20`, `py-24`) between content blocks. Do not cram UI elements.
+- **Micro-interactions:** Use the project's `.transition-all-fast` class. Hovering over cards should cause a slight lift (`hover:-translate-y-1 hover:shadow-lg`) without abrupt color changes.
 
-## 4. Bảo mật dữ liệu (Global Security Rule)
+## 4. Data Security (Global Security Rule)
 
-- **TUYỆT ĐỐI ẨN DANH DỮ LIỆU THẬT:** Nếu prompt của người dùng có chứa IP thật, MAC thật, hostname thật của công ty/khách hàng, hoặc dữ liệu nhạy cảm... AI **PHẢI** tự động làm sạch và thay thế bằng dữ liệu giả (dummy data) trước khi tạo ra HTML.
-- Thay IP thật bằng IP giả (VD: `10.x.x.x`, `192.168.x.x`, `1.1.1.1`).
-- Thay hostname thật bằng tên chung chung (VD: `FW-CORE`, `SW-ACCESS-01`, `R1`).
-- Che đi toàn bộ password, token, domain name, VLAN IDs thật. **Không bao giờ** được output raw data nhạy cảm vào file code.
+- **ABSOLUTELY ANONYMIZE REAL DATA:** If the user's prompt contains real IPs, MACs, hostnames of a company/client, or sensitive data... the AI **MUST** automatically sanitize and replace them with dummy data before generating HTML.
+- Replace real IPs with dummy IPs (e.g., `10.x.x.x`, `192.168.x.x`, `1.1.1.1`).
+- Replace real hostnames with generic names (e.g., `FW-CORE`, `SW-ACCESS-01`, `R1`).
+- Mask all real passwords, tokens, domain names, and VLAN IDs. **Never** output raw sensitive data into the code file.
 
-## 5. Cấu trúc mã nguồn Lab (Engine & Templates)
+## 5. Lab Source Code Structure (Engine & Templates)
 
-- Bất cứ khi nào được yêu cầu tạo bài Lab mới, AI **PHẢI** đọc qua file `docs/prompt-templates.md` để chọn đúng 1 trong 9 cấu trúc có sẵn (Ví dụ: Protocol Simulator, Troubleshooting, Algorithm Visualizer, v.v.).
-- Bắt buộc tuân thủ các quy tắc bất biến trong template như: cách dùng hàm `clampNodes()`, cách làm nút `Mode Toggle`, và các Quy ước song ngữ Anh-Việt (Bilingual Standards) đã ghi chú trong đó.
-- Trước khi viết code mới cho Packet Animation, Timer Bar, Trigger Outage button, hoặc Teaching Note box, AI **PHẢI** kiểm tra Section 15 (`Shared UI Components Library`) của `prompt-templates.md` — các pattern này đã có implementation mẫu đã kiểm chứng, không được viết lại từ đầu.
-- Layout: mặc định cuộn dọc; split-screen chỉ cho lab nhiều dữ liệu (xem Section 15.5). Kiến trúc JS: template timeline dùng `class XxxSimulator` + biến `app` (Section 15.6).
-- Mọi lab có ≥ 2 area/zone OSPF (hoặc kiến trúc multi-area tương tự) **PHẢI** dùng đúng bảng màu Area/Zone chuẩn tại Section 15.3: Area 0 = blue `#3b82f6`, Area 1 = indigo `#6366f1`, Area 2/NSSA = sky `#0ea5e9`, Area 3+ = cyan `#06b6d4`. Đây là bug đã lặp lại 3 lần trong thực tế (dùng nhầm violet/emerald) — không được tái diễn.
+- Whenever asked to create a new Lab, the AI **MUST** read the `docs/prompt-templates.md` file to select exactly 1 of the 9 available structures (e.g., Protocol Simulator, Troubleshooting, Algorithm Visualizer, etc.).
+- Strict adherence to immutable template rules is required: the usage of the `clampNodes()` function, the `Mode Toggle` button implementation, and the Bilingual Standards noted there.
+- Before writing new code for Packet Animations, Timer Bars, Trigger Outage buttons, or Teaching Note boxes, the AI **MUST** check Section 15 (`Shared UI Components Library`) of `prompt-templates.md` — these patterns have verified sample implementations and must not be rewritten from scratch.
+- Layout: vertical scrolling by default; split-screen only for data-heavy labs (see Section 15.5). JS Architecture: timeline templates use `class XxxSimulator` + `app` variable (Section 15.6).
+- Any lab with >= 2 OSPF areas/zones (or similar multi-area architecture) **MUST** use the exact Area/Zone color palette in Section 15.3: Area 0 = blue `#3b82f6`, Area 1 = indigo `#6366f1`, Area 2/NSSA = sky `#0ea5e9`, Area 3+ = cyan `#06b6d4`. This is a bug that has recurred 3 times in practice (accidentally using violet/emerald) — do not let it happen again.
 
-### Bảng 9 template — chọn nhanh:
+### Table of 9 Templates — Quick Selection:
 
-| Template                  | `type` key            | Dùng khi                                                                                         |
+| Template                  | `type` key            | When to Use                                                                                         |
 | ------------------------- | --------------------- | ------------------------------------------------------------------------------------------------ |
-| Protocol Simulator        | `protocol`            | Giải thích protocol hoạt động theo thời gian (FSM, packet exchange)                              |
-| Troubleshooting Lab       | `troubleshooting`     | Tái hiện quy trình xử lý sự cố: symptom → root cause → fix                                       |
-| Security Packet Walk      | `packet-walk`         | Trace packet qua firewall/NAT pipeline                                                           |
-| Change / MOP Flow         | `change-mop`          | Lập tài liệu maintenance window: pre-check → execute → rollback                                  |
-| Automation Workflow       | `automation`          | Minh họa script/API: payload → response → error handling                                         |
-| Failover / HA Drill       | `failover`            | Resilience test: trigger → timer countdown → convergence                                         |
-| Topology Design Reference | `topology-design`     | HLD/blueprint kiến trúc mạng hoàn chỉnh, không có timeline                                       |
-| Diagnostic Playbook       | `diagnostic-playbook` | Catalog N failure mode trên cùng topology — flip tab để so sánh                                  |
-| **Algorithm Visualizer**  | **`algorithm-viz`**   | **Graph algorithm chạy live trên topology có thể tương tác (Dijkstra SPF, Bellman-Ford, CSPF…)** |
+| Protocol Simulator        | `protocol`            | Explaining protocol operations over time (FSM, packet exchange)                              |
+| Troubleshooting Lab       | `troubleshooting`     | Recreating the incident response process: symptom → root cause → fix                                       |
+| Security Packet Walk      | `packet-walk`         | Tracing packets through firewall/NAT pipelines                                                           |
+| Change / MOP Flow         | `change-mop`          | Documenting a maintenance window: pre-check → execute → rollback                                  |
+| Automation Workflow       | `automation`          | Illustrating scripts/APIs: payload → response → error handling                                         |
+| Failover / HA Drill       | `failover`            | Resilience testing: trigger → timer countdown → convergence                                         |
+| Topology Design Reference | `topology-design`     | HLD/blueprint of a complete network architecture, without a timeline                                       |
+| Diagnostic Playbook       | `diagnostic-playbook` | Catalog of N failure modes on the same topology — flip tabs to compare                                  |
+| **Algorithm Visualizer**  | **`algorithm-viz`**   | **Live graph algorithm running on an interactive topology (Dijkstra SPF, Bellman-Ford, CSPF…)** |
 
-### Khi nào chọn Algorithm Visualizer (type: `algorithm-viz`):
+### When to choose Algorithm Visualizer (type: `algorithm-viz`):
 
-Dùng khi mục tiêu học là **quan sát thuật toán tính toán trên graph** và người học cần **tự thay đổi topology** để thấy kết quả thay đổi ngay lập tức. Khác với Protocol Simulator (timeline tuyến tính, passive), Algorithm Visualizer là **reactive**: người dùng click link để shutdown hoặc đổi cost → thuật toán tự chạy lại → path/table cập nhật real-time.
+Use this when the learning objective is to **observe algorithm computations on a graph** and the learner needs to **manually modify the topology** to see immediate changes. Unlike Protocol Simulator (linear timeline, passive), the Algorithm Visualizer is **reactive**: the user clicks a link to shut it down or change its cost → the algorithm reruns → paths/tables update in real-time.
 
-Ví dụ lab phù hợp:
+Suitable lab examples:
+- OSPF SPF / Dijkstra — click links to shutdown or change cable type, see paths change
+- IS-IS SPF on dual-topology (L1/L2)
+- MPLS-TE CSPF with bandwidth constraints
+- BGP best-path selection with multiple attributes
+- STP Bellman-Ford / port role election when links change
 
-- OSPF SPF / Dijkstra — click link để shutdown hoặc đổi cable type, xem path thay đổi
-- IS-IS SPF trên dual-topology (L1/L2)
-- MPLS-TE CSPF với bandwidth constraint
-- BGP best-path selection với multiple attributes
-- STP Bellman-Ford / port role election khi link thay đổi
+## 6. Bilingual Standards
 
-## 6. Quy ước Song ngữ (Bilingual Standards)
+When writing content displayed on the UI, you must mix English and Vietnamese according to Network Engineering standards:
 
-Khi viết nội dung hiển thị trên UI, bắt buộc pha trộn Anh - Việt theo quy chuẩn Kỹ sư mạng:
+- **English (Keep As-Is):** Main Lab Titles (H1), system states (e.g., `ONLINE`, `ERR-DISABLE`), Stepper labels (e.g., `INIT`, `VERIFY`), Role/Device names (e.g., `Core Switch`), and all CLI/Console output. Absolutely do not translate specialized terminology (like Routing, OSPF, Payload, Failover).
+- **Vietnamese:** Detailed descriptions, step explanations, subheadings, and analysis sections. The tone must be professional and concise.
 
-- **Tiếng Anh (Giữ nguyên):** Tiêu đề Lab chính (H1), các trạng thái hệ thống (VD: `ONLINE`, `ERR-DISABLE`), nhãn thanh Stepper (VD: `INIT`, `VERIFY`), tên Role/Thiết bị (VD: `Core Switch`), và toàn bộ output CLI/Console. Tuyệt đối không dịch các thuật ngữ chuyên ngành (như Routing, OSPF, Payload, Failover).
-- **Tiếng Việt:** Mô tả chi tiết, nội dung giải thích các bước, tiêu đề phụ, và các phần phân tích. Văn phong phải chuyên nghiệp, súc tích.
+*(Translator note: If the user explicitly asks for an all-English lab, Vietnamese can be omitted. However, the default bilingual rule remains for standard project labs).*
 
-## 7. Nguyên tắc Tiết chế (Principle of Restraint)
+## 7. Principle of Restraint
 
-- **Không lạm dụng tính năng:** Khi tạo trang mới, KHÔNG cố nhồi nhét tất cả các pattern hiện có (macOS terminal, thẻ nổi shadow-xl, tabs viên thuốc, Dijkstra engine live, v.v.) vào cùng một giao diện.
-- **Áp dụng có chọn lọc:** Chỉ sử dụng những thành phần giao diện hoặc tính năng engine thực sự mang lại lợi ích cho trải nghiệm người dùng hoặc phù hợp với mục tiêu cụ thể của bài lab đó. 
-- Ưu tiên sự gọn gàng, tập trung và đúng mục đích hơn là phô diễn tất cả các tính năng thiết kế có sẵn để tránh làm giao diện trở nên rối rắm hoặc nặng nề (overwhelmed).
+- **Avoid Feature Bloat:** When creating a new page, DO NOT try to cram all existing patterns (macOS terminals, floating shadow-xl cards, pill tabs, live Dijkstra engines, etc.) into a single interface.
+- **Selective Application:** Only use UI components or engine features that genuinely benefit the user experience or align with the specific learning objective of that lab. 
+- Prioritize a clean, focused, and purposeful interface over showing off every available design feature, to prevent the UI from becoming cluttered or overwhelming.

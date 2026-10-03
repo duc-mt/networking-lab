@@ -973,7 +973,7 @@ Hiển thị cost hiện tại của node (từ `step.dist`) dưới dạng badg
 
 **Tab "Algorithm Steps" (default):**
 
-- Card highlight bước hiện tại: action type + node đang processing + mô tả tiếng Việt.
+- Card highlight bước hiện tại: action type + node đang processing + English description.
 - Candidate list: danh sách node + cost, màu violet.
 - Settled set: danh sách node + cost, màu emerald.
 - Distance vector table: tất cả node, cost hiện tại, via (prev node).
@@ -1023,7 +1023,7 @@ resetTopology(); // reload active scenario từ BASE_GRAPH + patches
 - `window.addEventListener('resize', ...)` bắt buộc.
 - Theme toggle với `localStorage('portfolio-theme')` + no-FOUC head script.
 - Header glassmorphism: `backdrop-blur-md bg-white/80 dark:bg-slate-900/80`.
-- Bilingual: tiêu đề H1 tiếng Anh, mô tả/giải thích tiếng Việt (Section 11).
+- Bilingual: H1 title in English, description/explanation in English (Section 11).
 - Semantic Color Contract: không dùng amber cho path highlight — chỉ dùng emerald/violet/blue/pink (Section 13.6).
 
 ### 11. All visible UI text in Vietnamese (ngoại trừ H1 title và technical labels).
@@ -1197,37 +1197,37 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 
 ---
 
-## 12. Quy Ước Ngôn Ngữ & Thuật Ngữ Chuẩn (Bilingual Standards: EN / VI)
+## 12. Language & Terminology Standards (English Only)
 
-> **MỤC TIÊU:** Đảm bảo tất cả các bài lab (Protocol, Troubleshooting, Failover, MOP, Algorithm Visualizer...) có phong cách viết song ngữ Anh - Việt đồng bộ, chuyên nghiệp, chuẩn mực của một Kỹ sư Mạng / NetDevOps.
+> **OBJECTIVE:** Ensure all labs (Protocol, Troubleshooting, Failover, MOP, Algorithm Visualizer...) have a consistent, professional English-only writing style, adhering to Network Engineer / NetDevOps standards.
 
-### Bảng đối chiếu quy ước:
+### Convention Mapping Table:
 
-| Thành phần UI                             | Ngôn ngữ                      | Quy tắc & Ví dụ cụ thể                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| UI Component                              | Language                      | Specific Rules & Examples                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | :---------------------------------------- | :---------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Tiêu đề Lab (`<title>`, `<h1>`)**       | **English**                   | Ngắn gọn, chuyên nghiệp, giữ nguyên thuật ngữ quốc tế.<br>• `Port Security Misconfiguration`<br>• `Rogue DHCP Server & Layer 2 Security`<br>• `ClusterXL Zero-Downtime Patching`<br>• `STP Link Failure & Convergence`<br>• `OSPF SPF Algorithm Visualizer`                                                                                                                                                                                                 |
-| **Thanh Stepper (`phase`)**               | **UPPERCASE English**         | Luôn dùng từ ngắn gọn in hoa. **KHÔNG** dùng tiếng Việt dài dòng làm tràn nút trên mobile.<br>• _Troubleshooting:_ `TRIAGE`, `ISOLATE`, `ROOT CAUSE`, `FIX`, `VERIFY`<br>• _Protocol:_ `DOWN`, `INIT`, `2-WAY`, `EXCHANGE`, `FULL` / `BLOCKING`, `FORWARDING`<br>• _Failover:_ `NORMAL`, `FAILOVER`, `REBOOTING`, `RESTORED`<br>• _MOP:_ `PRE-CHECK`, `EXECUTION`, `POST-CHECK`, `ROLLBACK`<br>• _Algorithm Visualizer:_ `INIT`, `SETTLE`, `EXPAND`, `DONE` |
-| **Scenario Pills (Algorithm Visualizer)** | **English**                   | Tên ngắn gọn, dùng icon Font Awesome trước. Ví dụ: `Baseline`, `Link Failure`, `Cost Tuning`, `ECMP`, `Dual Failure`.                                                                                                                                                                                                                                                                                                                                       |
-| **Tiêu đề từng bước (`title`)**           | **Tiếng Việt Kỹ thuật**       | Ngắn gọn, nêu bật hành động hoặc kết quả. **KHÔNG** thêm tiền tố `"Bước 1:"`, `"Bước 2:"` (vì stepper đã có số bước).                                                                                                                                                                                                                                                                                                                                       |
-| **Mô tả chi tiết (`description`)**        | **Tiếng Việt + Thuật ngữ EN** | Diễn giải mạch lạc bằng tiếng Việt, kết hợp thẻ `<code class="font-mono ...">` cho các câu lệnh và thông số kỹ thuật (IP, MAC, VLAN, Default Gateway, DHCP Discover/Offer/ACK, v.v.).                                                                                                                                                                                                                                                                       |
-| **Vai trò thiết bị (Role Badge)**         | **English**                   | Nhãn nhỏ `-top-3` trên mỗi node card:<br>`Core Switch`, `Access Switch`, `DHCP Server`, `Victim PC 1`, `Rogue Router`, `File Server`, `Backbone`, `ABR`, `ASBR`.                                                                                                                                                                                                                                                                                            |
-| **Tên thiết bị (Hostnames `<h3>`)**       | **Standard Hostname**         | Chữ in hoa dạng chuẩn quy hoạch mạng:<br>`SW-CORE-01`, `SW-ACC-01`, `SRV-DHCP-01`, `PC-VICTIM-01`, `ROUTER-WIFI`.                                                                                                                                                                                                                                                                                                                                           |
-| **Trạng thái thiết bị (State Badge)**     | **UPPERCASE English**         | Trạng thái kỹ thuật in hoa:<br>`ONLINE`, `FORWARDING`, `NORMAL`, `MISCONFIGURED`, `ROGUE ACTIVE`, `POISONED`, `BLOCKED`, `PROTECTED`, `RESTORED ✓`, `DOWN`, `ERR-DISABLE`.<br>_Algorithm Visualizer:_ `SETTLED`, `CANDIDATE`, `PROCESSING`, `UNREACHABLE`.                                                                                                                                                                                                  |
-| **Khối điều tra (Investigation Panels)**  | **Tiếng Việt**                | Chuẩn hóa tiêu đề các card bên phải:<br>• `Danh sách Giả thuyết`<br>• `Nguyên nhân gốc rễ`<br>• `Biện pháp Khắc phục`<br>• Nhãn trạng thái giả thuyết: `Đang xét`, `Loại trừ` (gạch ngang chữ), `Xác nhận` (đỏ/cam).                                                                                                                                                                                                                                        |
-| **Checklist & Rollback Table**            | **Tiếng Việt + CLI**          | Bảng tiêu chuẩn kiểm thử và an toàn vận hành:<br>• Cột: `Hành động`, `Lệnh kiểm tra / Thao tác`, `Trạng thái kỳ vọng (Expected Output)`, `Phương án Rollback`.                                                                                                                                                                                                                                                                                              |
-| **Cửa sổ CLI / Terminal**                 | **English Console + CLI**     | Header: `SW-ACC-01# — Console` hoặc `PC-VICTIM-02> ipconfig /all`.<br>Logs: Output nguyên bản của Cisco IOS/Linux/Windows, kèm chú thích `! ` hoặc `→ ` nếu cần diễn giải.                                                                                                                                                                                                                                                                                  |
-| **Đăng ký `assets/js/projects.js`**       | **Title EN, Desc VI**         | `title: 'Rogue DHCP & Layer 2 Security'`<br>`description: 'Chẩn đoán sự cố mạng do Router Wi-Fi cá nhân gây Rogue DHCP, cấp phát sai Gateway và giải pháp phòng thủ triệt để với DHCP Snooping, DAI, IP Source Guard.'`                                                                                                                                                                                                                                     |
+| **Lab Title (`<title>`, `<h1>`)**         | **English**                   | Short, professional, keep international terminology.<br>• `Port Security Misconfiguration`<br>• `Rogue DHCP Server & Layer 2 Security`<br>• `ClusterXL Zero-Downtime Patching`<br>• `STP Link Failure & Convergence`<br>• `OSPF SPF Algorithm Visualizer`                                                                                                                                                                                                 |
+| **Stepper Bar (`phase`)**                 | **UPPERCASE English**         | Always use short uppercase words. **DO NOT** use long phrases that cause button overflow on mobile.<br>• _Troubleshooting:_ `TRIAGE`, `ISOLATE`, `ROOT CAUSE`, `FIX`, `VERIFY`<br>• _Protocol:_ `DOWN`, `INIT`, `2-WAY`, `EXCHANGE`, `FULL` / `BLOCKING`, `FORWARDING`<br>• _Failover:_ `NORMAL`, `FAILOVER`, `REBOOTING`, `RESTORED`<br>• _MOP:_ `PRE-CHECK`, `EXECUTION`, `POST-CHECK`, `ROLLBACK`<br>• _Algorithm Visualizer:_ `INIT`, `SETTLE`, `EXPAND`, `DONE` |
+| **Scenario Pills (Algorithm Visualizer)** | **English**                   | Short names, use Font Awesome icons first. Example: `Baseline`, `Link Failure`, `Cost Tuning`, `ECMP`, `Dual Failure`.                                                                                                                                                                                                                                                                                                                                       |
+| **Step Title (`title`)**                  | **English**                   | Short, highlighting the action or result. **DO NOT** add prefixes like `"Step 1:"`, `"Step 2:"` (as the stepper already has step numbers).                                                                                                                                                                                                                                                                                                                                       |
+| **Detailed Description (`description`)**  | **English**                   | Explain clearly in English, combine with `<code class="font-mono ...">` tags for commands and technical parameters (IP, MAC, VLAN, Default Gateway, DHCP Discover/Offer/ACK, etc.). All visible UI text must be in English.                                                                                                                                                                                                                                                                       |
+| **Device Role (Role Badge)**              | **English**                   | Small badge `-top-3` on each node card:<br>`Core Switch`, `Access Switch`, `DHCP Server`, `Victim PC 1`, `Rogue Router`, `File Server`, `Backbone`, `ABR`, `ASBR`.                                                                                                                                                                                                                                                                                            |
+| **Device Name (Hostnames `<h3>`)**        | **Standard Hostname**         | Uppercase letters in standard network planning format:<br>`SW-CORE-01`, `SW-ACC-01`, `SRV-DHCP-01`, `PC-VICTIM-01`, `ROUTER-WIFI`.                                                                                                                                                                                                                                                                                                                                           |
+| **Device State (State Badge)**            | **UPPERCASE English**         | Technical state in uppercase:<br>`ONLINE`, `FORWARDING`, `NORMAL`, `MISCONFIGURED`, `ROGUE ACTIVE`, `POISONED`, `BLOCKED`, `PROTECTED`, `RESTORED ✓`, `DOWN`, `ERR-DISABLE`.<br>_Algorithm Visualizer:_ `SETTLED`, `CANDIDATE`, `PROCESSING`, `UNREACHABLE`.                                                                                                                                                                                                  |
+| **Investigation Panels**                  | **English**                   | Standardize titles of right-side cards:<br>• `Hypothesis List`<br>• `Root Cause`<br>• `Remediation`<br>• Hypothesis state labels: `Investigating`, `Excluded` (strikethrough), `Confirmed` (red/orange).                                                                                                                                                                                                                                        |
+| **Checklist & Rollback Table**            | **English + CLI**             | Standard operational safety and testing table:<br>• Columns: `Action`, `Verification Command / Operation`, `Expected Output`, `Rollback Plan`.                                                                                                                                                                                                                                                                                              |
+| **CLI / Terminal Window**                 | **English Console + CLI**     | Header: `SW-ACC-01# — Console` or `PC-VICTIM-02> ipconfig /all`.<br>Logs: Original output of Cisco IOS/Linux/Windows, with comments `! ` or `→ ` if explanation is needed.                                                                                                                                                                                                                                                                                  |
+| **Register `assets/js/projects.js`**      | **Title EN, Desc EN**         | `title: 'Rogue DHCP & Layer 2 Security'`<br>`description: 'Network incident diagnosis due to personal Wi-Fi Router causing Rogue DHCP, incorrect Gateway allocation and thorough defense solution with DHCP Snooping, DAI, IP Source Guard.'`                                                                                                                                                                                                                                     |
 
 ---
 
-## 13. Quy Tắc Phòng Chống Lỗi Giao Diện & Bố Cục UI (Anti-Collision & Layout Robustness)
+## 13. Anti-Collision & Layout Robustness Rules
 
-> **MỤC TIÊU:** Tuyệt đối không để xảy ra hiện tượng các badge, nhãn thông tin hoặc các dòng dữ liệu bị dính sát, đè lên nhau hoặc vỡ layout khi nội dung dài hoặc khi xem trên màn hình kích thước khác nhau.
+> **OBJECTIVE:** Absolutely prevent badges, labels, or data rows from sticking together, overlapping, or breaking layout when content is long or viewed on different screen sizes.
 
-### 1. Header của các Card thông tin (Anti-Collision Header):
+### 1. Information Card Headers (Anti-Collision Header):
 
-- **Cấm:** Không dùng `flex items-center justify-between` đơn thuần khi một bên là chuỗi văn bản động hoặc chuỗi dài (như tên interface, location, rule name).
-- **Bắt buộc:** Dùng cấu trúc responsive flex có wrap và border phân cách:
+- **Forbidden:** Do not simply use `flex items-center justify-between` when one side is a dynamic or long string (like interface name, location, rule name).
+- **Mandatory:** Use a responsive flex structure with wrap and border separation:
     ```html
     <div
         class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800"
@@ -1246,123 +1246,121 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
         </span>
     </div>
     ```
-- Huy hiệu chính (`stage-badge`) phải có `shrink-0`.
-- Nhãn phụ (`device-badge`, `location`, `ip`) phải luôn được bọc trong một khối pill riêng biệt (`bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md`) để tạo vùng đệm mắt nhìn rõ ràng.
+- The main badge (`stage-badge`) must have `shrink-0`.
+- Secondary labels (`device-badge`, `location`, `ip`) must always be wrapped in a separate pill block (`bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md`) to create a clear visual buffer.
 
-### 2. Các hàng thông số Key-Value (Inspector Panels):
+### 2. Key-Value Rows (Inspector Panels):
 
-- **Khoảng cách:** Luôn có `gap-2.5` hoặc `gap-3` giữa nhãn (Key) và giá trị (Value).
-- **Chống co bóp nhãn:** Nhãn bên trái phải có `shrink-0` để không bị bóp méo khi Value quá dài:
+- **Spacing:** Always have `gap-2.5` or `gap-3` between the label (Key) and value (Value).
+- **Anti-squish label:** The left label must have `shrink-0` so it doesn't get distorted when the Value is too long:
     ```html
     <div
         class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50"
     >
-        <span class="text-slate-400 font-sans shrink-0">Luật Firewall:</span>
+        <span class="text-slate-400 font-sans shrink-0">Firewall Rule:</span>
         <span id="inspector-rule" class="font-bold text-blue-600 dark:text-blue-400 text-right">
             ...
         </span>
     </div>
     ```
 
-### 3. Thanh Stepper & Pipeline Responsive:
+### 3. Responsive Stepper & Pipeline:
 
-- Luôn bọc phần timeline/pipeline trong container có `overflow-x-auto` và đặt `min-w-[700px]` bên trong để không bị co cụm trên mobile.
-- Nút bấm stepper dùng nhãn ngắn gọn in hoa tiếng Anh (`phase`), ẩn chữ trên màn hình nhỏ và chỉ hiện số bước:
+- Always wrap the timeline/pipeline part in a container with `overflow-x-auto` and put `min-w-[700px]` inside so it doesn't cluster on mobile.
+- The stepper button uses a short uppercase English label (`phase`), hides the text on small screens and only shows the step number:
   `<span class="hidden md:block">${d.step}. ${d.phase}</span><span class="md:hidden">${d.step}</span>`.
 
-### 4. Quy tắc an toàn định vị Canvas (Topology Safety):
+### 4. Topology Safety Positioning Rules:
 
-- Mọi canvas đều phải kích hoạt hàm `clampNodes()` chống tràn biên (Section 11).
-- Không dùng `absolute` trôi nổi mà không có tọa độ neo (`top/left` hoặc `inset-0`).
+- All canvases must activate the `clampNodes()` function to prevent boundary overflow (Section 11).
+- Do not use floating `absolute` without anchor coordinates (`top/left` or `inset-0`).
 
 ---
 
-## 14. Quy Tắc Thiết Kế Sơ Đồ Mạng (Topology Design & Styling Rules)
+## 14. Topology Design & Styling Rules
 
-> **MỤC TIÊU:** Đảm bảo toàn bộ các trang mô phỏng Topology (đặc biệt là dạng `topology-design` và `algorithm-viz`) đều nhất quán tuyệt đối về khoảng cách, màu sắc, cấu trúc hiển thị trên màn hình siêu rộng (Ultra-wide) và tuân thủ các chuẩn mực trực quan.
+> **OBJECTIVE:** Ensure all Topology simulation pages (especially `topology-design` and `algorithm-viz`) are absolutely consistent in spacing, colors, and layout on ultra-wide screens, and adhere to visual standards.
 
 ### 1. Canvas and Layout Widths (Responsive Auto-Scale Support)
 
-- **Main Container**: Thẻ `<main>` bọc ngoài cùng bắt buộc dùng `class="flex-1 w-full max-w-[1600px] mx-auto ..."` (KHÔNG dùng `max-w-7xl`).
-- **Topology Canvas**: Khung chứa sơ đồ `<div id="topology-container">` dùng `class="relative w-full max-w-[1400px] mx-auto overflow-hidden ..."` với chiều cao tối thiểu (ví dụ `min-h-[500px]` hoặc `min-h-[600px]`). Loại bỏ chế độ cuộn ngang tĩnh (overflow-x-auto), sơ đồ phải tự động co giãn chủ động (responsive) lấp đầy chiều rộng.
-- **Algorithm Visualizer exception:** Layout dùng `flex-row` chia đôi màn hình (topology trái + panel phải 400px cố định), chiều cao = `calc(100vh - header - controlbar)`. Canvas topology chiếm toàn bộ phần còn lại bên trái.
+- **Main Container**: The outermost `<main>` tag must use `class="flex-1 w-full max-w-[1600px] mx-auto ..."` (DO NOT use `max-w-7xl`).
+- **Topology Canvas**: The diagram container `<div id="topology-container">` uses `class="relative w-full max-w-[1400px] mx-auto overflow-hidden ..."` with a minimum height (e.g., `min-h-[500px]` or `min-h-[600px]`). Remove static horizontal scrolling (`overflow-x-auto`), the diagram must automatically scale (responsive) to fill the width.
+- **Algorithm Visualizer exception:** Layout uses `flex-row` to split the screen (topology left + fixed 400px panel right), height = `calc(100vh - header - controlbar)`. The topology canvas occupies the entire remaining space on the left.
 
-### 2. Node Positioning & Symmetry (Tọa độ Tương đối)
+### 2. Node Positioning & Symmetry (Relative Coordinates)
 
-- **CẤM SỬ DỤNG** tọa độ Pixel tĩnh (hardcode pixel). Toàn bộ thiết bị (nodes) và phân vùng (zones) BẮT BUỘC sử dụng tọa độ theo **Phần trăm (%)** (Ví dụ: `left: 15%, top: 50%`) để tự động co giãn mượt mà theo kích thước trình duyệt.
-- Bạn có thể khai báo thẳng % trong array data, hoặc khai báo tọa độ hệ quy chiếu ảo (VD: `REF_W = 1400, REF_H = 600`) rồi tự động tính ra % khi render bằng JS: `el.style.left = (n.x / REF_W * 100) + '%'`.
-- **TUYỆT ĐỐI KHÔNG** để các Node bị dồn tụm về bên trái. Phải phân bổ khoảng cách chia đều cho các Region để trải rộng hài hòa trên bản vẽ.
+- **FORBIDDEN TO USE** static Pixel coordinates (hardcode pixel). All devices (nodes) and zones MUST use coordinates in **Percentage (%)** (Example: `left: 15%, top: 50%`) to scale smoothly according to the browser size.
+- You can declare percentages directly in the array data, or declare virtual reference coordinates (e.g., `REF_W = 1400, REF_H = 600`) and dynamically calculate percentages when rendering with JS: `el.style.left = (n.x / REF_W * 100) + '%'`.
+- **ABSOLUTELY DO NOT** cluster Nodes to the left. Spacing must be distributed evenly across Regions to spread out harmoniously on the canvas.
 
-### 3. Zone Bounding Boxes (Khung Phân Vùng)
+### 3. Zone Bounding Boxes
 
-- **Bounding Box Sizing (Chiều cao an toàn):** Phải đảm bảo chiều cao của khung phân vùng (VD: `height: 92%`) đủ lớn để ôm trọn toàn bộ các thiết bị (nodes) bên trong, không được cắt ngang qua bất kỳ thiết bị nào (nhất là thiết bị nằm ở dưới cùng).
-- **Z-index:** Bounding box bắt buộc phải nằm dưới cùng (`z-0`), còn các Nodes thiết bị phải nổi lên trên (`z-10` hoặc `z-20`).
-- **Bắt buộc** vẽ các khung viền đứt nét để phân định khu vực vật lý (Ví dụ: On-Prem Site, Cloud Region, MPLS Core).
-- **Style CSS:** `absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0`.
-- **Background:** Phải đổ một lớp nền mờ (opacity ~5%) theo màu chủ đạo của vùng (ví dụ thêm hex `0D` vào mã màu như `#3b82f60D`). KHÔNG được chỉ dùng text suông hay khoảng trắng để phân chia.
+- **Bounding Box Sizing:** Ensure the height of the partition frame (e.g., `height: 92%`) is large enough to completely encompass all internal nodes, and does not intersect any device (especially bottom nodes).
+- **Z-index:** Bounding boxes must be at the very bottom (`z-0`), while device Nodes float on top (`z-10` or `z-20`).
+- **Mandatory** to draw dashed borders to delineate physical areas (Example: On-Prem Site, Cloud Region, MPLS Core).
+- **CSS Style:** `absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0`.
+- **Background:** Must fill with a translucent background (opacity ~5%) matching the zone's primary color (e.g., append hex `0D` to the color code like `#3b82f60D`). DO NOT use just text or whitespace for separation.
 
-### 4. Node Card UI & Semantic Colors (Giao diện Thẻ Thiết Bị)
+### 4. Node Card UI & Semantic Colors
 
-- **Role Badge (Nhãn Vai trò - Phía trên cùng):** Dùng màu xám/slate trung tính (`bg-slate-100 text-slate-600`). CẤM dùng màu sắc sặc sỡ phân chia theo Region.
-- **Node Border & Glow:** Viền thẻ và hiệu ứng đổ bóng phát sáng (Outer Glow) CHỈ thể hiện **tình trạng vận hành thực tế** (Health state). Không dùng viền để biểu thị rủi ro kiến trúc hay trạng thái tắt chủ động — xem **Section 14.6 (Semantic Color Contract)**.
-    - Khỏe mạnh (`health: green`): `border-emerald-500` và `shadow-[0_0_15px_rgba(16,185,129,0.3)]`
-    - Suy giảm / cấu hình sai (`health: amber`): `border-amber-500` và `shadow-[0_0_15px_rgba(245,158,11,0.3)]` — chỉ dùng cho thiết bị **đang chạy nhưng có lỗi** (trùng IP, orphaned gateway, mismatch…)
-    - Lỗi / DOWN (`health: red`): dùng dải màu Red/Rose
-    - Tắt chủ động (`state: inactive`): viền `border-slate-400 border-dashed`, `opacity-60`, **không glow** — dùng cho `DISABLED`, admin-down, chưa cấp phép
-- **Algorithm Visualizer node states** dùng màu riêng (xem Section 9, Requirement 6) — không áp dụng health/inactive contract cho các trạng thái `settled`, `candidate`, `processing`.
-- **Status Badge (Nhãn Trạng thái - Phía dưới cùng):** Mỗi thiết bị phải có thêm một huy hiệu nhỏ xíu (pill badge) ở gáy dưới báo cáo trạng thái vận hành hiện tại (Ví dụ: `ONLINE`, `BGP UP`, `DOWN`).
-- **Primary Spec (Thông số cốt lõi):** Dòng text phụ ngay dưới tên thiết bị phải là thông số quan trọng nhất:
-    - Máy chủ (Compute/Host): Hiển thị IP Address.
-    - Router biên mạng (PE Router/L3): Hiển thị **VRF Name** hoặc **Loopback IP**.
-    - **TUYỆT ĐỐI KHÔNG** vứt một cái tên interface chung chung như `Gi0/0/0` vào vị trí này gây hiểu nhầm kiến trúc.
+- **Role Badge (Top):** Use neutral gray/slate (`bg-slate-100 text-slate-600`). DO NOT use vibrant colors divided by Region.
+- **Node Border & Glow:** Card borders and outer glow ONLY represent the **actual operational state** (Health state). Do not use borders to indicate architectural risks or administrative down states — see **Section 14.6 (Semantic Color Contract)**.
+    - Healthy (`health: green`): `border-emerald-500` and `shadow-[0_0_15px_rgba(16,185,129,0.3)]`
+    - Degraded / Misconfigured (`health: amber`): `border-amber-500` and `shadow-[0_0_15px_rgba(245,158,11,0.3)]` — only used for devices **running but with errors** (duplicate IP, orphaned gateway, mismatch…)
+    - Error / DOWN (`health: red`): use Red/Rose color scale
+    - Administratively Down (`state: inactive`): `border-slate-400 border-dashed` border, `opacity-60`, **no glow** — used for `DISABLED`, admin-down, unprovisioned
+- **Algorithm Visualizer node states** use separate colors (see Section 9, Requirement 6) — do not apply health/inactive contract for `settled`, `candidate`, `processing` states.
+- **Status Badge (Bottom):** Each device must have a small pill badge at the bottom reporting current operational state (Example: `ONLINE`, `BGP UP`, `DOWN`).
+- **Primary Spec (Core Parameter):** The subtext right below the device name must be the most important parameter:
+    - Server (Compute/Host): Display IP Address.
+    - Edge Router (PE Router/L3): Display **VRF Name** or **Loopback IP**.
+    - **ABSOLUTELY DO NOT** place a generic interface name like `Gi0/0/0` here to cause architectural confusion.
 
-### 5. Topology Links & Event Listeners (Cáp Mạng và Co Giãn)
+### 5. Topology Links & Event Listeners
 
-- **Resize Listener (QUAN TRỌNG):** Vì thiết bị đã dùng `%`, Bắt buộc phải có `window.addEventListener('resize', drawLinks);` để tính toán lại tọa độ Pixel thực tế (dựa vào `container.clientWidth` và `clientHeight`) rồi cập nhật lại nét vẽ của các thẻ `<svg><path>` mỗi khi trình duyệt co giãn.
-- **Line Animation:** Các liên kết mạng đang active phải có hiệu ứng luồng dữ liệu chạy (Traffic Flowing). Dùng `stroke-dasharray` kết hợp class `.animate-dash` gọi tới CSS `@keyframes dash { to { stroke-dashoffset: -N; } }`.
-- **Algorithm Visualizer link states:** `link-path` (emerald, animated dash + marker-end arrow), `link-candidate` (violet, animated dash), `link-active` (slate static), `link-down` (red dashed, opacity 0.5). Dùng hai `<g>` layer tách biệt: hit layer và visual layer.
-- **Port Labels (Nhãn Cổng Vật Lý/Logic):** Bất kỳ thông số cổng nào (như `Gi1/0/24`, `eth0`) PHẢI được gắn vào 2 đầu của cáp. Dùng toán học nội suy trên JS để đẩy khoảng cách Badge ra cách tâm Node một lượng an toàn tương đối khi màn hình bị thu nhỏ (VD: `px = sx + (dx - sx) * 0.2`).. Đồng thời, CẤM ghim nhãn nằm chết tại tâm đường link, phải tính vector pháp tuyến (Normal Vector) và tịnh tiến (Shift) nhãn sang hai bên đường link khoảng `18px` để né xung đột (Anchor Collision) với các nhãn khác ở Top/Bottom của thiết bị.
+- **Resize Listener (IMPORTANT):** Since devices use `%`, it is Mandatory to have `window.addEventListener('resize', drawLinks);` to recalculate actual Pixel coordinates (based on `container.clientWidth` and `clientHeight`) and update the paths of `<svg><path>` elements whenever the browser resizes.
+- **Line Animation:** Active network links must have flowing traffic animation (Traffic Flowing). Use `stroke-dasharray` combined with `.animate-dash` class calling CSS `@keyframes dash { to { stroke-dashoffset: -N; } }`.
+- **Algorithm Visualizer link states:** `link-path` (emerald, animated dash + marker-end arrow), `link-candidate` (violet, animated dash), `link-active` (slate static), `link-down` (red dashed, opacity 0.5). Use two separate `<g>` layers: hit layer and visual layer.
+- **Port Labels (Physical/Logical Port Labels):** Any port parameter (like `Gi1/0/24`, `eth0`) MUST be attached to both ends of the cable. Use JS interpolation math to push the Badge a safe relative distance from the Node center when the screen shrinks (e.g., `px = sx + (dx - sx) * 0.2`). Also, DO NOT pin the label dead center on the link, calculate the Normal Vector and Shift the label to both sides of the link about `18px` to avoid Anchor Collision with other labels at the Top/Bottom of the device.
 
-### 6. Semantic Color Contract (Một màu — một nghĩa)
+### 6. Semantic Color Contract (One color — one meaning)
 
-> **MỤC TIÊU:** Mỗi màu ngữ nghĩa (emerald / amber / rose / violet / blue) chỉ được mang **đúng một ý nghĩa** trên toàn trang. Không gộp các trạng thái có bản chất khác nhau vào cùng một màu chỉ vì "đều là cảnh báo".
+> **OBJECTIVE:** Each semantic color (emerald / amber / rose / violet / blue) must only convey **exactly one meaning** throughout the page. Do not combine fundamentally different states into the same color just because they are both "warnings".
 
-| Trục                     | Trả lời câu hỏi                                          | Thể hiện                                                        | Màu                            |
+| Axis                     | Answers the question                                     | Representation                                                  | Color                          |
 | :----------------------- | :------------------------------------------------------- | :-------------------------------------------------------------- | :----------------------------- |
-| **Health** (viền + glow) | Thiết bị đang chạy thế nào?                              | `green` = UP · `amber` = chạy nhưng lỗi/suy giảm · `red` = DOWN | emerald / amber / rose         |
-| **Inactive**             | Có bị tắt chủ động không?                                | Viền `slate` nét đứt, `opacity-60`, không glow                  | slate                          |
-| **Risk**                 | Thiết kế có điểm yếu không? (SPOF, No HA, single uplink) | **Chip riêng** ở góc thẻ hoặc dưới Status Badge, KHÔNG đổi viền | violet                         |
-| **Highlight**            | Đang chọn / đang trace?                                  | Đường trace, node được chọn, hover                              | blue / cyan                    |
-| **Algorithm states**     | Node đang ở bước nào trong thuật toán?                   | Chỉ dùng trong `algorithm-viz` — xem Section 9 Req 6            | pink/violet/emerald/blue/amber |
+| **Health** (border+glow) | How is the device running?                               | `green` = UP · `amber` = running but error/degraded · `red` = DOWN | emerald / amber / rose         |
+| **Inactive**             | Is it administratively shut down?                        | Dashed `slate` border, `opacity-60`, no glow                    | slate                          |
+| **Risk**                 | Does the design have weaknesses? (SPOF, No HA, single uplink) | **Separate chip** at card corner or under Status Badge, NO border change | violet                         |
+| **Highlight**            | Currently selected / tracing?                            | Trace path, selected node, hover                                | blue / cyan                    |
+| **Algorithm states**     | Which algorithm step is the node at?                     | Only used in `algorithm-viz` — see Section 9 Req 6              | pink/violet/emerald/blue/amber |
 
-**Quy tắc phân loại (áp dụng theo thứ tự):**
+**Classification Rules (applied in order):**
 
-1. Bị tắt chủ động (`DISABLED`, admin-down, chưa cấp phép) → `inactive`, không phải `amber`.
-2. Đang chạy nhưng cấu hình sai (`DUP IP`, gateway orphaned, DHCP bật trên interface disabled) → `health: amber`.
-3. Đang chạy đúng nhưng thiết kế có rủi ro (`NO HA · SPOF`) → `health: green` + **risk chip violet**. Viền vẫn xanh vì thiết bị hoạt động bình thường.
-4. Ngừng hoạt động / mất kết nối → `health: red`.
+1. Administratively down (`DISABLED`, admin-down, unprovisioned) → `inactive`, not `amber`.
+2. Running but misconfigured (`DUP IP`, gateway orphaned, DHCP enabled on disabled interface) → `health: amber`.
+3. Running correctly but design has risks (`NO HA · SPOF`) → `health: green` + **violet risk chip**. Border remains green because device operates normally.
+4. Out of service / disconnected → `health: red`.
 
-**Các màu bị cấm dùng sai chỗ:**
+**Colors prohibited in wrong contexts:**
 
-- **Zone Bounding Box / nhãn layer:** chỉ dùng `blue`, `indigo`, `sky`, `cyan`, `slate`. CẤM dùng `emerald`, `amber`, `rose`, `violet` cho zone (tránh nhầm với health/risk).
-- **Path Tracer / highlight:** dùng `blue` hoặc `cyan`. CẤM dùng `amber`.
-- **Nhãn mức ưu tiên (`HIGH` / `MEDIUM` / `LOW`):** dùng `rose` cho HIGH, `slate` cho MEDIUM/LOW. CẤM dùng `amber` (đã dành cho health).
-- **Chỉ báo node đang chọn (Selected):** dùng `outline` cyan tách khỏi thẻ bằng `outline-offset` (≥ 6px), CẤM dùng `ring` / `border` / `shadow` đè sát viền health — màu cyan chồng lên viền amber/rose sẽ làm sai màu trạng thái. Khi có outline, `clampNodes()` phải chừa `EDGE_PX ≥ outline-offset + độ dày` để không bị cắt bởi `overflow-hidden`.
-- **Status Badge (pill dưới thẻ):** màu pill phải khớp với trục mà text mô tả. `DISABLED` → slate; `DUP MGMT IP` → amber; `NO HA` → violet.
+- **Zone Bounding Box / layer labels:** only use `blue`, `indigo`, `sky`, `cyan`, `slate`. DO NOT use `emerald`, `amber`, `rose`, `violet` for zones (to avoid confusing with health/risk).
+- **Path Tracer / highlight:** use `blue` or `cyan`. DO NOT use `amber`.
+- **Priority Labels (`HIGH` / `MEDIUM` / `LOW`):** use `rose` for HIGH, `slate` for MEDIUM/LOW. DO NOT use `amber` (reserved for health).
+- **Selected Node Indicator:** use `outline` cyan separated from card by `outline-offset` (≥ 6px), DO NOT use `ring` / `border` / `shadow` overlapping health borders — cyan over amber/rose borders will falsify state color. When outlined, `clampNodes()` must leave `EDGE_PX ≥ outline-offset + thickness` to prevent clipping by `overflow-hidden`.
+- **Status Badge (bottom pill):** pill color must match the axis described by text. `DISABLED` → slate; `DUP MGMT IP` → amber; `NO HA` → violet.
 
-**Tự kiểm tra trước khi xuất file:** liệt kê mọi vị trí dùng `amber`, `rose`, `violet`. Nếu một màu xuất hiện với hơn một ý nghĩa (ví dụ amber vừa là "disabled" vừa là "SPOF"), phải sửa lại theo bảng trên.
+**Self-check before finalizing file:** list all locations using `amber`, `rose`, `violet`. If a color appears with more than one meaning (e.g., amber is both "disabled" and "SPOF"), it must be corrected according to the table above.
 
 ---
 
 ## 15. Shared UI Components Library
 
-> **MỤC TIÊU:** Một số mẫu UI đã xuất hiện lặp lại và nhất quán trên nhiều template khác nhau (Protocol Simulator, Algorithm Visualizer, Failover Drill), chứng tỏ chúng là pattern dùng chung thay vì đặc thù 1 template. Section này chuẩn hoá chúng để AI tái sử dụng thay vì phát minh lại mỗi lần — và ghi lại quy ước màu Zone đã sửa lỗi thực tế (xem mục 3).
+> **OBJECTIVE:** Some UI patterns appear repeatedly across templates (Protocol Simulator, Algorithm Visualizer, Failover Drill), proving they are common components rather than template-specific. This section standardizes them for AI reuse instead of reinventing them — and documents the fixed Zone color convention.
 
-### 1. Teaching Note box (ghim cố định)
+### 1. Teaching Note Box (Pinned)
 
-Dùng cho bất kỳ template nào có timeline/scenario (Protocol Simulator, Algorithm
-Visualizer, Failover Drill, Change/MOP) để giải thích **ý nghĩa sư phạm** của
-bước/scenario hiện tại — khác với mô tả kỹ thuật thuần tuý ở phần `title`/`desc`.
+Use for any template with a timeline/scenario (Protocol Simulator, Algorithm Visualizer, Failover Drill, Change/MOP) to explain the **pedagogical meaning** of the current step/scenario — distinct from pure technical descriptions.
 
 ```html
 <div
@@ -1371,75 +1369,58 @@ bước/scenario hiện tại — khác với mô tả kỹ thuật thuần tuý
     style="background:#6366f108"
 >
     <i class="fas fa-lightbulb text-indigo-400 mr-1.5"></i>
-    <b>Tên cơ chế:</b>
-    giải thích ngắn gọn tại sao bước này quan trọng...
+    <b>Mechanism Name:</b>
+    briefly explain why this step is important...
 </div>
 ```
 
-Quy tắc:
+Rules:
 
-- Luôn đặt ở **cuối panel bên phải**, ghim cố định (không cuộn theo nội dung phía trên).
-- Nội dung thay đổi theo step/scenario hiện tại, nhưng khung UI giữ nguyên vị trí.
-- Nếu step không có note, ẩn hẳn box (`display:none`) thay vì để trống.
-- Border màu `indigo-500` cố định — đây là "giọng nói sư phạm" của hệ thống, không đổi theo ngữ cảnh (không dùng amber/emerald ở đây dù nội dung đang nói về cảnh báo hay thành công).
+- Always place at the **bottom of the right panel**, pinned (does not scroll with content above).
+- Content changes according to current step/scenario, but the UI frame stays fixed.
+- If a step has no note, hide the box completely (`display:none`) rather than leaving it empty.
+- Fixed `indigo-500` border — this is the "teaching voice" of the system, independent of context (do not use amber/emerald here even if the content discusses warnings or success).
 
 ### 2. Packet Animation Engine, Timer Bar, Trigger Outage button
 
-Đã có code mẫu đầy đủ tại Section 1 (sau Requirement 9) và Section 6 (sau
-Requirement 4/Requirement 3) — không lặp lại ở đây. Bất kỳ template nào cần
-packet animation, countdown timer, hoặc nút kích hoạt sự cố đều PHẢI tham
-chiếu các implementation đó thay vì viết lại từ đầu.
+Full sample code exists in Section 1 and Section 6. Any template requiring packet animation, countdown timers, or outage trigger buttons MUST reference those implementations instead of writing from scratch.
 
-### 3. Standard Area/Zone Color Convention (áp dụng cho mọi lab OSPF/multi-area)
+### 3. Standard Area/Zone Color Convention (for all OSPF/multi-area labs)
 
-**Bối cảnh lỗi thực tế:** 3 lab OSPF multi-area đầu tiên (LSDB Formation, SPF
-Visualizer, 11-LSA Diagnostic Playbook) đều tô Area 1 = violet và Area 2/NSSA
-= emerald cho zone bounding box — vi phạm trực tiếp Semantic Color Contract
-(Section 14.6) vì violet/emerald đã dành cho Risk/Health. Bug lặp lại ở cả 3
-file vì không có bảng màu mẫu cụ thể để chép theo — chỉ có danh sách "màu được
-phép dùng" chung chung. Để tránh tái diễn, đây là bảng màu MẶC ĐỊNH bắt buộc
-dùng cho mọi lab có từ 2 area/zone OSPF trở lên trừ khi đề bài yêu cầu khác:
+To prevent Semantic Color Contract violations (using Risk/Health colors for zones), this is the MANDATORY default color palette for any lab with 2 or more OSPF areas/zones unless instructed otherwise:
 
-| Area / Zone                                           | Màu bắt buộc | Hex       |
-| :---------------------------------------------------- | :----------- | :-------- |
-| Area 0 (Backbone)                                     | blue         | `#3b82f6` |
-| Area 1                                                | indigo       | `#6366f1` |
-| Area 2 / NSSA                                         | sky          | `#0ea5e9` |
-| Area 3+ (nếu có)                                      | cyan         | `#06b6d4` |
-| Vùng trung lập (ABR/transit, không thuộc area cụ thể) | slate        | `#64748b` |
+| Area / Zone                                           | Mandatory Color | Hex       |
+| :---------------------------------------------------- | :-------------- | :-------- |
+| Area 0 (Backbone)                                     | blue            | `#3b82f6` |
+| Area 1                                                | indigo          | `#6366f1` |
+| Area 2 / NSSA                                         | sky             | `#0ea5e9` |
+| Area 3+ (if any)                                      | cyan            | `#06b6d4` |
+| Neutral zone (ABR/transit, not specific to an area)   | slate           | `#64748b` |
 
-Áp dụng cho CẢ topology zone box LẪN bất kỳ panel/legend nào tham chiếu lại
-cùng area đó (ví dụ panel "LSDB by Area" phải dùng đúng màu area đã vẽ trên
-topology — không tự chọn màu khác cho cùng 1 Area ở 2 nơi khác nhau trong
-cùng 1 file).
+Apply to BOTH the topology zone box AND any panel/legend referencing that same area.
 
-### 4. Khuyến nghị kỹ thuật (không bắt buộc): hàm vẽ link + flood-highlight dùng chung
+### 4. Technical Recommendation (Optional): Shared Link + Flood-Highlight Function
 
-3 lab OSPF (LSDB Formation, SPF Visualizer, 11-LSA Diagnostic Playbook) đều tự
-viết lại gần như y hệt logic "vẽ SVG link + highlight đường flood/path" với
-các biến thể nhỏ khác nhau (`link-active`/`link-flood` vs `link-path`/
-`link-candidate` vs `link-highlight`). Nếu một lab mới cũng thuộc nhóm
-OSPF-multi-area-topology, nên cân nhắc viết 1 hàm dùng chung dạng:
+If a new lab belongs to the OSPF-multi-area-topology group, consider writing a shared function for SVG link drawing and highlight routing:
 
 ```javascript
 function drawTopologyLinks(linksArray, { highlightSet, activeSet, downSet }) {
-    // trả về <line> với class tương ứng: lnk-down / lnk-up / lnk-active / lnk-flood
+    // returns <line> with corresponding class: lnk-down / lnk-up / lnk-active / lnk-flood
 }
 ```
 
-Đây là khuyến nghị tối ưu hoá, không phải quy tắc bắt buộc — một lab đơn lẻ
-không cần refactor chỉ vì lý do này.
+This is an optimization recommendation, not a mandatory rule.
 
-### 5. Layout variants: cuộn dọc (mặc định) vs split-screen (lab nhiều dữ liệu)
+### 5. Layout Variants: Vertical Scroll (Default) vs Split-Screen (Data-Heavy Labs)
 
-- **Mặc định — cuộn dọc:** mọi lab Protocol / Troubleshooting / Failover / Packet-walk / Change-MOP dùng `min-h-screen`, `<main>` cuộn tự nhiên, `max-w-7xl` (riêng `topology-design` dùng `max-w-[1600px]` theo Section 14.1).
-- **Biến thể split-screen (được phép):** chỉ dùng khi người học cần **nhìn đồng thời** topology đang chạy VÀ một bảng/log lớn cập nhật theo từng bước (ví dụ LSDB theo router, VRRP/OSPF state, SPF distance table). Cấu trúc: `<main class="flex-1 flex flex-col xl:flex-row overflow-hidden" style="height:calc(100vh - <header+stepper>)">`, topology bên trái (`flex-1`), panel bên phải cố định `xl:w-[400px]`/`[420px]` có cuộn riêng (`overflow-y-auto`). Dưới `xl` tự xếp dọc.
-- `algorithm-viz` luôn dùng split-screen (Section 9). Lab khác chỉ chuyển sang split-screen khi thỏa điều kiện trên — độ dài file KHÔNG phải tiêu chí (`vxlan-mtu-blackhole`, `stp-visual-compare` dài ~900–1000 dòng vẫn dùng cuộn dọc).
+- **Default — Vertical Scroll:** all Protocol / Troubleshooting / Failover / Packet-walk / Change-MOP labs use `min-h-screen`, naturally scrolling `<main>`, `max-w-7xl` (except `topology-design` which uses `max-w-[1600px]`).
+- **Split-Screen Variant (Allowed):** only used when the learner needs to **simultaneously view** the running topology AND a large table/log updating per step (e.g. LSDB by router, VRRP/OSPF state, SPF distance table). Structure: `<main class="flex-1 flex flex-col xl:flex-row overflow-hidden" style="height:calc(100vh - <header+stepper>)">`, left topology (`flex-1`), right fixed panel `xl:w-[400px]`/`[420px]` with own scroll (`overflow-y-auto`). Stack vertically below `xl`.
+- `algorithm-viz` always uses split-screen. Other labs only switch to split-screen when meeting the above condition — file length is NOT a criteria.
 
-### 6. Kiến trúc JS theo template
+### 6. JS Architecture by Template
 
-- Template theo timeline (Protocol, Troubleshooting, Failover, Packet-walk): `class XxxSimulator { constructor(){…} }` + `let app; document.addEventListener('DOMContentLoaded', () => { app = new XxxSimulator(); });`, mọi `onclick` gọi `app.method()`.
-- `algorithm-viz`: module `const App = (() => {…})()` được chấp nhận (engine reactive, không có stepper cố định).
-- Diagnostic Playbook / Topology Design / Change-MOP: hàm toàn cục hoặc object đơn giản (tab/state tĩnh), không bắt buộc class.
-- `clampNodes()` chỉ cần cho canvas có node định vị tuyệt đối bằng `%` (data-driven). Lab dùng flexbox card cố định (`bgp-peering`, `ospf-adjacency`) hoặc không có topology (`change-mop/*`, `wireguard-pfsense-walk`, `dns-resolution`) không cần. Khi retrofit vào file cũ, chỉ ghi lại `style.top/left` khi thực sự có clip (tránh ghi đè node không có inline style).
-- Các lab đã có panel giải thích riêng (`lessons-panel`, "Rủi ro & Lưu ý", Root Cause) không cần thêm Teaching Note box — dùng box ở mục 15.1 cho lab chưa có phần "tại sao bước này quan trọng".
+- Timeline templates (Protocol, Troubleshooting, Failover, Packet-walk): `class XxxSimulator { constructor(){…} }` + `let app; document.addEventListener('DOMContentLoaded', () => { app = new XxxSimulator(); });`, all `onclick` call `app.method()`.
+- `algorithm-viz`: module `const App = (() => {…})()` is acceptable (reactive engine, no fixed stepper).
+- Diagnostic Playbook / Topology Design / Change-MOP: global functions or simple objects (static tabs/states), class not mandatory.
+- `clampNodes()` is only needed for canvases with nodes absolutely positioned by `%` (data-driven). Flexbox card labs or topology-less labs do not need it.
+- Labs that already have separate explanation panels ("Risks & Notes", Root Cause) do not need an additional Teaching Note box.
