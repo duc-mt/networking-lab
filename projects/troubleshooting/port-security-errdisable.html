@@ -363,6 +363,7 @@ const TIMELINE = [
 
 class TroubleshootingSimulator {
     constructor() {
+        this.currentCase = 'shutdown';
         this.idx = 0; this.playing = false; this.intervalId = null; this.currentAnim = null;
         this.dom = {
             stepper: document.getElementById('stepper-container'),
@@ -381,18 +382,49 @@ class TroubleshootingSimulator {
             packet: document.getElementById('animated-packet'),
             packetIcon: document.getElementById('packet-icon'),
             packetLabel: document.getElementById('packet-label'),
-            portBadge: document.getElementById('port-badge'),
-            hypothesisList: document.getElementById('hypothesis-list'),
+            hypotheses: document.getElementById('hypothesis-list'),
             rootCausePanel: document.getElementById('root-cause-panel'),
             rootCauseText: document.getElementById('root-cause-text'),
             fixPanel: document.getElementById('fix-panel'),
             fixText: document.getElementById('fix-text'),
+            portBadge: document.getElementById('port-badge'),
         };
-        window.addEventListener('resize', () => {
-            this.clampNodes();
-            this.drawLinks(TIMELINE[this.idx].links);
-        });
+        window.addEventListener('resize', () => { this.drawLinks(TIMELINE[this.idx].links); });
         this.init();
+    }
+
+    switchCase(caseId) {
+        this.currentCase = caseId;
+        const btns = { shutdown: 'case-btn-shutdown', restrict: 'case-btn-restrict', recovery: 'case-btn-recovery' };
+        Object.entries(btns).forEach(([k, id]) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            if (k === caseId) {
+                btn.className = 'px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-amber-500 text-white shadow cursor-pointer';
+            } else {
+                btn.className = 'px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer';
+            }
+        });
+
+        const caseLabel = document.getElementById('active-case-label');
+        const symptomText = document.getElementById('symptom-text');
+        const portBadge = document.getElementById('port-badge');
+
+        if (caseId === 'shutdown') {
+            if (caseLabel) caseLabel.textContent = 'Case 1 — Violation Shutdown (Mặc định)';
+            if (symptomText) symptomText.textContent = 'Triệu chứng [Case 1 - Violation Shutdown]: Nhân viên PC-KT-05 bị khoá port Gi0/3 (err-disable) do cắm laptop mới có MAC không khớp với sticky MAC đã học.';
+            if (portBadge) portBadge.innerHTML = '<i class="fas fa-lock mr-1"></i>Gi0/3 ERR-DISABLED';
+        } else if (caseId === 'restrict') {
+            if (caseLabel) caseLabel.textContent = 'Case 2 — Violation Restrict (Drop & Trap)';
+            if (symptomText) symptomText.textContent = 'Triệu chứng [Case 2 - Violation Restrict]: Cổng Gi0/3 vẫn giữ trạng thái UP, nhưng Switch tự động drop toàn bộ packet của MAC lạ và liên tục gửi cảnh báo SNMP Trap.';
+            if (portBadge) portBadge.innerHTML = '<i class="fas fa-shield-cat mr-1"></i>Gi0/3 RESTRICT (DROP & TRAP)';
+        } else if (caseId === 'recovery') {
+            if (caseLabel) caseLabel.textContent = 'Case 3 — Auto-Recovery (errdisable recovery 300s)';
+            if (symptomText) symptomText.textContent = 'Triệu chứng [Case 3 - Auto-Recovery]: Cổng Gi0/3 bị err-disable nhưng tự động được khôi phục sau 300s nhờ timer errdisable recovery cause psecure-violation.';
+            if (portBadge) portBadge.innerHTML = '<i class="fas fa-clock-rotate-left mr-1"></i>Gi0/3 TIMER RECOVERY (300s)';
+        }
+
+        this.render(this.idx);
     }
 
     init() {
