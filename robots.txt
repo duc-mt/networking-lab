@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://duc-mt.github.io/networking-lab/sitemap.xml

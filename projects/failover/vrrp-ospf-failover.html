@@ -96,10 +96,10 @@
 #btn-trigger.fired{animation:none;background:#1e293b;color:#64748b;box-shadow:none;cursor:not-allowed}
 </style>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-200">
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200">
 
 <!-- ═══ HEADER ═══ -->
-<header class="sticky top-0 z-50 px-4 py-2.5 flex items-center justify-between gap-3">
+<header class="sticky top-0 z-50 px-4 py-2.5 flex items-center justify-between gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
   <div class="flex items-center gap-3">
     <a href="../../index.html" class="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 hover:shadow-lg hover:scale-105 transition-all-fast"
          style="background:linear-gradient(135deg,#ec4899,#6366f1)" title="Về trang chủ Portfolio">
@@ -126,7 +126,7 @@
     </button>
     <button onclick="app.next()" id="btn-next" class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all text-xs disabled:opacity-30" disabled><i class="fas fa-chevron-right"></i></button>
     <button onclick="app.reset()" class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all text-xs" title="Reset"><i class="fas fa-rotate-left text-[10px]"></i></button>
-    <button onclick="app.toggleTheme()" class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400 transition-all text-xs ml-1"><i class="fas fa-circle-half-stroke"></i></button>
+    <button onclick="app.toggleTheme()" aria-label="Đổi giao diện Sáng/Tối" title="Đổi giao diện Sáng/Tối" class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 transition-all text-xs ml-1"><i class="fas fa-circle-half-stroke"></i></button>
   </div>
 </header>
 
@@ -138,7 +138,7 @@
 </div>
 
 <!-- ═══ MAIN ═══ -->
-<main class="flex-1 flex flex-col xl:flex-row overflow-hidden" style="height:calc(100vh - 95px)">
+<main class="flex-1 flex flex-col xl:flex-row overflow-y-auto xl:overflow-hidden xl:h-[calc(100vh-95px)]">
 
   <!-- LEFT: topology + impact -->
   <div class="flex-1 flex flex-col min-h-[480px] xl:min-h-0 bg-white dark:bg-slate-950 border-b xl:border-b-0 xl:border-r border-slate-200 dark:border-slate-800/60">
@@ -916,7 +916,15 @@ class VrrpFailoverSimulator {
 }
 
 let app;
-document.addEventListener('DOMContentLoaded', () => { app = new VrrpFailoverSimulator(); });
+document.addEventListener('DOMContentLoaded', () => {
+  app = new VrrpFailoverSimulator();
+  window.addEventListener('keydown', (e) => {
+    if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); if (app && !document.getElementById('btn-next')?.disabled) app.next(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); if (app && !document.getElementById('btn-prev')?.disabled) app.prev(); }
+    else if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); if (app && !document.getElementById('btn-play')?.disabled) app.playPause(); }
+  });
+});
 </script>
 </body>
 </html>
