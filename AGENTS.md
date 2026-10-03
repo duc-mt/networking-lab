@@ -74,3 +74,9 @@ Khi viết nội dung hiển thị trên UI, bắt buộc pha trộn Anh - Việ
 
 - **Tiếng Anh (Giữ nguyên):** Tiêu đề Lab chính (H1), các trạng thái hệ thống (VD: `ONLINE`, `ERR-DISABLE`), nhãn thanh Stepper (VD: `INIT`, `VERIFY`), tên Role/Thiết bị (VD: `Core Switch`), và toàn bộ output CLI/Console. Tuyệt đối không dịch các thuật ngữ chuyên ngành (như Routing, OSPF, Payload, Failover).
 - **Tiếng Việt:** Mô tả chi tiết, nội dung giải thích các bước, tiêu đề phụ, và các phần phân tích. Văn phong phải chuyên nghiệp, súc tích.
+
+## 7. Nguyên tắc Tiết chế (Principle of Restraint)
+
+- **Không lạm dụng tính năng:** Khi tạo trang mới, KHÔNG cố nhồi nhét tất cả các pattern hiện có (macOS terminal, thẻ nổi shadow-xl, tabs viên thuốc, Dijkstra engine live, v.v.) vào cùng một giao diện.
+- **Áp dụng có chọn lọc:** Chỉ sử dụng những thành phần giao diện hoặc tính năng engine thực sự mang lại lợi ích cho trải nghiệm người dùng hoặc phù hợp với mục tiêu cụ thể của bài lab đó. 
+- Ưu tiên sự gọn gàng, tập trung và đúng mục đích hơn là phô diễn tất cả các tính năng thiết kế có sẵn để tránh làm giao diện trở nên rối rắm hoặc nặng nề (overwhelmed).
