@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSPF LSDB Formation Dashboard | Portfolio</title>
+    
+    <!-- Apply saved theme before first paint -->
+    <script src="../../assets/js/theme-init.js"></script>
+    <!-- Shared theme CSS -->
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    },
+                    colors: {
+                        slate: { 50: '#f8fafc', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap');
+
+        .transition-all-fast { transition: all 0.2s ease-in-out; }
+
+        /* Dual-Layer Cable Architecture */
+        @keyframes dash {
+            to { stroke-dashoffset: -24; }
+        }
+        .animate-dash {
+            animation: dash 1.2s linear infinite;
+        }
+
+        .link-track {
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke: rgba(203, 213, 225, 0.45);
+        }
+        .dark .link-track {
+            stroke: rgba(51, 65, 85, 0.55);
+        }
+
+        .link-flow-active {
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 8 16;
+            animation: dash 1.2s linear infinite;
+        }
+
+        /* Area Bounding Boxes */
+        .area-box {
+            fill: none;
+            stroke-width: 2;
+            stroke-dasharray: 6 6;
+            opacity: 0.35;
+        }
+        .light .area-box {
+            opacity: 0.5;
+        }
+
+        /* Table Row Highlights */
+        @keyframes highlight-row {
+            0% { background-color: rgba(16, 185, 129, 0.2); }
+            100% { background-color: transparent; }
+        }
+        .row-new {
+            animation: highlight-row 2.5s ease-out;
+        }
+        @keyframes fade-out {
+            0%, 65% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.8); }
+        }
+        .badge-new {
+            display: inline-block;
+            animation: fade-out 3.5s forwards;
+        }
+
+        /* Node Cards */
+        .node-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased pb-20">
+
+    <!-- Sticky Header & Unified Control Cluster (Golden Standard) -->
+    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+            <!-- Brand / Back Link -->
+            <div class="flex items-center gap-3">
+                <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0" title="Về trang chủ Portfolio">
+                    <i class="fa-solid fa-network-wired text-sm"></i>
+                </a>
+                <div class="h-6 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block shrink-0"></div>
+                <div class="flex flex-col min-w-0">
+                    <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-left text-[10px]"></i> Portfolio
+                    </a>
+                    <h1 class="text-base md:text-xl font-bold text-slate-900 dark:text-white leading-tight truncate">OSPF LSDB Formation Dashboard</h1>
+                </div>
+            </div>
+
+            <!-- Unified Control Cluster -->
+            <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner">
+                <button id="btn-prev" onclick="app.prevStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast" title="Bước trước (Previous)">
+                    <i class="fa-solid fa-backward-step"></i>
+                </button>
+                <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/30 transition-all-fast mx-0.5" title="Phát / Tạm dừng">
+                    <i id="icon-play" class="fa-solid fa-play ml-0.5"></i>
+                </button>
+                <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast" title="Bước tiếp theo (Next)">
+                    <i class="fa-solid fa-forward-step"></i>
+                </button>
+                <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-rose-500 hover:shadow transition-all-fast" title="Khôi phục trạng thái đầu (Reset)">
+                    <i class="fa-solid fa-rotate-left text-sm"></i>
+                </button>
+                <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                <button onclick="app.toggleTheme()" id="theme-toggle" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" title="Đổi giao diện Sáng/Tối">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="py-8 max-w-7xl mx-auto px-4 md:px-8 flex flex-col gap-6">
+        
+        <!-- Hero Section Header -->
+        <div class="text-center mb-2">
+            <h2 class="text-3xl font-extrabold tracking-tight mb-2 text-slate-900 dark:text-white">OSPF LSDB Formation Dashboard</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm max-w-2xl mx-auto">
+                Trực quan hóa vòng đời hình thành và đồng bộ Link State Database (LSDB) trong mạng OSPF Đa Vùng — từ khám phá láng giềng, bầu chọn DR, trao đổi DBD, flood LSA các loại đến hoàn tất SPF.
+            </p>
+        </div>
+
+        <!-- Interactive Stepper Bar (Matching Golden Standard) -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors relative overflow-hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                    <i class="fa-solid fa-timeline text-blue-500"></i> Tiến trình OSPF (9 Bước)
+                </h2>
+                <span id="step-badge" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">Phase 0 / 8</span>
+            </div>
+            <div class="relative flex justify-between items-center w-full">
+                <!-- Background Line -->
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
+                <!-- Progress Line -->
+                <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out w-0"></div>
+                
+                <!-- Stepper Buttons (Injected by JS) -->
+                <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-2 overflow-x-auto py-1"></div>
+            </div>
+        </section>
+
+        <!-- Topology Canvas (h-[540px] with Dual-Layer Cables & Exact Multi-Area Standards) -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm relative overflow-hidden h-[540px]" id="topology-canvas">
+            <!-- SVG Background: Areas & Cables -->
+            <svg class="absolute inset-0 w-full h-full pointer-events-none" id="svg-layer">
+                <defs>
+                    <marker id="arrow-emerald" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                    </marker>
+                </defs>
+
+                <!-- Area Bounding Boxes (Section 15.3 Golden Standard) -->
+                <g id="svg-areas">
+                    <!-- Area 1 (Standard - Indigo) -->
+                    <rect class="area-box" x="2%" y="5%" width="30%" height="78%" stroke="#6366f1" rx="16" fill="rgba(99, 102, 241, 0.04)"></rect>
+                    <text x="4%" y="10.5%" class="font-mono font-bold text-xs uppercase tracking-wider" fill="#6366f1" opacity="0.75">Area 1 (Standard)</text>
+
+                    <!-- Area 0 (Backbone - Blue) -->
+                    <rect class="area-box" x="35%" y="5%" width="30%" height="78%" stroke="#3b82f6" rx="16" fill="rgba(59, 130, 246, 0.04)"></rect>
+                    <text x="37%" y="10.5%" class="font-mono font-bold text-xs uppercase tracking-wider" fill="#3b82f6" opacity="0.75">Area 0 (Backbone)</text>
+
+                    <!-- Area 2 (NSSA - Sky) -->
+                    <rect class="area-box" x="68%" y="5%" width="30%" height="78%" stroke="#0ea5e9" rx="16" fill="rgba(14, 165, 233, 0.04)"></rect>
+                    <text x="70%" y="10.5%" class="font-mono font-bold text-xs uppercase tracking-wider" fill="#0ea5e9" opacity="0.75">Area 2 (NSSA)</text>
+                </g>
+
+                <!-- Cables Layer -->
+                <g id="links-layer"></g>
+            </svg>
+
+            <!-- HTML Nodes Layer (Injected by JS) -->
+            <div id="nodes-layer" class="absolute inset-0 pointer-events-none"></div>
+
+            <!-- Dynamic 2D Animated Packet -->
+            <div id="animated-packet" class="absolute opacity-0 flex items-center justify-center gap-1.5 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/90 border border-emerald-400 dark:border-emerald-500 rounded-full shadow-lg backdrop-blur-sm text-emerald-800 dark:text-emerald-300 font-mono text-[11px] font-bold z-50 pointer-events-none" style="left: 0; top: 0; transform: translate(-50%, -50%);">
+                <i class="fa-solid fa-envelope"></i> <span id="packet-label">HELLO</span>
+            </div>
+
+            <!-- Embedded Topology Legend Overlay (Positioned cleanly below Area borders) -->
+            <div class="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-4 text-[11px] px-4 py-2 rounded-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg pointer-events-auto">
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-blue-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Area 0</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-indigo-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Area 1</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-sky-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Area 2 NSSA</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Active Flooding</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-slate-400"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Link Track</span></span>
+            </div>
+
+            <!-- Global State Indicator Bottom Left -->
+            <div class="absolute bottom-3.5 left-4 z-20 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-2.5">
+                <div id="global-indicator" class="w-2.5 h-2.5 rounded-full bg-slate-400"></div>
+                <span id="global-state-text" class="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">SYSTEM INIT</span>
+            </div>
+        </section>
+
+        <!-- Two-Column Split Layout (Terminal & LSDB Data Explorer) -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            
+            <!-- LEFT COLUMN: Teaching Context & CLI Console -->
+            <div class="flex flex-col gap-4">
+                <!-- Teaching Context -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+                    <h3 id="step-title" class="text-lg font-extrabold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-blue-500"></i>
+                        <span>1. Khởi động OSPF</span>
+                    </h3>
+                    <div id="step-desc" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed space-y-3">
+                        <p>Đang tải dữ liệu tiến trình...</p>
+                    </div>
+                </div>
+
+                <!-- Terminal Console Standard (vt100, Mac traffic dots) -->
+                <div class="bg-[#1e1e1e] rounded-2xl overflow-hidden border border-slate-700 shadow-xl flex flex-col font-mono text-sm h-[320px]">
+                    <div class="bg-[#2d2d2d] px-4 py-2.5 flex items-center justify-between border-b border-black/50 select-none">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="text-slate-400 text-xs font-mono font-bold tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-terminal text-slate-500 text-[10px]"></i>
+                            <span id="cli-router-prompt">R1</span> — Console
+                        </div>
+                        <div class="text-[10px] text-slate-500 font-mono">vt100</div>
+                    </div>
+                    <div class="p-4 font-mono text-xs leading-relaxed overflow-x-auto text-emerald-400 bg-[#1e1e1e] flex-1 overflow-y-auto whitespace-pre-wrap" id="cli-output"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: LSDB Data Explorer Panel -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-[520px]">
+                
+                <!-- Tab Header Bar -->
+                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 p-2 border-b border-slate-200 dark:border-slate-800 shrink-0">
+                    <button onclick="app.switchTab('router')" id="tab-btn-router" class="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all shadow-sm bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400">
+                        <i class="fa-solid fa-server mr-1.5"></i> LSDB by Router
+                    </button>
+                    <button onclick="app.switchTab('area')" id="tab-btn-area" class="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                        <i class="fa-solid fa-layer-group mr-1.5"></i> LSDB by Area
+                    </button>
+                    <button onclick="app.switchTab('route')" id="tab-btn-route" class="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                        <i class="fa-solid fa-route mr-1.5"></i> Routing Table
+                    </button>
+                </div>
+
+                <!-- Tab 1: LSDB by Router -->
+                <div id="tab-content-router" class="flex-1 flex flex-col overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-slate-900/30">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Xem Database tại router:</span>
+                        <select id="router-select" onchange="app.renderDataTables()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-slate-800 dark:text-slate-200 shadow-sm">
+                            <option value="R1">R1 (DR Core Area 0)</option>
+                            <option value="R2">R2 (ABR Area 0/1)</option>
+                            <option value="R3">R3 (ABR Area 0/2 NSSA)</option>
+                            <option value="R4">R4 (Internal Area 1)</option>
+                            <option value="R5">R5 (ASBR Area 1)</option>
+                            <option value="R6">R6 (NSSA ASBR Area 2)</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-4 bg-slate-50/30 dark:bg-slate-950/20">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                                    <th class="pb-2.5">LSA Type</th>
+                                    <th class="pb-2.5">Link State ID</th>
+                                    <th class="pb-2.5">ADV Router</th>
+                                    <th class="pb-2.5 text-right">Age / Seq#</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lsdb-router-tbody" class="text-xs font-mono divide-y divide-slate-100 dark:divide-slate-800/80">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                        <div id="lsdb-empty-msg" class="text-center py-16 text-sm text-slate-400 hidden">
+                            <i class="fa-solid fa-database text-3xl mb-3 text-slate-300 dark:text-slate-700 block"></i>
+                            LSDB đang trống tại giai đoạn này.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: LSDB by Area -->
+                <div id="tab-content-area" class="hidden flex-1 flex flex-col overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-slate-900/30">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Xem Database theo vùng:</span>
+                        <select id="area-select" onchange="app.renderDataTables()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-slate-800 dark:text-slate-200 shadow-sm">
+                            <option value="0">Area 0 (Backbone)</option>
+                            <option value="1">Area 1 (Standard)</option>
+                            <option value="2">Area 2 (NSSA)</option>
+                            <option value="ext">AS External (Type 5)</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-4 bg-slate-50/30 dark:bg-slate-950/20">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                                    <th class="pb-2.5">LSA Type</th>
+                                    <th class="pb-2.5">Link State ID</th>
+                                    <th class="pb-2.5">ADV Router</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lsdb-area-tbody" class="text-xs font-mono divide-y divide-slate-100 dark:divide-slate-800/80">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Routing Table -->
+                <div id="tab-content-route" class="hidden flex-1 overflow-y-auto p-4 bg-slate-50/30 dark:bg-slate-950/20">
+                    <div class="bg-[#1e1e1e] rounded-xl p-4 text-[11px] font-mono text-emerald-400 whitespace-pre leading-relaxed border border-slate-800 shadow-inner" id="route-table-output">
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        // ---------------------------------------------------------------------
+        // 1. TOPOLOGY DATA MODEL (Standard Multi-Area: Area 1 - Area 0 - Area 2)
+        // ---------------------------------------------------------------------
+        const NODES = {
+            'R4': { id: 'R4', name: 'R4', ip: '10.1.1.4', role: 'Internal Area 1', icon: 'fa-route', x: 10, y: 32 },
+            'R5': { id: 'R5', name: 'R5', ip: '10.1.1.5', role: 'ASBR Area 1',     icon: 'fa-microchip', x: 10, y: 68 },
+            'R2': { id: 'R2', name: 'R2', ip: '10.0.1.2', role: 'ABR Area 0/1',    icon: 'fa-network-wired', x: 32, y: 50 },
+            'R1': { id: 'R1', name: 'R1', ip: '10.0.1.1', role: 'DR Core Area 0',  icon: 'fa-server', x: 50, y: 28 },
+            'R3': { id: 'R3', name: 'R3', ip: '10.0.1.3', role: 'ABR / Xlate 0/2', icon: 'fa-network-wired', x: 68, y: 50 },
+            'R6': { id: 'R6', name: 'R6', ip: '10.2.1.6', role: 'NSSA ASBR Area 2',icon: 'fa-microchip', x: 88, y: 50 },
+        };
+
+        const CABLES = [
+            { source: 'R5', target: 'R4' },
+            { source: 'R4', target: 'R2' },
+            { source: 'R2', target: 'R1' },
+            { source: 'R1', target: 'R3' },
+            { source: 'R2', target: 'R3' },
+            { source: 'R3', target: 'R6' }
+        ];
+
+        // ---------------------------------------------------------------------
+        // 2. TIMELINE DATA (9 Steps of Chronological Learning)
+        // ---------------------------------------------------------------------
+        const TIMELINE = [
+            {
+                step: 0,
+                phase: 'BOOT / DOWN',
+                title: '0. Khởi động OSPF (Boot & Init)',
+                desc: `<p>Hệ thống vừa khởi động. Tất cả các router OSPF bắt đầu tiến trình khởi tạo trên các interface đã kích hoạt lệnh <code>router ospf</code>.</p>
+                <p>Lúc này, cơ sở dữ liệu Link State (LSDB) hoàn toàn trống. Các router chưa phát hiện ra láng giềng nào xung quanh và trạng thái OSPF đang ở mức <strong>DOWN</strong>.</p>`,
+                global_state: 'DOWN / INIT',
+                global_color: 'bg-slate-400',
+                cli_prompt: 'R1',
+                cli: `R1# show ip ospf neighbor\n\n(No neighbors discovered yet)\n\nR1# show ip ospf database\n\n            OSPF Router with ID (10.0.1.1) (Process ID 1)\n\n(LSDB is currently empty)`,
+                anim: null,
+                node_status: {
+                    R1: { text: 'DOWN', class: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300' },
+                    R2: { text: 'DOWN', class: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300' },
+                    R3: { text: 'DOWN', class: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300' },
+                    R4: { text: 'DOWN', class: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300' },
+                    R5: { text: 'DOWN', class: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300' },
+                    R6: { text: 'DOWN', class: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300' },
+                },
+                active_links: [],
+                lsdb_delta: []
+            },
+            {
+                step: 1,
+                phase: 'HELLO / 2-WAY',
+                title: '1. Gửi Hello & Bầu chọn DR/BDR',
+                desc: `<p>Các router bắt đầu gửi gói tin <strong>Hello</strong> (Multicast 224.0.0.5) ra các cổng để khám phá láng giềng.</p>
+                <p>Trong phân đoạn mạng Broadcast của Area 0, quá trình bầu chọn DR/BDR diễn ra. Dựa trên Router-ID cao nhất, <strong>R1</strong> trở thành <strong>DR</strong> và <strong>R2</strong> trở thành <strong>BDR</strong>. Trạng thái chuyển sang <strong>2-WAY</strong>.</p>`,
+                global_state: '2-WAY / ELECTED',
+                global_color: 'bg-amber-400',
+                cli_prompt: 'R1',
+                cli: `R1# show ip ospf neighbor
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+10.0.1.2          1   2WAY/BDR        00:00:34    10.0.1.2        GigabitEthernet0/0
+10.0.1.3          1   2WAY/DROTHER    00:00:31    10.0.1.3        GigabitEthernet0/0`,
+                anim: { from: 'R1', to: 'R2', label: 'HELLO' },
+                node_status: {
+                    R1: { text: 'DR ELECTED', class: 'bg-blue-600 text-white' },
+                    R2: { text: 'BDR ELECTED', class: 'bg-indigo-600 text-white' },
+                    R3: { text: '2-WAY', class: 'bg-amber-500 text-white' },
+                    R4: { text: '2-WAY', class: 'bg-amber-500 text-white' },
+                    R5: { text: '2-WAY', class: 'bg-amber-500 text-white' },
+                    R6: { text: '2-WAY', class: 'bg-amber-500 text-white' },
+                },
+                active_links: ['R5-R4', 'R4-R2', 'R2-R1', 'R1-R3', 'R2-R3', 'R3-R6'],
+                lsdb_delta: []
+            },
+            {
+                step: 2,
+                phase: 'EXSTART / DBD',
+                title: '2. Đồng bộ tóm tắt LSDB (DBD Exchange)',
+                desc: `<p>Các cặp router chuyển sang trạng thái <strong>EXSTART</strong> để thương lượng Master/Slave bằng Initial DBD.</p>
+                <p>Khi đạt <strong>EXCHANGE</strong>, các router gửi các gói tin <strong>Database Description (DBD)</strong> chứa LSA Header. Router so sánh sequence number để xác định bản tin nào mình còn thiếu, chuẩn bị gửi yêu cầu LSR.</p>`,
+                global_state: 'EXCHANGE / LOADING',
+                global_color: 'bg-blue-400',
+                cli_prompt: 'R2',
+                cli: `R2# debug ip ospf adj
+OSPF: Send DBD to 10.0.1.1 seq 0x1A22 opt 0x52 flag 0x7 len 32
+OSPF: Rcv DBD from 10.0.1.1 seq 0x2B44 opt 0x52 flag 0x2 len 52
+OSPF: Database Exchange complete with 10.0.1.1. Entering LOADING state...`,
+                anim: { from: 'R2', to: 'R1', label: 'DBD (Header)' },
+                node_status: {
+                    R1: { text: 'EXCHANGE', class: 'bg-blue-500 text-white' },
+                    R2: { text: 'EXCHANGE', class: 'bg-blue-500 text-white' },
+                    R3: { text: 'EXCHANGE', class: 'bg-blue-500 text-white' },
+                    R4: { text: 'EXCHANGE', class: 'bg-blue-500 text-white' },
+                    R5: { text: 'EXCHANGE', class: 'bg-blue-500 text-white' },
+                    R6: { text: 'EXCHANGE', class: 'bg-blue-500 text-white' },
+                },
+                active_links: ['R5-R4', 'R4-R2', 'R2-R1', 'R1-R3', 'R2-R3', 'R3-R6'],
+                lsdb_delta: []
+            },
+            {
+                step: 3,
+                phase: 'TYPE 1 LSA',
+                title: '3. Quảng bá Type 1 Router LSA (Nội vùng)',
+                desc: `<p>Mỗi router tự sinh ra <strong>Type 1 LSA (Router LSA)</strong> để mô tả chính nó (Router-ID), các cổng kết nối trực tiếp và chi phí (Cost/Metric).</p>
+                <p>Type 1 LSA có phạm vi <strong>Area-Local</strong>: nó chỉ được flood trong nội bộ một Area và <em>tuyệt đối không bao giờ vượt qua ABR</em>.</p>`,
+                global_state: 'FULL / INTRA-AREA',
+                global_color: 'bg-emerald-500',
+                cli_prompt: 'R1',
+                cli: `R1# show ip ospf database router
+
+            OSPF Router with ID (10.0.1.1) (Process ID 1)
+                Router Link States (Area 0)
+  LS age: 12
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 10.0.1.1
+  Advertising Router: 10.0.1.1
+  Number of Links: 1 (Broadcast transit link)`,
+                anim: { from: 'R4', to: 'R2', label: 'LSU (Type 1)' },
+                node_status: {
+                    R1: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                    R2: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                    R3: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                    R4: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                    R5: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                    R6: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                },
+                active_links: ['R5-R4', 'R4-R2', 'R2-R1', 'R1-R3', 'R2-R3', 'R3-R6'],
+                lsdb_delta: [
+                    { type: '1 (Router)', id: '10.0.1.1', adv: '10.0.1.1', area: '0', scope: ['R1','R2','R3'] },
+                    { type: '1 (Router)', id: '10.0.1.2', adv: '10.0.1.2', area: '0', scope: ['R1','R2','R3'] },
+                    { type: '1 (Router)', id: '10.0.1.3', adv: '10.0.1.3', area: '0', scope: ['R1','R2','R3'] },
+                    { type: '1 (Router)', id: '10.0.1.2', adv: '10.0.1.2', area: '1', scope: ['R2','R4','R5'] },
+                    { type: '1 (Router)', id: '10.1.1.4', adv: '10.1.1.4', area: '1', scope: ['R2','R4','R5'] },
+                    { type: '1 (Router)', id: '10.1.1.5', adv: '10.1.1.5', area: '1', scope: ['R2','R4','R5'] },
+                    { type: '1 (Router)', id: '10.0.1.3', adv: '10.0.1.3', area: '2', scope: ['R3','R6'] },
+                    { type: '1 (Router)', id: '10.2.1.6', adv: '10.2.1.6', area: '2', scope: ['R3','R6'] }
+                ]
+            },
+            {
+                step: 4,
+                phase: 'TYPE 2 LSA',
+                title: '4. DR tạo Type 2 Network LSA',
+                desc: `<p>Trong mạng Broadcast Multi-access của Area 0, router DR <strong>R1</strong> tạo ra <strong>Type 2 LSA (Network LSA)</strong> đại diện cho toàn bộ subnet.</p>
+                <p>Type 2 LSA liệt kê danh sách toàn bộ các router đang kết nối vào phân đoạn mạng đó (R1, R2, R3). Giống như Type 1, Type 2 LSA cũng chỉ flood trong nội bộ Area 0.</p>`,
+                global_state: 'FULL / DR SYNC',
+                global_color: 'bg-emerald-500',
+                cli_prompt: 'R2',
+                cli: `R2# show ip ospf database network
+
+            OSPF Router with ID (10.0.1.2) (Process ID 1)
+                Net Link States (Area 0)
+  LS Type: Network Links
+  Link State ID: 10.0.1.1 (Interface IP of DR)
+  Advertising Router: 10.0.1.1
+  Network Mask: /24
+  Attached Router: 10.0.1.1
+  Attached Router: 10.0.1.2
+  Attached Router: 10.0.1.3`,
+                anim: { from: 'R1', to: 'R3', label: 'LSU (Type 2)' },
+                node_status: {
+                    R1: { text: 'DR ACTIVE', class: 'bg-emerald-600 text-white' },
+                    R2: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                    R3: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                    R4: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                    R5: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                    R6: { text: 'FULL', class: 'bg-emerald-600 text-white' },
+                },
+                active_links: ['R5-R4', 'R4-R2', 'R2-R1', 'R1-R3', 'R2-R3', 'R3-R6'],
+                lsdb_delta: [
+                    { type: '2 (Network)', id: '10.0.1.1', adv: '10.0.1.1', area: '0', scope: ['R1','R2','R3'] }
+                ]
+            },
+            {
+                step: 5,
+                phase: 'TYPE 3 SUMMARY',
+                title: '5. ABR sinh Type 3 Summary LSA (Liên vùng)',
+                desc: `<p>Để các Area biết đường đến nhau, các router biên ABR (<strong>R2</strong> và <strong>R3</strong>) đọc Type 1 & 2 từ một vùng, chuyển hóa thành <strong>Type 3 Summary LSA</strong> và tiêm vào vùng còn lại.</p>
+                <p>Ví dụ: R2 tiêm route mạng Area 1 vào Area 0, và ngược lại. Nhờ đó mọi router biết được các subnet liên vùng (Inter-Area <code>O IA</code>).</p>`,
+                global_state: 'FULL / INTER-AREA',
+                global_color: 'bg-emerald-500',
+                cli_prompt: 'R1',
+                cli: `R1# show ip ospf database summary
+
+            OSPF Router with ID (10.0.1.1) (Process ID 1)
+                Summary Net Link States (Area 0)
+  Link State ID: 10.1.1.0 (Subnet in Area 1)
+  Advertising Router: 10.0.1.2 (ABR R2)
+  Network Mask: /24
+  Metric: 20`,
+                anim: { from: 'R2', to: 'R1', label: 'LSU (Type 3)' },
+                node_status: {
+                    R1: { text: 'INTER-AREA', class: 'bg-indigo-600 text-white' },
+                    R2: { text: 'ABR ACTIVE', class: 'bg-indigo-600 text-white' },
+                    R3: { text: 'ABR ACTIVE', class: 'bg-indigo-600 text-white' },
+                    R4: { text: 'INTER-AREA', class: 'bg-indigo-600 text-white' },
+                    R5: { text: 'INTER-AREA', class: 'bg-indigo-600 text-white' },
+                    R6: { text: 'INTER-AREA', class: 'bg-indigo-600 text-white' },
+                },
+                active_links: ['R5-R4', 'R4-R2', 'R2-R1', 'R1-R3', 'R2-R3', 'R3-R6'],
+                lsdb_delta: [
+                    { type: '3 (Summary)', id: '10.1.1.0', adv: '10.0.1.2', area: '0', scope: ['R1','R2','R3'] },
+                    { type: '3 (Summary)', id: '10.2.1.0', adv: '10.0.1.3', area: '0', scope: ['R1','R2','R3'] },
+                    { type: '3 (Summary)', id: '10.0.1.0', adv: '10.0.1.2', area: '1', scope: ['R2','R4','R5'] },
+                    { type: '3 (Summary)', id: '10.0.1.0', adv: '10.0.1.3', area: '2', scope: ['R3','R6'] }
+                ]
+            },
+            {
+                step: 6,
+                phase: 'TYPE 4 & 5 LSA',
+                title: '6. ASBR bơm Type 5 & ABR tạo Type 4 LSA',
+                desc: `<p>ASBR <strong>R5</strong> tại Area 1 redistribute mạng ngoài <code>192.168.100.0/24</code> vào OSPF, sinh ra <strong>Type 5 AS External LSA</strong> lan truyền toàn miền (trừ NSSA).</p>
+                <p>Để Area 0 biết cách tìm đến ASBR R5, ABR <strong>R2</strong> sinh ra <strong>Type 4 ASBR Summary LSA</strong> chỉ đường: <em>"Muốn đến ASBR 10.1.1.5, hãy đi qua tôi"</em>.</p>`,
+                global_state: 'FULL / EXTERNAL',
+                global_color: 'bg-emerald-500',
+                cli_prompt: 'R1',
+                cli: `R1# show ip ospf database asbr-summary
+  Link State ID: 10.1.1.5 (ASBR R5)
+  Advertising Router: 10.0.1.2 (ABR R2)
+
+R1# show ip ospf database external
+  Link State ID: 192.168.100.0 (External Network)
+  Advertising Router: 10.1.1.5
+  Network Mask: /24, Metric Type: 2 (E2)`,
+                anim: { from: 'R5', to: 'R4', label: 'LSU (Type 5)' },
+                node_status: {
+                    R1: { text: 'EXTERNAL OK', class: 'bg-emerald-600 text-white' },
+                    R2: { text: 'TYPE 4 ADV', class: 'bg-indigo-600 text-white' },
+                    R3: { text: 'EXTERNAL OK', class: 'bg-emerald-600 text-white' },
+                    R4: { text: 'EXTERNAL OK', class: 'bg-emerald-600 text-white' },
+                    R5: { text: 'ASBR ACTIVE', class: 'bg-amber-600 text-white' },
+                    R6: { text: 'NSSA BLOCKED', class: 'bg-slate-600 text-white' },
+                },
+                active_links: ['R5-R4', 'R4-R2', 'R2-R1', 'R1-R3', 'R2-R3', 'R3-R6'],
+                lsdb_delta: [
+                    { type: '5 (External)', id: '192.168.100.0', adv: '10.1.1.5', area: 'ext', scope: ['R1','R2','R3','R4','R5'] },
+                    { type: '4 (ASBR Sum)', id: '10.1.1.5', adv: '10.0.1.2', area: '0', scope: ['R1','R2','R3'] }
+                ]
+            },
+            {
+                step: 7,
+                phase: 'TYPE 7 NSSA',
+                title: '7. Type 7 NSSA LSA & Dịch thuật (T7 → T5)',
+                desc: `<p>Area 2 là vùng Not-So-Stubby Area (NSSA). Router <strong>R6</strong> bơm mạng ngoại vi <code>172.16.50.0/24</code> vào dưới dạng <strong>Type 7 NSSA LSA</strong>.</p>
+                <p>Khi chạm đến ABR <strong>R3</strong> (NSSA Translator), R3 bóc vỏ Type 7, dịch thành <strong>Type 5 External LSA</strong> và tiếp tục flood vào Backbone Area 0.</p>`,
+                global_state: 'FULL / NSSA TRANSLATE',
+                global_color: 'bg-emerald-500',
+                cli_prompt: 'R3',
+                cli: `R3# show ip ospf database nssa-external
+  Link State ID: 172.16.50.0
+  Advertising Router: 10.2.1.6 (Area 2 NSSA)
+
+%OSPF-5-ADJCHG: R3 translates Type-7 LSA to Type-5 External for Area 0...`,
+                anim: { from: 'R6', to: 'R3', label: 'LSU (Type 7)' },
+                node_status: {
+                    R1: { text: 'LEARNED T5', class: 'bg-emerald-600 text-white' },
+                    R2: { text: 'LEARNED T5', class: 'bg-emerald-600 text-white' },
+                    R3: { text: 'T7->T5 XLATE', class: 'bg-sky-600 text-white' },
+                    R4: { text: 'LEARNED T5', class: 'bg-emerald-600 text-white' },
+                    R5: { text: 'LEARNED T5', class: 'bg-emerald-600 text-white' },
+                    R6: { text: 'NSSA ORIGIN', class: 'bg-amber-600 text-white' },
+                },
+                active_links: ['R5-R4', 'R4-R2', 'R2-R1', 'R1-R3', 'R2-R3', 'R3-R6'],
+                lsdb_delta: [
+                    { type: '7 (NSSA Ext)', id: '172.16.50.0', adv: '10.2.1.6', area: '2', scope: ['R3','R6'] },
+                    { type: '5 (External)', id: '172.16.50.0', adv: '10.0.1.3', area: 'ext', scope: ['R1','R2','R3','R4','R5'] }
+                ]
+            },
+            {
+                step: 8,
+                phase: 'CONVERGED',
+                title: '8. Hội tụ toàn diện & Thuật toán SPF',
+                desc: `<p>Toàn bộ cơ sở dữ liệu Link State (LSDB) đã hoàn tất và đạt trạng thái đồng bộ tuyệt đối trên toàn mạng OSPF.</p>
+                <p>Mỗi router tự thực thi thuật toán <strong>Dijkstra (SPF)</strong> tính toán cây đường đi ngắn nhất (Shortest Path Tree) độc lập, sau đó cài đặt các tuyến tối ưu vào Bảng định tuyến (Routing Table).</p>`,
+                global_state: 'CONVERGED / SPF DONE',
+                global_color: 'bg-indigo-600',
+                cli_prompt: 'R1',
+                cli: `R1# show ip route ospf
+      10.0.0.0/8 is variably subnetted, 6 subnets, 2 masks
+O IA     10.1.1.0/24 [110/20] via 10.0.1.2, 00:00:45, GigabitEthernet0/0
+O IA     10.2.1.0/24 [110/20] via 10.0.1.3, 00:00:45, GigabitEthernet0/0
+O E2     192.168.100.0/24 [110/20] via 10.0.1.2, 00:00:15, GigabitEthernet0/0
+O E2     172.16.50.0/24 [110/20] via 10.0.1.3, 00:00:10, GigabitEthernet0/0`,
+                anim: null,
+                node_status: {
+                    R1: { text: 'CONVERGED', class: 'bg-emerald-600 text-white ring-2 ring-emerald-500/50' },
+                    R2: { text: 'CONVERGED', class: 'bg-emerald-600 text-white ring-2 ring-emerald-500/50' },
+                    R3: { text: 'CONVERGED', class: 'bg-emerald-600 text-white ring-2 ring-emerald-500/50' },
+                    R4: { text: 'CONVERGED', class: 'bg-emerald-600 text-white ring-2 ring-emerald-500/50' },
+                    R5: { text: 'CONVERGED', class: 'bg-emerald-600 text-white ring-2 ring-emerald-500/50' },
+                    R6: { text: 'CONVERGED', class: 'bg-emerald-600 text-white ring-2 ring-emerald-500/50' },
+                },
+                active_links: ['R5-R4', 'R4-R2', 'R2-R1', 'R1-R3', 'R2-R3', 'R3-R6'],
+                lsdb_delta: []
+            }
+        ];
+
+        // ---------------------------------------------------------------------
+        // 3. ENGINE IMPLEMENTATION
+        // ---------------------------------------------------------------------
+        class LSDBFormationSimulator {
+            constructor() {
+                this.currentStep = 0;
+                this.isPlaying = false;
+                this.playInterval = null;
+                this.activeTab = 'router';
+                this.cumulativeLSDB = [];
+                this.cliTimer = null;
+
+                this.dom = {
+                    title: document.getElementById('step-title'),
+                    desc: document.getElementById('step-desc'),
+                    stepBadge: document.getElementById('step-badge'),
+                    cliRouter: document.getElementById('cli-router-prompt'),
+                    cli: document.getElementById('cli-output'),
+                    progress: document.getElementById('timeline-progress'),
+                    stepper: document.getElementById('stepper-container'),
+                    nodes: document.getElementById('nodes-layer'),
+                    links: document.getElementById('links-layer'),
+                    globalStateText: document.getElementById('global-state-text'),
+                    globalIndicator: document.getElementById('global-indicator'),
+                    btnPrev: document.getElementById('btn-prev'),
+                    btnNext: document.getElementById('btn-next'),
+                    btnPlay: document.getElementById('btn-play'),
+                    btnPlayIcon: document.getElementById('icon-play'),
+                    packet: document.getElementById('animated-packet'),
+                    packetLabel: document.getElementById('packet-label'),
+                    lsdbRouterTbody: document.getElementById('lsdb-router-tbody'),
+                    lsdbAreaTbody: document.getElementById('lsdb-area-tbody'),
+                    emptyMsg: document.getElementById('lsdb-empty-msg')
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.buildStepper();
+                this.drawNodes();
+                this.drawLinks();
+                this.buildCumulativeLSDB();
+
+                // Theme sync
+                const isDark = document.documentElement.classList.contains('dark');
+                const themeIcon = document.getElementById('theme-icon');
+                if (themeIcon) {
+                    themeIcon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+                }
+
+                window.addEventListener('resize', () => {
+                    this.drawLinks();
+                });
+
+                this.renderStep(0);
+            }
+
+            buildCumulativeLSDB() {
+                this.cumulativeLSDB = [];
+                TIMELINE.forEach(s => {
+                    if (s.lsdb_delta) {
+                        s.lsdb_delta.forEach(lsa => {
+                            this.cumulativeLSDB.push({ ...lsa, addedStep: s.step });
+                        });
+                    }
+                });
+            }
+
+            buildStepper() {
+                let html = '';
+                TIMELINE.forEach((s, idx) => {
+                    html += `
+                    <button onclick="app.goToStep(${idx})" id="step-btn-${idx}" class="relative w-8 h-8 md:w-auto md:px-3 md:py-1.5 rounded-full font-bold text-xs border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 shrink-0">
+                        <span class="md:hidden">${idx}</span>
+                        <span class="hidden md:inline">${s.title.split(' ')[0]} ${s.phase}</span>
+                    </button>`;
+                });
+                this.dom.stepper.innerHTML = html;
+            }
+
+            drawNodes() {
+                let html = '';
+                Object.values(NODES).forEach(node => {
+                    html += `
+                    <div id="node-${node.id}" class="absolute flex flex-col items-center node-card bg-white dark:bg-slate-800 rounded-xl p-3 w-36 border-2 border-slate-200 dark:border-slate-700 shadow-xl select-none" style="left: calc(${node.x}% - 72px); top: calc(${node.y}% - 55px); z-index: 10;">
+                        <!-- 1. Top Role Badge -->
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600 shadow-xs">
+                            ${node.role}
+                        </div>
+                        
+                        <!-- 2. Circular Icon Housing -->
+                        <div class="w-12 h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                            <i class="fa-solid ${node.icon} text-lg text-slate-700 dark:text-slate-300"></i>
+                        </div>
+                        
+                        <!-- 3. Device Name -->
+                        <h3 class="text-sm font-extrabold text-slate-800 dark:text-white tracking-tight">${node.name}</h3>
+                        
+                        <!-- 4. Monospace IP Badge -->
+                        <div class="text-[10px] font-mono text-slate-500 dark:text-slate-400 my-1 bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+                            ${node.ip}
+                        </div>
+                        
+                        <!-- 5. Bottom Status Pill -->
+                        <div id="status-${node.id}" class="text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full uppercase border shadow-sm whitespace-nowrap bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+                            DOWN
+                        </div>
+                    </div>`;
+                });
+                this.dom.nodes.innerHTML = html;
+            }
+
+            drawLinks() {
+                const svg = this.dom.links;
+                svg.innerHTML = '';
+
+                CABLES.forEach(cable => {
+                    const src = NODES[cable.source];
+                    const tgt = NODES[cable.target];
+                    if (!src || !tgt) return;
+
+                    const activeLinks = TIMELINE[this.currentStep].active_links || [];
+                    const isActive = activeLinks.includes(`${cable.source}-${cable.target}`) || activeLinks.includes(`${cable.target}-${cable.source}`);
+
+                    // Base track (Golden Standard)
+                    const track = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    track.setAttribute('x1', `${src.x}%`);
+                    track.setAttribute('y1', `${src.y}%`);
+                    track.setAttribute('x2', `${tgt.x}%`);
+                    track.setAttribute('y2', `${tgt.y}%`);
+                    track.setAttribute('class', 'link-track');
+                    svg.appendChild(track);
+
+                    // Flow Overlay
+                    if (isActive) {
+                        const flow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        flow.setAttribute('x1', `${src.x}%`);
+                        flow.setAttribute('y1', `${src.y}%`);
+                        flow.setAttribute('x2', `${tgt.x}%`);
+                        flow.setAttribute('y2', `${tgt.y}%`);
+                        
+                        let colorStroke = 'stroke-[#10b981]'; // Emerald
+                        if (cable.source === 'R5' || cable.target === 'R5' || cable.source === 'R4') colorStroke = 'stroke-[#6366f1]'; // Indigo
+                        if (cable.source === 'R6' || cable.target === 'R6') colorStroke = 'stroke-[#0ea5e9]'; // Sky
+
+                        flow.setAttribute('class', `link-flow-active ${colorStroke}`);
+                        flow.style.filter = 'drop-shadow(0 0 6px rgba(16, 185, 129, 0.75))';
+                        svg.appendChild(flow);
+                    }
+                });
+            }
+
+            animatePacket(animData) {
+                if (!animData) return;
+                const src = NODES[animData.from];
+                const tgt = NODES[animData.to];
+                if (!src || !tgt) return;
+
+                const canvas = document.getElementById('topology-canvas').getBoundingClientRect();
+                const x1 = (src.x / 100) * canvas.width;
+                const y1 = (src.y / 100) * canvas.height;
+                const x2 = (tgt.x / 100) * canvas.width;
+                const y2 = (tgt.y / 100) * canvas.height;
+
+                this.dom.packetLabel.innerText = animData.label;
+                this.dom.packet.style.left = '0px';
+                this.dom.packet.style.top = '0px';
+                this.dom.packet.style.opacity = '1';
+
+                const anim = this.dom.packet.animate([
+                    { transform: `translate(${x1}px, ${y1}px) translate(-50%, -50%) scale(0.8)`, opacity: 0 },
+                    { transform: `translate(${x1}px, ${y1}px) translate(-50%, -50%) scale(1)`, opacity: 1, offset: 0.1 },
+                    { transform: `translate(${x2}px, ${y2}px) translate(-50%, -50%) scale(1)`, opacity: 1, offset: 0.9 },
+                    { transform: `translate(${x2}px, ${y2}px) translate(-50%, -50%) scale(0.8)`, opacity: 0 }
+                ], {
+                    duration: 1600,
+                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                    iterations: 1,
+                    fill: 'forwards'
+                });
+
+                anim.onfinish = () => {
+                    this.dom.packet.style.opacity = '0';
+                };
+            }
+
+            updateStepperUI() {
+                const pct = (this.currentStep / (TIMELINE.length - 1)) * 100;
+                this.dom.progress.style.width = `${pct}%`;
+                this.dom.stepBadge.innerText = `Phase ${this.currentStep} / ${TIMELINE.length - 1}`;
+
+                TIMELINE.forEach((_, idx) => {
+                    const btn = document.getElementById(`step-btn-${idx}`);
+                    if (!btn) return;
+
+                    if (idx === this.currentStep) {
+                        btn.className = `relative w-8 h-8 md:w-auto md:px-3 md:py-1.5 rounded-full font-bold text-xs border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-600 text-white border-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.5)] scale-105 shrink-0`;
+                    } else if (idx < this.currentStep) {
+                        btn.className = `relative w-8 h-8 md:w-auto md:px-3 md:py-1.5 rounded-full font-bold text-xs border-2 transition-all duration-300 z-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-500 border-blue-300 dark:border-blue-700 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/50 shrink-0`;
+                    } else {
+                        btn.className = `relative w-8 h-8 md:w-auto md:px-3 md:py-1.5 rounded-full font-bold text-xs border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 shrink-0`;
+                    }
+                });
+
+                this.dom.btnPrev.disabled = this.currentStep === 0;
+                this.dom.btnNext.disabled = this.currentStep === TIMELINE.length - 1;
+            }
+
+            updateNodeCards() {
+                const s = TIMELINE[this.currentStep];
+                if (!s.node_status) return;
+
+                Object.entries(s.node_status).forEach(([id, status]) => {
+                    const pill = document.getElementById(`status-${id}`);
+                    if (pill) {
+                        pill.className = `text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full uppercase border shadow-sm whitespace-nowrap ${status.class}`;
+                        pill.innerText = status.text;
+                    }
+                });
+            }
+
+            renderDataTables() {
+                const selectedRouter = document.getElementById('router-select').value;
+                const routerLsdb = this.cumulativeLSDB.filter(lsa => 
+                    lsa.addedStep <= this.currentStep && lsa.scope.includes(selectedRouter)
+                );
+
+                if (routerLsdb.length === 0) {
+                    this.dom.lsdbRouterTbody.innerHTML = '';
+                    this.dom.emptyMsg.classList.remove('hidden');
+                } else {
+                    this.dom.emptyMsg.classList.add('hidden');
+                    let rHtml = '';
+                    routerLsdb.forEach(lsa => {
+                        const isNew = lsa.addedStep === this.currentStep;
+                        const rowClass = isNew ? 'row-new text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-600 dark:text-slate-300';
+                        const badge = isNew ? `<span class="badge-new ml-2 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded uppercase font-bold">NEW</span>` : '';
+                        rHtml += `
+                        <tr class="${rowClass} transition-colors border-b border-slate-100 dark:border-slate-800/80 last:border-0 hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
+                            <td class="py-2.5 pr-2">${lsa.type}</td>
+                            <td class="py-2.5 pr-2 font-bold">${lsa.id} ${badge}</td>
+                            <td class="py-2.5 pr-2">${lsa.adv}</td>
+                            <td class="py-2.5 text-right opacity-70">0x8000000${lsa.addedStep + 1}</td>
+                        </tr>`;
+                    });
+                    this.dom.lsdbRouterTbody.innerHTML = rHtml;
+                }
+
+                const selectedArea = document.getElementById('area-select').value;
+                const areaLsdb = this.cumulativeLSDB.filter(lsa => 
+                    lsa.addedStep <= this.currentStep && lsa.area === selectedArea
+                );
+                
+                let aHtml = '';
+                if (areaLsdb.length === 0) {
+                    aHtml = '<tr><td colspan="3" class="py-8 text-center text-slate-400 text-xs">Chưa có LSA nào được tạo cho vùng này.</td></tr>';
+                } else {
+                    areaLsdb.forEach(lsa => {
+                        const isNew = lsa.addedStep === this.currentStep;
+                        const rowClass = isNew ? 'row-new text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-600 dark:text-slate-300';
+                        const badge = isNew ? `<span class="badge-new ml-2 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded uppercase font-bold">NEW</span>` : '';
+                        aHtml += `
+                        <tr class="${rowClass} transition-colors border-b border-slate-100 dark:border-slate-800/80 last:border-0 hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
+                            <td class="py-2.5 pr-2">${lsa.type}</td>
+                            <td class="py-2.5 pr-2 font-bold">${lsa.id} ${badge}</td>
+                            <td class="py-2.5">${lsa.adv}</td>
+                        </tr>`;
+                    });
+                }
+                this.dom.lsdbAreaTbody.innerHTML = aHtml;
+
+                const rtBox = document.getElementById('route-table-output');
+                if (this.currentStep === 8) {
+                    rtBox.textContent = `Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 6 subnets, 2 masks
+C        10.0.1.0/24 is directly connected, GigabitEthernet0/0
+L        10.0.1.1/32 is directly connected, GigabitEthernet0/0
+O IA     10.1.1.0/24 [110/20] via 10.0.1.2, 00:00:45, GigabitEthernet0/0
+O IA     10.2.1.0/24 [110/20] via 10.0.1.3, 00:00:45, GigabitEthernet0/0
+O E2     192.168.100.0/24 [110/20] via 10.0.1.2, 00:00:15, GigabitEthernet0/0
+O E2     172.16.50.0/24 [110/20] via 10.0.1.3, 00:00:10, GigabitEthernet0/0`;
+                } else {
+                    rtBox.textContent = `// Thuật toán Dijkstra SPF chưa hội tụ hoàn toàn.
+// Bảng định tuyến (Routing Table) sẽ được cài đặt tại Bước 8 khi LSDB hoàn thiện.`;
+                }
+            }
+
+            renderStep(idx) {
+                if (idx < 0 || idx >= TIMELINE.length) return;
+                this.currentStep = idx;
+                const s = TIMELINE[idx];
+
+                this.dom.title.innerHTML = `<i class="fa-solid fa-circle-info text-blue-500"></i> <span>${s.title}</span>`;
+                this.dom.desc.innerHTML = s.desc;
+                this.dom.cliRouter.innerText = s.cli_prompt || 'R1';
+
+                this.dom.globalStateText.innerText = s.global_state;
+                this.dom.globalIndicator.className = `w-2.5 h-2.5 rounded-full ${s.global_color} shadow-sm`;
+
+                if (this.cliTimer) clearTimeout(this.cliTimer);
+                this.dom.cli.textContent = '';
+                let i = 0;
+                const cliText = s.cli;
+                const typeWriter = () => {
+                    if (i < cliText.length) {
+                        this.dom.cli.textContent += cliText.charAt(i);
+                        i++;
+                        this.cliTimer = setTimeout(typeWriter, 4);
+                    }
+                };
+                typeWriter();
+
+                this.updateStepperUI();
+                this.updateNodeCards();
+                this.drawLinks();
+                this.renderDataTables();
+
+                this.dom.packet.style.opacity = '0';
+                if (s.anim) {
+                    setTimeout(() => this.animatePacket(s.anim), 100);
+                }
+            }
+
+            nextStep() {
+                if (this.currentStep < TIMELINE.length - 1) {
+                    this.renderStep(this.currentStep + 1);
+                } else {
+                    this.pause();
+                }
+            }
+
+            prevStep() {
+                if (this.currentStep > 0) {
+                    this.renderStep(this.currentStep - 1);
+                }
+            }
+
+            goToStep(idx) {
+                this.pause();
+                this.renderStep(idx);
+            }
+
+            reset() {
+                this.pause();
+                this.renderStep(0);
+            }
+
+            togglePlay() {
+                if (this.isPlaying) {
+                    this.pause();
+                } else {
+                    this.play();
+                }
+            }
+
+            play() {
+                if (this.currentStep >= TIMELINE.length - 1) {
+                    this.renderStep(0);
+                }
+                this.isPlaying = true;
+                this.dom.btnPlayIcon.className = 'fa-solid fa-pause';
+                this.dom.btnPlay.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-amber-500 text-white hover:bg-amber-600 shadow-md shadow-amber-500/30 transition-all-fast mx-0.5';
+
+                this.nextStep();
+                this.playInterval = setInterval(() => {
+                    if (this.currentStep < TIMELINE.length - 1) {
+                        this.nextStep();
+                    } else {
+                        this.pause();
+                    }
+                }, 4000);
+            }
+
+            pause() {
+                this.isPlaying = false;
+                this.dom.btnPlayIcon.className = 'fa-solid fa-play ml-0.5';
+                this.dom.btnPlay.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/30 transition-all-fast mx-0.5';
+                if (this.playInterval) clearInterval(this.playInterval);
+            }
+
+            toggleTheme() {
+                const isDark = document.documentElement.classList.toggle('dark');
+                const themeIcon = document.getElementById('theme-icon');
+                if (themeIcon) {
+                    themeIcon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+                }
+                try {
+                    localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light');
+                } catch (e) {}
+            }
+
+            switchTab(tabId) {
+                const btns = ['router', 'area', 'route'];
+                btns.forEach(id => {
+                    const btn = document.getElementById(`tab-btn-${id}`);
+                    const content = document.getElementById(`tab-content-${id}`);
+                    if (id === tabId) {
+                        btn.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all shadow-sm bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400';
+                        content.classList.remove('hidden');
+                        content.classList.add('flex', 'flex-col');
+                        if (id === 'route') { content.classList.remove('flex', 'flex-col'); content.classList.add('block'); }
+                    } else {
+                        btn.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200';
+                        content.classList.add('hidden');
+                        content.classList.remove('flex', 'flex-col', 'block');
+                    }
+                });
+                this.activeTab = tabId;
+                if (tabId !== 'route') this.renderDataTables();
+            }
+        }
+
+        let app;
+        function initApp() {
+            if (!app) {
+                app = new LSDBFormationSimulator();
+                window.app = app;
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    </script>
+</body>
+</html>

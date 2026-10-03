@@ -95,6 +95,19 @@ const PROJECT_TYPES = {
 
 const PROJECTS = [
     {
+        id: 'vrrp-ospf-failover',
+        title: 'VRRP + OSPF Failover Visualization',
+        category: 'failover',
+        type: 'failover',
+        status: 'live',
+        dateAdded: '2026-10-03',
+        image: 'assets/images/protocol-placeholder.jpg',
+        description:
+            'Mô phỏng chuỗi failover khi router VyOS chính mất kết nối WAN và sự kết hợp giữa VRRP với OSPF để khôi phục lưu lượng.',
+        tags: ['VRRP', 'OSPF', 'HA', 'Failover', 'VyOS', 'GARP'],
+        href: 'projects/failover/vrrp-ospf-failover.html',
+    },
+    {
         id: 'vxlan-mtu-blackhole',
         title: 'EVPN-VXLAN MTU Blackhole',
         category: 'troubleshooting',
@@ -358,5 +371,17 @@ const PROJECTS = [
             'Mô phỏng trực quan thuật toán OSPF SPF (Dijkstra): tính toán đường đi ngắn nhất, xây dựng SPF tree và routing table trên mô hình OSPF Đa Vùng.',
         tags: ['OSPF', 'Dijkstra', 'SPF', 'Algorithm', 'LSDB', 'Routing Table'],
         href: 'projects/algorithm-viz/ospf-spf.html',
+    },
+    {
+        id: 'ospf-lsdb-formation',
+        title: 'OSPF LSDB Formation Dashboard',
+        category: 'protocol',
+        type: 'protocol',
+        status: 'live',
+        dateAdded: '2026-10-03',
+        description:
+            'Theo dõi toàn bộ vòng đời học định tuyến của OSPF đa vùng (Multi-Area) - từ Hello packets, bầu chọn DR, đến trao đổi DBD và đồng bộ LSDB.',
+        tags: ['OSPF', 'LSDB', 'Multi-Area', 'LSA', 'Convergence', 'Simulation'],
+        href: 'projects/protocol/ospf-lsdb-formation.html',
     },
 ];
