@@ -18,7 +18,9 @@
   position:relative;width:100%;height:100%;
   min-height:480px;
   overflow:hidden;
+  background:#f8fafc;
 }
+.dark #topo-wrap{ background:#0f172a; }
 #topo-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 #topo-nodes{position:absolute;inset:0;z-index:10}
 
@@ -29,34 +31,59 @@
   transition:all .25s ease;
 }
 .n-inner{
-  background:#0f172a;border:2px solid #334155;
-  border-radius:12px;padding:7px 12px;min-width:82px;text-align:center;
+  background:#ffffff;border:2px solid #e2e8f0;
+  border-radius:14px;padding:8px 12px;min-width:88px;text-align:center;
+  box-shadow:0 4px 12px rgba(0,0,0,0.06);
   transition:all .25s ease;
 }
-.dark .n-inner{background:#020617}
+.dark .n-inner{
+  background:#1e293b;border-color:#334155;
+  box-shadow:0 4px 16px rgba(0,0,0,0.35);
+}
 .n-role{
   position:absolute;top:-10px;left:50%;transform:translateX(-50%);
-  font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:999px;
+  font-size:8.5px;font-weight:700;padding:1px 7px;border-radius:999px;
   white-space:nowrap;letter-spacing:.05em;
-  background:#1e293b;border:1px solid #334155;color:#94a3b8;
+  background:#f1f5f9;border:1px solid #cbd5e1;color:#475569;
 }
-.n-icon{font-size:17px;margin-bottom:2px}
-.n-label{font-size:11px;font-weight:700;color:#e2e8f0;font-family:'Fira Code',monospace}
+.dark .n-role{
+  background:#0f172a;border-color:#334155;color:#94a3b8;
+}
+.n-icon-box{
+  width:32px;height:32px;margin:0 auto 3px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(to bottom, #f8fafc, #e2e8f0);
+  border:1px solid #cbd5e1;box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);
+  color:#334155;
+}
+.dark .n-icon-box{
+  background:linear-gradient(to bottom, #334155, #1e293b);
+  border-color:#475569;box-shadow:inset 0 1px 2px rgba(0,0,0,0.4);
+  color:#e2e8f0;
+}
+.n-label{font-size:11.5px;font-weight:800;color:#0f172a;font-family:'Fira Code',monospace}
+.dark .n-label{color:#f8fafc}
 .n-rid{font-size:9.5px;color:#64748b;font-family:'Fira Code',monospace}
+.dark .n-rid{color:#94a3b8}
 .n-cost-badge{
   position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);
   font-size:9px;font-weight:700;padding:1px 7px;border-radius:999px;
   white-space:nowrap;font-family:'Fira Code',monospace;
+  background:#f8fafc;border:1px solid #cbd5e1;color:#475569;
+}
+.dark .n-cost-badge{
+  background:#0f172a;border-color:#334155;color:#94a3b8;
 }
 
 /* node state colors */
-.ns-normal .n-inner{border-color:#334155}
+.ns-normal .n-inner{border-color:#cbd5e1}
+.dark .ns-normal .n-inner{border-color:#334155}
 .ns-source .n-inner{border-color:#3b82f6;box-shadow:0 0 18px rgba(59,130,246,.45)}
 .ns-dest   .n-inner{border-color:#f59e0b;box-shadow:0 0 18px rgba(245,158,11,.45)}
 .ns-settled .n-inner{border-color:#10b981;box-shadow:0 0 14px rgba(16,185,129,.35)}
-.ns-candidate .n-inner{border-color:#a78bfa;box-shadow:0 0 14px rgba(167,139,250,.35)}
+.ns-candidate .n-inner{border-color:#6366f1;box-shadow:0 0 14px rgba(99,102,241,.35)}
 .ns-processing .n-inner{border-color:#ec4899;box-shadow:0 0 18px rgba(236,72,153,.5);animation:pulse-node .6s infinite alternate}
-.ns-path .n-inner{border-color:#34d399;box-shadow:0 0 16px rgba(52,211,153,.4)}
+.ns-path .n-inner{border-color:#10b981;box-shadow:0 0 16px rgba(16,185,129,.4)}
 
 @keyframes pulse-node{from{box-shadow:0 0 12px rgba(236,72,153,.4)}to{box-shadow:0 0 22px rgba(236,72,153,.7)}}
 
@@ -68,16 +95,17 @@
 .zone-lbl{
   position:absolute;top:7px;left:10px;
   font-size:9px;font-weight:700;letter-spacing:.07em;
-  padding:2px 8px;border-radius:4px;opacity:.8;
+  padding:2px 8px;border-radius:4px;opacity:.85;
 }
 
 /* link hit area (invisible wide stripe for easier clicking) */
 .link-hit{cursor:pointer;stroke:transparent;stroke-width:18;fill:none}
 .link-vis{fill:none;stroke-linecap:round;transition:stroke .3s,opacity .3s}
-.link-active{stroke:#334155;stroke-width:2.5}
-.link-down{stroke:#ef444466;stroke-width:2;stroke-dasharray:6 4;opacity:.5}
-.link-path{stroke:#34d399;stroke-width:3;stroke-dasharray:10 4;animation:dash .8s linear infinite}
-.link-candidate{stroke:#a78bfa;stroke-width:2;stroke-dasharray:5 3;animation:dash 1.2s linear infinite}
+.link-active{stroke:#94a3b8;stroke-width:2.5}
+.dark .link-active{stroke:#334155;stroke-width:2.5}
+.link-down{stroke:#f43f5e88;stroke-width:2;stroke-dasharray:6 4;opacity:.6}
+.link-path{stroke:#10b981;stroke-width:3.5;stroke-dasharray:10 4;animation:dash .8s linear infinite}
+.link-candidate{stroke:#6366f1;stroke-width:2.5;stroke-dasharray:5 3;animation:dash 1.2s linear infinite}
 @keyframes dash{to{stroke-dashoffset:-28}}
 
 /* cost label on link */
@@ -90,24 +118,31 @@
   font-family:'Fira Code',monospace;cursor:pointer;pointer-events:all;
   transition:all .2s;border:1.5px solid;
 }
-.cost-up{background:#1e293b;border-color:#475569;color:#94a3b8}
-.cost-down{background:#1e293b;border-color:#ef444444;color:#ef4444;opacity:.6}
-.cost-path{background:#064e3b;border-color:#10b981;color:#34d399}
+.cost-up{background:#ffffff;border-color:#cbd5e1;color:#475569;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.dark .cost-up{background:#0f172a;border-color:#334155;color:#94a3b8;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.cost-down{background:#fff1f2;border-color:#fecdd3;color:#e11d48}
+.dark .cost-down{background:#1f1315;border-color:#881337;color:#f87171}
+.cost-path{background:#ecfdf5;border-color:#a7f3d0;color:#047857;font-weight:800}
+.dark .cost-path{background:#064e3b;border-color:#10b981;color:#34d399}
 
 /* right panel tabs */
 .rtab{padding:6px 14px;font-size:11px;font-weight:700;border-radius:8px;cursor:pointer;transition:all .18s;letter-spacing:.03em}
 .rtab.active{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;box-shadow:0 2px 10px rgba(99,102,241,.35)}
 .rtab:not(.active){color:#64748b}
-.rtab:not(.active):hover{color:#94a3b8;background:#1e293b}
+.rtab:not(.active):hover{color:#0f172a;background:#f1f5f9}
+.dark .rtab:not(.active):hover{color:#cbd5e1;background:#1e293b}
 
 /* scenario pills */
 .sc-pill{
   padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;
-  cursor:pointer;transition:all .2s;border:1.5px solid #334155;color:#64748b;
-  white-space:nowrap;
+  cursor:pointer;transition:all .2s;border:1.5px solid #cbd5e1;color:#64748b;
+  background:#ffffff;white-space:nowrap;
 }
-.sc-pill.active{border-color:#6366f1;color:#818cf8;background:#6366f110}
-.sc-pill:not(.active):hover{border-color:#475569;color:#94a3b8}
+.dark .sc-pill{border-color:#334155;color:#94a3b8;background:#0f172a}
+.sc-pill.active{border-color:#6366f1;color:#4f46e5;background:#6366f115}
+.dark .sc-pill.active{border-color:#6366f1;color:#818cf8;background:#6366f120}
+.sc-pill:not(.active):hover{border-color:#94a3b8;color:#0f172a}
+.dark .sc-pill:not(.active):hover{border-color:#475569;color:#cbd5e1}
 
 /* SPF step row */
 .spf-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;font-size:11.5px;transition:background .2s}
@@ -121,18 +156,30 @@
 
 /* lsdb row */
 .lsdb-row{display:grid;grid-template-columns:60px 1fr 1fr 60px;gap:6px;padding:4px 8px;font-size:10.5px;align-items:center;border-radius:6px}
-.lsdb-row:hover{background:#1e293b}
+.lsdb-row:hover{background:#f1f5f9}
+.dark .lsdb-row:hover{background:#1e293b}
 
 /* control bar */
-#ctrl-bar{background:rgba(15,23,42,.95);border-top:1px solid #1e293b;backdrop-filter:blur(10px)}
+#ctrl-bar{
+  background:rgba(255,255,255,.9);
+  border-top:1px solid #e2e8f0;
+  backdrop-filter:blur(12px);
+}
+.dark #ctrl-bar{
+  background:rgba(15,23,42,.92);
+  border-top-color:#1e293b;
+}
 
 /* bandwidth selector popup */
 .bw-popup{
-  position:fixed;z-index:200;background:#0f172a;border:1px solid #334155;
-  border-radius:12px;padding:10px;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,.5);
+  position:fixed;z-index:200;background:#ffffff;border:1px solid #cbd5e1;
+  border-radius:12px;padding:10px;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,.15);
+  color:#334155;
 }
+.dark .bw-popup{background:#0f172a;border-color:#334155;box-shadow:0 8px 32px rgba(0,0,0,.5);color:#cbd5e1}
 .bw-opt{padding:7px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Fira Code',monospace;transition:background .15s;white-space:nowrap}
-.bw-opt:hover{background:#1e293b}
+.bw-opt:hover{background:#f1f5f9}
+.dark .bw-opt:hover{background:#1e293b}
 
 /* teaching note */
 #teaching-note{border-left:3px solid #6366f1;background:#6366f108}
@@ -242,27 +289,27 @@
 <div id="ctrl-bar" class="sticky bottom-0 z-40 px-4 py-2.5 flex items-center justify-between gap-3">
   <!-- SPF step controls -->
   <div class="flex items-center gap-2">
-    <button onclick="App.spfPrev()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all text-sm" title="Bước trước">
+    <button onclick="App.spfPrev()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all text-sm" title="Bước trước">
       <i class="fas fa-backward-step"></i>
     </button>
-    <button onclick="App.spfPlayPause()" id="btn-play" class="h-8 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white transition-all text-xs font-bold gap-1.5">
+    <button onclick="App.spfPlayPause()" id="btn-play" class="h-8 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white transition-all text-xs font-bold gap-1.5 shadow-sm">
       <i class="fas fa-play" id="play-icon"></i><span id="play-lbl">Chạy SPF</span>
     </button>
-    <button onclick="App.spfNext()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all text-sm" title="Bước tiếp">
+    <button onclick="App.spfNext()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all text-sm" title="Bước tiếp">
       <i class="fas fa-forward-step"></i>
     </button>
-    <button onclick="App.spfReset()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all text-sm" title="Reset">
+    <button onclick="App.spfReset()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all text-sm" title="Reset">
       <i class="fas fa-rotate-left"></i>
     </button>
   </div>
 
   <!-- step indicator -->
-  <div class="text-xs mono text-slate-500 hidden sm:block">
-    Bước <span id="step-cur" class="text-slate-300 font-bold">0</span> / <span id="step-tot">0</span>
+  <div class="text-xs mono text-slate-500 dark:text-slate-400 hidden sm:block">
+    Bước <span id="step-cur" class="text-slate-900 dark:text-slate-200 font-bold">0</span> / <span id="step-tot">0</span>
   </div>
 
   <!-- speed -->
-  <div class="flex items-center gap-2 text-xs text-slate-500">
+  <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
     <i class="fas fa-gauge-simple-high text-[10px]"></i>
     <input type="range" id="speed-slider" min="200" max="1800" value="800" step="200"
            class="w-20 accent-indigo-500 cursor-pointer" title="Tốc độ auto-play"/>
@@ -270,7 +317,7 @@
   </div>
 
   <!-- reset topo -->
-  <button onclick="App.resetTopology()" class="h-8 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-400 hover:text-slate-200 transition-all font-bold gap-1.5 flex items-center">
+  <button onclick="App.resetTopology()" class="h-8 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all font-bold gap-1.5 flex items-center shadow-sm">
     <i class="fas fa-arrows-rotate text-[11px]"></i><span class="hidden sm:inline">Reset Topology</span>
   </button>
 </div>
@@ -749,7 +796,7 @@ const App = (() => {
       el.innerHTML = `
         <div class="n-inner">
           <div class="n-role">${n.role}</div>
-          <div class="n-icon"><i class="fas ${n.icon}" style="color:${stateColor}"></i></div>
+          <div class="n-icon-box"><i class="fas ${n.icon}" style="color:${stateColor}"></i></div>
           <div class="n-label">${n.label}</div>
           <div class="n-rid">${n.rid}</div>
           ${step && step.action!=='INIT' ? `<div class="n-cost-badge" style="background:${stateColor}20;border:1px solid ${stateColor}50;color:${stateColor}">${stepCostTxt}</div>` : ''}
@@ -819,11 +866,11 @@ const App = (() => {
 
     // candidate list
     if (step.candidates && step.candidates.length>0) {
-      html += `<div class="rounded-xl bg-slate-800/60 border border-slate-700 p-3">
-        <div class="text-[9px] uppercase tracking-widest text-violet-400 mb-2 mono">Candidate List</div>
+      html += `<div class="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-3 shadow-sm">
+        <div class="text-[9px] uppercase tracking-widest text-indigo-600 dark:text-violet-400 mb-2 mono font-bold">Candidate List</div>
         <div class="flex flex-wrap gap-1.5">
           ${step.candidates.map(c=>`
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs mono font-bold" style="background:#7c3aed18;border:1px solid #7c3aed40;color:#a78bfa">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs mono font-bold bg-indigo-50 dark:bg-violet-950/40 border border-indigo-200 dark:border-violet-700/40 text-indigo-700 dark:text-violet-300">
               ${c.id} <span class="opacity-60">cost</span> ${c.cost===Infinity?'∞':c.cost}
             </span>`).join('')}
         </div>
@@ -832,11 +879,11 @@ const App = (() => {
 
     // settled set
     if (step.settled && step.settled.length>0) {
-      html += `<div class="rounded-xl bg-slate-800/60 border border-slate-700 p-3">
-        <div class="text-[9px] uppercase tracking-widest text-emerald-400 mb-2 mono">Settled (SPF Tree)</div>
+      html += `<div class="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-3 shadow-sm">
+        <div class="text-[9px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2 mono font-bold">Settled (SPF Tree)</div>
         <div class="flex flex-wrap gap-1.5">
           ${step.settled.map(s=>`
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs mono font-bold" style="background:#05966918;border:1px solid #05966940;color:#34d399">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs mono font-bold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-300">
               ${s} <span class="opacity-60">${step.dist&&step.dist[s]!==undefined?step.dist[s]:''}</span>
             </span>`).join('')}
         </div>
@@ -846,16 +893,16 @@ const App = (() => {
     // distance table
     if (step.dist) {
       const finalStep = spfResult.steps[spfResult.steps.length-1];
-      html += `<div class="rounded-xl bg-slate-800/60 border border-slate-700 overflow-hidden">
-        <div class="text-[9px] uppercase tracking-widest text-slate-400 px-3 py-2 mono border-b border-slate-700">Distance Vector (tại bước này)</div>
-        <div class="divide-y divide-slate-700/50">
+      html += `<div class="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="text-[9px] uppercase tracking-widest text-slate-500 dark:text-slate-400 px-3 py-2 mono border-b border-slate-200 dark:border-slate-700 font-bold bg-slate-50 dark:bg-slate-800/40">Distance Vector (tại bước này)</div>
+        <div class="divide-y divide-slate-100 dark:divide-slate-700/50">
           ${graph.nodes.map(n=>{
             const d=step.dist[n.id];
             const prev=step.prev&&step.prev[n.id];
             const settled=step.settled&&step.settled.includes(n.id);
-            return `<div class="flex items-center justify-between px-3 py-1.5 text-xs hover:bg-slate-700/30">
-              <span class="mono font-bold ${settled?'text-emerald-400':d===Infinity?'text-slate-600':'text-slate-300'}">${n.id}</span>
-              <span class="mono ${d===Infinity?'text-slate-600':'text-violet-300'}">${d===Infinity?'∞':d}</span>
+            return `<div class="flex items-center justify-between px-3 py-1.5 text-xs hover:bg-slate-50 dark:hover:bg-slate-700/30">
+              <span class="mono font-bold ${settled?'text-emerald-600 dark:text-emerald-400':d===Infinity?'text-slate-400 dark:text-slate-600':'text-slate-800 dark:text-slate-200'}">${n.id}</span>
+              <span class="mono font-bold ${d===Infinity?'text-slate-400 dark:text-slate-600':'text-indigo-600 dark:text-violet-300'}">${d===Infinity?'∞':d}</span>
               <span class="mono text-slate-500 text-[10px]">${prev?'via '+prev:'—'}</span>
             </div>`;
           }).join('')}
@@ -867,36 +914,36 @@ const App = (() => {
   }
 
   function renderLSDBPanel(body) {
-    let html = `<div class="text-[9px] uppercase tracking-widest text-slate-500 mb-2 mono px-1">Type 1 & Type 2 LSA — Area 0</div>`;
+    let html = `<div class="text-[9px] uppercase tracking-widest text-slate-500 mb-2 mono px-1 font-bold">Type 1 & Type 2 LSA — Area 0</div>`;
 
     // Type 1: one per node
     graph.nodes.filter(n=>n.area==='0'||n.area==='ABR').forEach(n => {
       const myLinks = graph.links.filter(l => (l.from===n.id||l.to===n.id) && l.state==='up');
-      html += `<div class="rounded-xl bg-slate-800/60 border border-slate-700 overflow-hidden mb-2">
-        <div class="flex items-center gap-2 px-3 py-1.5 border-b border-slate-700/60 bg-blue-500/5">
-          <span class="text-[9px] mono font-bold text-blue-400 bg-blue-500/15 px-1.5 py-0.5 rounded">Type 1</span>
-          <span class="text-xs mono font-bold text-slate-200">${n.label}</span>
+      html += `<div class="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden mb-2">
+        <div class="flex items-center gap-2 px-3 py-1.5 border-b border-slate-200 dark:border-slate-700/60 bg-blue-500/5">
+          <span class="text-[9px] mono font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-500/15 px-1.5 py-0.5 rounded">Type 1</span>
+          <span class="text-xs mono font-bold text-slate-800 dark:text-slate-200">${n.label}</span>
           <span class="text-[10px] mono text-slate-500 ml-auto">${n.rid}</span>
         </div>
         ${myLinks.map(l=>{
           const peer = l.from===n.id?l.to:l.from;
           const bwt = BW_TYPES[l.bwType];
-          return `<div class="flex items-center gap-3 px-3 py-1 text-[10.5px] border-b border-slate-700/30 last:border-0">
+          return `<div class="flex items-center gap-3 px-3 py-1 text-[10.5px] border-b border-slate-100 dark:border-slate-700/30 last:border-0">
             <span class="mono text-slate-500 w-16 shrink-0">→ ${peer}</span>
-            <span class="mono text-slate-400">${bwt.label.split(' ')[0]}</span>
-            <span class="mono text-violet-300 ml-auto">cost ${bwt.cost}</span>
+            <span class="mono text-slate-600 dark:text-slate-400">${bwt.label.split(' ')[0]}</span>
+            <span class="mono text-indigo-600 dark:text-violet-300 ml-auto font-bold">cost ${bwt.cost}</span>
           </div>`;
         }).join('')}
-        ${myLinks.length===0?`<div class="px-3 py-1.5 text-[10px] text-slate-600 italic">Không có active link</div>`:''}
+        ${myLinks.length===0?`<div class="px-3 py-1.5 text-[10px] text-slate-500 italic">Không có active link</div>`:''}
       </div>`;
     });
 
     // Down links note
     const downLinks = graph.links.filter(l=>l.state==='down');
     if (downLinks.length>0) {
-      html += `<div class="rounded-xl bg-red-900/10 border border-red-800/40 p-3 mt-1">
-        <div class="text-[9px] mono font-bold text-red-400 mb-1 uppercase tracking-widest">Links DOWN — không có trong LSDB</div>
-        ${downLinks.map(l=>`<div class="text-[10.5px] mono text-red-400/70 py-0.5">${l.from} ↔ ${l.to} — LSA seq# tăng, link bị xóa</div>`).join('')}
+      html += `<div class="rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/40 p-3 mt-1 shadow-sm">
+        <div class="text-[9px] mono font-bold text-red-600 dark:text-red-400 mb-1 uppercase tracking-widest">Links DOWN — không có trong LSDB</div>
+        ${downLinks.map(l=>`<div class="text-[10.5px] mono text-red-600 dark:text-red-400/70 py-0.5">${l.from} ↔ ${l.to} — LSA seq# tăng, link bị xóa</div>`).join('')}
       </div>`;
     }
 
@@ -908,7 +955,7 @@ const App = (() => {
     const finalStep = spfResult.steps[spfResult.steps.length-1];
     if (!finalStep.dist) { body.innerHTML='<div class="text-xs text-slate-500 p-2">Chưa có kết quả SPF.</div>'; return; }
 
-    let html = `<div class="text-[9px] uppercase tracking-widest text-slate-500 mb-2 mono px-1">Routing Table — từ ${src}</div>`;
+    let html = `<div class="text-[9px] uppercase tracking-widest text-slate-500 mb-2 mono px-1 font-bold">Routing Table — từ ${src}</div>`;
 
     const baseSPF = dijkstra(BASE_GRAPH.nodes, BASE_GRAPH.links, src);
     const baseFinal = baseSPF.steps[baseSPF.steps.length-1];
@@ -922,24 +969,24 @@ const App = (() => {
       const isUnreachable = cost === Infinity;
       const isDst = n.id === dst;
 
-      html += `<div class="rounded-xl ${isDst?'border-amber-500/40 bg-amber-500/5':'border-slate-700 bg-slate-800/60'} border ${isChanged?'ring-1 ring-emerald-500/30':''} overflow-hidden mb-1.5">
-        <div class="flex items-center gap-2 px-3 py-2">
-          <span class="mono font-bold text-xs ${isUnreachable?'text-red-400':isDst?'text-amber-400':'text-slate-200'}">${n.id}</span>
+      html += `<div class="rounded-xl ${isDst?'border-amber-400 dark:border-amber-500/40 bg-amber-50/50 dark:bg-amber-500/5':'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/60'} border shadow-sm ${isChanged?'ring-2 ring-emerald-500/30':''} overflow-hidden mb-1.5">
+        <div class="flex items-center gap-2 px-3 py-2 bg-slate-50/50 dark:bg-transparent">
+          <span class="mono font-bold text-xs ${isUnreachable?'text-red-500 dark:text-red-400':isDst?'text-amber-600 dark:text-amber-400':'text-slate-800 dark:text-slate-200'}">${n.id}</span>
           <span class="mono text-[10px] text-slate-500">${n.rid}</span>
-          ${isDst?`<span class="ml-auto text-[9px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded mono font-bold">DST</span>`:''}
-          ${isChanged&&!isDst?`<span class="ml-auto text-[9px] text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded mono font-bold">CHANGED</span>`:''}
+          ${isDst?`<span class="ml-auto text-[9px] text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-400/10 px-1.5 py-0.5 rounded mono font-bold">DST</span>`:''}
+          ${isChanged&&!isDst?`<span class="ml-auto text-[9px] text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-400/10 px-1.5 py-0.5 rounded mono font-bold">CHANGED</span>`:''}
         </div>
-        <div class="border-t border-slate-700/50 grid grid-cols-2 divide-x divide-slate-700/50">
+        <div class="border-t border-slate-200 dark:border-slate-700/50 grid grid-cols-2 divide-x divide-slate-200 dark:divide-slate-700/50">
           <div class="px-3 py-1.5">
-            <div class="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Next-hop</div>
-            <div class="mono text-xs font-bold ${isUnreachable?'text-red-400':'text-violet-300'}">${isUnreachable?'UNREACHABLE':prev||'—'}</div>
+            <div class="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5 font-bold">Next-hop</div>
+            <div class="mono text-xs font-bold ${isUnreachable?'text-red-500 dark:text-red-400':'text-indigo-600 dark:text-violet-300'}">${isUnreachable?'UNREACHABLE':prev||'—'}</div>
           </div>
           <div class="px-3 py-1.5">
-            <div class="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Cost</div>
-            <div class="mono text-xs font-bold ${isUnreachable?'text-red-400':'text-emerald-300'}">${isUnreachable?'∞':cost}</div>
+            <div class="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5 font-bold">Cost</div>
+            <div class="mono text-xs font-bold ${isUnreachable?'text-red-500 dark:text-red-400':'text-emerald-600 dark:text-emerald-300'}">${isUnreachable?'∞':cost}</div>
           </div>
         </div>
-        ${isChanged?`<div class="border-t border-slate-700/30 px-3 py-1 text-[10px] mono text-slate-500">
+        ${isChanged?`<div class="border-t border-slate-100 dark:border-slate-700/30 px-3 py-1 text-[10px] mono text-slate-500 bg-slate-50 dark:bg-transparent">
           trước: via ${basePrev||'—'} cost ${baseCost===Infinity?'∞':baseCost}
         </div>`:''}
       </div>`;
