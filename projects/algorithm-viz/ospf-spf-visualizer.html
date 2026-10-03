@@ -126,47 +126,48 @@
 .dark .cost-path{background:#064e3b;border-color:#10b981;color:#34d399}
 
 /* right panel tabs */
-.rtab{padding:6px 14px;font-size:11px;font-weight:700;border-radius:8px;cursor:pointer;transition:all .18s;letter-spacing:.03em}
-.rtab.active{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;box-shadow:0 2px 10px rgba(99,102,241,.35)}
+.rtab{padding:6px 12px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;transition:all .18s;letter-spacing:.02em;border:1px solid transparent}
+.rtab.active{background:#ffffff;color:#2563eb;box-shadow:0 1px 3px rgba(0,0,0,.08);border-color:#e2e8f0}
+.dark .rtab.active{background:#1e293b;color:#60a5fa;box-shadow:0 1px 4px rgba(0,0,0,.3);border-color:#334155}
 .rtab:not(.active){color:#64748b}
-.rtab:not(.active):hover{color:#0f172a;background:#f1f5f9}
-.dark .rtab:not(.active):hover{color:#cbd5e1;background:#1e293b}
+.rtab:not(.active):hover{color:#0f172a;background:rgba(255,255,255,.6)}
+.dark .rtab:not(.active):hover{color:#cbd5e1;background:rgba(30,41,59,.6)}
 
 /* scenario pills */
 .sc-pill{
-  padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;
-  cursor:pointer;transition:all .2s;border:1.5px solid #cbd5e1;color:#64748b;
-  background:#ffffff;white-space:nowrap;
+  padding:5px 14px;border-radius:999px;font-size:12px;font-weight:700;
+  cursor:pointer;transition:all .18s;border:1px solid #cbd5e1;color:#64748b;
+  background:#ffffff;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;
 }
 .dark .sc-pill{border-color:#334155;color:#94a3b8;background:#0f172a}
-.sc-pill.active{border-color:#6366f1;color:#4f46e5;background:#6366f115}
-.dark .sc-pill.active{border-color:#6366f1;color:#818cf8;background:#6366f120}
-.sc-pill:not(.active):hover{border-color:#94a3b8;color:#0f172a}
-.dark .sc-pill:not(.active):hover{border-color:#475569;color:#cbd5e1}
+.sc-pill.active{border-color:#3b82f6;color:#ffffff;background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 2px 8px rgba(59,130,246,.3)}
+.dark .sc-pill.active{border-color:#6366f1;color:#ffffff;background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 2px 8px rgba(99,102,241,.3)}
+.sc-pill:not(.active):hover{border-color:#94a3b8;color:#0f172a;transform:translateY(-1px)}
+.dark .sc-pill:not(.active):hover{border-color:#475569;color:#f1f5f9;transform:translateY(-1px)}
 
 /* SPF step row */
-.spf-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;font-size:11.5px;transition:background .2s}
-.spf-row.current{background:#6366f115;border:1px solid #6366f130}
+.spf-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;font-size:12px;transition:background .2s}
+.spf-row.current{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25)}
 .spf-row.done{opacity:.5}
 
 /* routing table */
-.rt-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;padding:5px 8px;border-radius:6px;font-size:11px;align-items:center}
-.rt-row.changed{background:#06404020;border:1px solid #06404050}
+.rt-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;padding:6px 10px;border-radius:8px;font-size:12px;align-items:center}
+.rt-row.changed{background:rgba(6,64,64,.15);border:1px solid rgba(6,64,64,.4)}
 .rt-row.removed{opacity:.4;text-decoration:line-through}
 
 /* lsdb row */
-.lsdb-row{display:grid;grid-template-columns:60px 1fr 1fr 60px;gap:6px;padding:4px 8px;font-size:10.5px;align-items:center;border-radius:6px}
+.lsdb-row{display:grid;grid-template-columns:60px 1fr 1fr 60px;gap:6px;padding:5px 8px;font-size:11px;align-items:center;border-radius:6px}
 .lsdb-row:hover{background:#f1f5f9}
 .dark .lsdb-row:hover{background:#1e293b}
 
 /* control bar */
 #ctrl-bar{
-  background:rgba(255,255,255,.9);
+  background:rgba(255,255,255,.85);
   border-top:1px solid #e2e8f0;
   backdrop-filter:blur(12px);
 }
 .dark #ctrl-bar{
-  background:rgba(15,23,42,.92);
+  background:rgba(15,23,42,.85);
   border-top-color:#1e293b;
 }
 
@@ -182,7 +183,13 @@
 .dark .bw-opt:hover{background:#1e293b}
 
 /* teaching note */
-#teaching-note{border-left:3px solid #6366f1;background:#6366f108}
+#teaching-note{
+  border-left:4px solid #6366f1;
+  background:rgba(99,102,241,.06);
+}
+.dark #teaching-note{
+  background:rgba(99,102,241,.12);
+}
 
 /* spf auto animate */
 .spf-animate-in{animation:slideIn .25s ease both}
@@ -209,20 +216,20 @@
   </div>
 
   <!-- Scenario selector -->
-  <div class="flex items-center gap-2 overflow-x-auto flex-1 justify-center px-2" id="scenario-bar"></div>
+  <div class="flex items-center gap-2 overflow-x-auto flex-1 justify-center px-2 py-1" id="scenario-bar"></div>
 
   <!-- Controls right -->
   <div class="flex items-center gap-2 shrink-0">
     <!-- src / dst selectors -->
-    <div class="hidden md:flex items-center gap-1.5 bg-slate-800 rounded-lg px-2.5 py-1.5 text-xs">
-      <span class="text-blue-400 font-bold mono">SRC</span>
-      <select id="sel-src" class="bg-transparent text-slate-200 font-bold mono outline-none text-xs cursor-pointer"></select>
-      <i class="fas fa-arrow-right text-slate-600 text-[10px] mx-1"></i>
-      <span class="text-amber-400 font-bold mono">DST</span>
-      <select id="sel-dst" class="bg-transparent text-slate-200 font-bold mono outline-none text-xs cursor-pointer"></select>
+    <div class="hidden md:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+      <span class="text-blue-600 dark:text-blue-400 font-bold font-mono px-1">SRC</span>
+      <select id="sel-src" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 font-bold font-mono outline-none text-xs cursor-pointer shadow-sm focus:ring-2 focus:ring-blue-500"></select>
+      <i class="fas fa-arrow-right text-slate-400 dark:text-slate-500 text-xs mx-0.5"></i>
+      <span class="text-amber-600 dark:text-amber-400 font-bold font-mono px-1">DST</span>
+      <select id="sel-dst" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 font-bold font-mono outline-none text-xs cursor-pointer shadow-sm focus:ring-2 focus:ring-blue-500"></select>
     </div>
-    <button onclick="App.toggleTheme()" aria-label="Đổi giao diện Sáng/Tối" title="Đổi giao diện Sáng/Tối" class="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:-translate-y-0.5 transition-all text-sm">
-      <i class="fas fa-circle-half-stroke"></i>
+    <button onclick="App.toggleTheme()" aria-label="Đổi giao diện Sáng/Tối" title="Đổi giao diện Sáng/Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast">
+      <i id="theme-icon" class="fas fa-sun"></i>
     </button>
   </div>
 </header>
@@ -233,12 +240,12 @@
   <!-- LEFT: topology -->
   <div class="flex-1 flex flex-col min-h-[480px] xl:min-h-0 relative bg-white dark:bg-slate-950 border-b xl:border-b-0 xl:border-r border-slate-200 dark:border-slate-800/60">
     <!-- mobile src/dst -->
-    <div class="md:hidden flex items-center gap-2 px-3 pt-2 text-xs">
-      <span class="text-blue-400 font-bold mono">SRC</span>
-      <select id="sel-src-m" class="bg-slate-800 text-slate-200 mono outline-none text-xs rounded px-1 py-0.5 cursor-pointer"></select>
-      <i class="fas fa-arrow-right text-slate-600 text-[10px] mx-1"></i>
-      <span class="text-amber-400 font-bold mono">DST</span>
-      <select id="sel-dst-m" class="bg-slate-800 text-slate-200 mono outline-none text-xs rounded px-1 py-0.5 cursor-pointer"></select>
+    <div class="md:hidden flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs">
+      <span class="text-blue-600 dark:text-blue-400 font-bold font-mono">SRC</span>
+      <select id="sel-src-m" class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono outline-none text-xs rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1 cursor-pointer shadow-sm"></select>
+      <i class="fas fa-arrow-right text-slate-400 text-xs mx-1"></i>
+      <span class="text-amber-600 dark:text-amber-400 font-bold font-mono">DST</span>
+      <select id="sel-dst-m" class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono outline-none text-xs rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1 cursor-pointer shadow-sm"></select>
     </div>
     <div id="topo-wrap" class="flex-1">
       <svg id="topo-svg">
@@ -258,67 +265,83 @@
       <div id="topo-nodes"></div>
     </div>
     <!-- legend -->
-    <div class="px-4 py-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-500">
-      <span><span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Source</span>
-      <span><span class="inline-block w-2 h-2 rounded-full bg-amber-400 mr-1"></span>Destination</span>
-      <span><span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>Settled</span>
-      <span><span class="inline-block w-2 h-2 rounded-full bg-violet-400 mr-1"></span>Candidate</span>
-      <span><span class="inline-block w-2 h-2 rounded-full bg-pink-500 mr-1"></span>Processing</span>
-      <span class="text-slate-600 ml-2"><i class="fas fa-hand-pointer mr-1"></i>Click link để shutdown/đổi băng thông</span>
+    <div class="px-4 py-2.5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+      <span class="flex items-center"><span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5 shadow-sm"></span>Source</span>
+      <span class="flex items-center"><span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 mr-1.5 shadow-sm"></span>Destination</span>
+      <span class="flex items-center"><span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1.5 shadow-sm"></span>Settled</span>
+      <span class="flex items-center"><span class="inline-block w-2.5 h-2.5 rounded-full bg-violet-400 mr-1.5 shadow-sm"></span>Candidate</span>
+      <span class="flex items-center"><span class="inline-block w-2.5 h-2.5 rounded-full bg-pink-500 mr-1.5 shadow-sm"></span>Processing</span>
+      <span class="text-blue-600 dark:text-blue-400 font-medium ml-auto flex items-center"><i class="fas fa-hand-pointer mr-1"></i>Click link để shutdown / đổi băng thông</span>
     </div>
   </div>
 
   <!-- RIGHT: panel -->
-  <div class="w-full xl:w-[400px] flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
-    <!-- tabs -->
-    <div class="flex items-center gap-1.5 px-3 py-2.5 border-b border-slate-200 dark:border-slate-800 shrink-0">
-      <button class="rtab active" id="tab-spf" onclick="App.setTab('spf')">SPF Steps</button>
-      <button class="rtab" id="tab-lsdb" onclick="App.setTab('lsdb')">LSDB</button>
-      <button class="rtab" id="tab-rt" onclick="App.setTab('rt')">Routing Table</button>
+  <div class="w-full xl:w-[420px] flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <!-- panel header -->
+    <div class="p-3.5 pb-2.5 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold uppercase tracking-widest border border-blue-200 dark:border-blue-800 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+            <i class="fas fa-microchip mr-1.5"></i> SPF Engine
+          </span>
+          <h3 class="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Calculation State</h3>
+        </div>
+        <span class="text-xs font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+          Step <span id="panel-step-cur" class="text-blue-600 dark:text-blue-400">0</span>
+        </span>
+      </div>
+
+      <!-- tabs -->
+      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+        <button class="rtab active flex-1 text-center" id="tab-spf" onclick="App.setTab('spf')">SPF Steps</button>
+        <button class="rtab flex-1 text-center" id="tab-lsdb" onclick="App.setTab('lsdb')">LSDB</button>
+        <button class="rtab flex-1 text-center" id="tab-rt" onclick="App.setTab('rt')">Routing Table</button>
+      </div>
     </div>
 
     <!-- panel body -->
-    <div class="flex-1 overflow-y-auto px-3 py-3 space-y-2" id="panel-body"></div>
+    <div class="flex-1 overflow-y-auto p-3.5 space-y-3" id="panel-body"></div>
 
     <!-- teaching note -->
-    <div id="teaching-note" class="mx-3 mb-3 px-3 py-2.5 rounded-xl text-xs text-slate-400 hidden shrink-0"></div>
+    <div id="teaching-note" class="m-3 p-3.5 rounded-xl text-xs text-slate-700 dark:text-slate-300 hidden shrink-0 shadow-sm leading-relaxed"></div>
   </div>
 </main>
 
 <!-- ═══════════════════════════════ CONTROL BAR ═══════════════════════════════ -->
-<div id="ctrl-bar" class="sticky bottom-0 z-40 px-4 py-2.5 flex items-center justify-between gap-3">
+<div id="ctrl-bar" class="sticky bottom-0 z-40 px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
   <!-- SPF step controls -->
-  <div class="flex items-center gap-2">
-    <button onclick="App.spfPrev()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all text-sm" title="Bước trước">
-      <i class="fas fa-backward-step"></i>
+  <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700">
+    <button onclick="App.spfPrev()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-600 hover:shadow transition-all-fast" title="Bước trước">
+      <i class="fas fa-backward-step text-xs"></i>
     </button>
-    <button onclick="App.spfPlayPause()" id="btn-play" class="h-8 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white transition-all text-xs font-bold gap-1.5 shadow-sm">
-      <i class="fas fa-play" id="play-icon"></i><span id="play-lbl">Chạy SPF</span>
+    <button onclick="App.spfPlayPause()" id="btn-play" class="h-8 px-4 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center text-white transition-all-fast text-xs font-bold gap-1.5 shadow-md shadow-blue-500/30">
+      <i class="fas fa-play text-xs" id="play-icon"></i><span id="play-lbl">Chạy SPF</span>
     </button>
-    <button onclick="App.spfNext()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all text-sm" title="Bước tiếp">
-      <i class="fas fa-forward-step"></i>
+    <button onclick="App.spfNext()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-blue-600 hover:shadow transition-all-fast" title="Bước tiếp">
+      <i class="fas fa-forward-step text-xs"></i>
     </button>
-    <button onclick="App.spfReset()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all text-sm" title="Reset">
-      <i class="fas fa-rotate-left"></i>
+    <div class="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-0.5"></div>
+    <button onclick="App.spfReset()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast" title="Reset">
+      <i class="fas fa-rotate-left text-xs"></i>
     </button>
   </div>
 
   <!-- step indicator -->
-  <div class="text-xs mono text-slate-500 dark:text-slate-400 hidden sm:block">
-    Bước <span id="step-cur" class="text-slate-900 dark:text-slate-200 font-bold">0</span> / <span id="step-tot">0</span>
+  <div class="text-xs font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 hidden sm:flex items-center gap-1.5">
+    <span>Bước</span> <span id="step-cur" class="text-blue-600 dark:text-blue-400 font-extrabold">0</span> / <span id="step-tot">0</span>
   </div>
 
-  <!-- speed -->
-  <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-    <i class="fas fa-gauge-simple-high text-[10px]"></i>
+  <!-- speed slider -->
+  <div class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+    <i class="fas fa-gauge-simple-high text-xs text-blue-500"></i>
     <input type="range" id="speed-slider" min="200" max="1800" value="800" step="200"
-           class="w-20 accent-indigo-500 cursor-pointer" title="Tốc độ auto-play"/>
-    <span class="hidden sm:inline">Speed</span>
+           class="w-20 accent-blue-600 cursor-pointer" title="Tốc độ auto-play"/>
+    <span class="hidden sm:inline font-mono">Speed</span>
   </div>
 
   <!-- reset topo -->
-  <button onclick="App.resetTopology()" class="h-8 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all font-bold gap-1.5 flex items-center shadow-sm">
-    <i class="fas fa-arrows-rotate text-[11px]"></i><span class="hidden sm:inline">Reset Topology</span>
+  <button onclick="App.resetTopology()" class="h-8 px-3.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 text-xs text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition-all-fast font-bold gap-1.5 flex items-center shadow-sm">
+    <i class="fas fa-arrows-rotate text-xs text-indigo-500"></i><span class="hidden sm:inline">Reset Topology</span>
   </button>
 </div>
 
@@ -530,6 +553,9 @@ const App = (() => {
     buildSelectors();
     buildScenarioBar();
     document.addEventListener('click', () => closePopup());
+    const isDark = document.documentElement.classList.contains('dark');
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
   }
 
   function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
@@ -659,8 +685,12 @@ const App = (() => {
 
   function updateStepIndicator() {
     if (!spfResult) return;
-    document.getElementById('step-cur').textContent = spfStepIdx;
-    document.getElementById('step-tot').textContent = spfResult.steps.length - 1;
+    const cur = spfStepIdx;
+    const tot = spfResult.steps.length - 1;
+    document.getElementById('step-cur').textContent = cur;
+    document.getElementById('step-tot').textContent = tot;
+    const pCur = document.getElementById('panel-step-cur');
+    if (pCur) pCur.textContent = `${cur}/${tot}`;
   }
 
   // ── TOPOLOGY ────────────────────────────────────────
@@ -1053,6 +1083,8 @@ const App = (() => {
   function toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('portfolio-theme', isDark?'dark':'light');
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
     renderTopology();
   }
 
