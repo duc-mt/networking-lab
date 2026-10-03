@@ -420,8 +420,7 @@ const App = (() => {
                         }
                     }
                     if (onPath) linkClass = 'link-path';
-                }
-} else if (step.action === 'evaluate' && ((l.source === step.processing && l.target === step.from) || (l.target === step.processing && l.source === step.from))) {
+                } else if (step.action === 'evaluate' && ((l.source === step.processing && l.target === step.from) || (l.target === step.processing && l.source === step.from))) {
                     linkClass = 'link-candidate'; // evaluating this link
                 }
             }
