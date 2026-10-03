@@ -90,9 +90,11 @@
             <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-slate-500 opacity-50"></span><span class="text-slate-500 font-medium uppercase tracking-wider">Ngoài vùng (Blocked)</span></span>
         </div>
 
-        <!-- Tabs -->
-        <div class="flex flex-wrap items-center justify-center gap-3 mb-10" id="tabs-container">
-            <!-- Rendered by JS -->
+        <!-- Mode Toggle Panel (same style as STP Variants in Action) -->
+        <div class="flex items-center justify-center mb-10">
+            <div class="flex flex-wrap justify-center items-center bg-slate-200/50 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner gap-1" id="tabs-container">
+                <!-- Rendered by JS -->
+            </div>
         </div>
 
         <!-- Topology Canvas -->
@@ -163,7 +165,7 @@
         const playbookCases = [
             {
                 id: 'lsa1',
-                label: 'Type 1 (Router LSA)',
+                label: 'Type 1 <span class="font-normal text-[11px] opacity-75">Router</span>',
                 icon: 'fa-microchip',
                 topology: {
                     nodes: [
@@ -198,7 +200,7 @@ ADV Router      Age         Seq#       Checksum Link count
             },
             {
                 id: 'lsa2',
-                label: 'Type 2 (Network LSA)',
+                label: 'Type 2 <span class="font-normal text-[11px] opacity-75">Network</span>',
                 icon: 'fa-project-diagram',
                 topology: {
                     nodes: [
@@ -232,7 +234,7 @@ ADV Router      Age         Seq#       Checksum
             },
             {
                 id: 'lsa3',
-                label: 'Type 3 (Summary LSA)',
+                label: 'Type 3 <span class="font-normal text-[11px] opacity-75">Summary</span>',
                 icon: 'fa-layer-group',
                 topology: {
                     nodes: [
@@ -266,7 +268,7 @@ ADV Router      Age         Seq#       Checksum
             },
             {
                 id: 'lsa5',
-                label: 'Type 5 (External LSA)',
+                label: 'Type 5 <span class="font-normal text-[11px] opacity-75">External</span>',
                 icon: 'fa-globe-americas',
                 topology: {
                     nodes: [
@@ -300,7 +302,7 @@ ADV Router      Age         Seq#       Checksum Tag
             },
             {
                 id: 'lsa7',
-                label: 'Type 7 (NSSA External)',
+                label: 'Type 7 <span class="font-normal text-[11px] opacity-75">NSSA Ext</span>',
                 icon: 'fa-random',
                 topology: {
                     nodes: [
@@ -338,11 +340,18 @@ ADV Router      Age         Seq#       Checksum Tag
 
         function initTabs() {
             const container = document.getElementById('tabs-container');
-            container.innerHTML = playbookCases.map(c => `
-                <button onclick="switchTab('${c.id}')" id="tab-${c.id}" class="kb-tab flex items-center gap-2 px-5 py-2.5 rounded-full border ${c.id === activeCaseId ? 'active-tab' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'} font-medium text-sm">
-                    <i class="fas ${c.icon}"></i> ${c.label}
-                </button>
-            `).join('');
+            container.innerHTML = playbookCases.map(c => {
+                const isActive = c.id === activeCaseId;
+                const activeCls = 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 font-bold';
+                const inactiveCls = 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold';
+                
+                return `
+                    <button onclick="switchTab('${c.id}')" id="tab-${c.id}" class="mode-btn px-5 py-2 text-sm rounded-lg transition-all flex items-center gap-2 ${isActive ? activeCls : inactiveCls}">
+                        <i class="fas ${c.icon} text-xs"></i>
+                        <span>${c.label}</span>
+                    </button>
+                `;
+            }).join('');
         }
 
         window.switchTab = function(id) {
