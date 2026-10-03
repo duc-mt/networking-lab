@@ -55,6 +55,30 @@
 
 <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
 
+    <!-- Diagnostic Case Control Bar (Prominent UI Switcher) -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                <i class="fas fa-sliders text-sm"></i>
+            </div>
+            <div>
+                <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block">Kịch bản chẩn đoán</span>
+                <span id="active-case-label" class="text-sm font-extrabold text-slate-900 dark:text-white">Case 1 — Violation Shutdown (Mặc định)</span>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+            <button id="case-btn-shutdown" onclick="app.switchCase('shutdown')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-amber-500 text-white shadow cursor-pointer">
+                <i class="fas fa-ban mr-1.5"></i>Case 1: Shutdown
+            </button>
+            <button id="case-btn-restrict" onclick="app.switchCase('restrict')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                <i class="fas fa-shield-cat mr-1.5"></i>Case 2: Restrict
+            </button>
+            <button id="case-btn-recovery" onclick="app.switchCase('recovery')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                <i class="fas fa-clock-rotate-left mr-1.5"></i>Case 3: Recovery
+            </button>
+        </div>
+    </div>
+
     <!-- Symptom Banner -->
     <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl px-6 py-4 flex items-start gap-4">
         <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0 mt-0.5">
@@ -62,7 +86,7 @@
         </div>
         <div>
             <div class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">Ticket #INC-2024-0847 — Mức độ: HIGH</div>
-            <div class="font-bold text-red-800 dark:text-red-300">Triệu chứng: Nhân viên phòng Kế toán không vào được mạng sau khi IT move máy sang bàn mới. Toàn bộ máy tính tầng 3 vẫn hoạt động bình thường.</div>
+            <div id="symptom-text" class="font-bold text-red-800 dark:text-red-300">Triệu chứng: Nhân viên phòng Kế toán không vào được mạng sau khi IT move máy sang bàn mới. Toàn bộ máy tính tầng 3 vẫn hoạt động bình thường.</div>
         </div>
     </div>
 
@@ -84,12 +108,7 @@
             <div class="w-full overflow-x-auto">
                 <section id="topology-canvas" style="min-width: 900px;" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[500px] md:min-h-[580px]">
                 
-                <!-- Diagnostic Scenario Selector (Pill Tabs) -->
-                <div class="absolute top-4 left-4 z-30 flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <button id="case-btn-shutdown" onclick="app.switchCase('shutdown')" class="px-3 py-1 text-[11px] font-bold rounded-full transition-all bg-amber-500 text-white shadow-sm">Case 1: Shutdown</button>
-                    <button id="case-btn-restrict" onclick="app.switchCase('restrict')" class="px-3 py-1 text-[11px] font-bold rounded-full transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Case 2: Restrict</button>
-                    <button id="case-btn-recovery" onclick="app.switchCase('recovery')" class="px-3 py-1 text-[11px] font-bold rounded-full transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Case 3: Recovery</button>
-                </div>
+
 
                 <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
 

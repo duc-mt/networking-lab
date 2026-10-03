@@ -235,16 +235,6 @@ const PROJECTS = [
     },
 
     {
-        title: 'Network Bắt Bệnh #06 — DNS Resolution',
-        description:
-            'Ping by IP works fine, but hostnames fail — 8 KB cases of DNS resolution breaking on a flat LAN, same topology, one tab per failure mode.',
-        type: 'diagnostic-playbook',
-        tags: ['DNS', 'dnsmasq', 'resolv.conf', '/etc/hosts', 'nscd'],
-        href: 'projects/diagnostic-playbook/dns-resolution.html',
-        status: 'live',
-        dateAdded: '2026-09-27',
-    },
-    {
         title: 'OSPF Neighbor Adjacency',
         description:
             'Step through OSPF forming a Full adjacency between two routers — Hello packets, DBD exchange, and LSDB sync.',
@@ -334,16 +324,7 @@ const PROJECTS = [
         status: 'live',
         dateAdded: '2026-09-20',
     },
-    {
-        title: 'Hybrid Cloud Transit Topology (VyOS / OSPF)',
-        description:
-            'Bản đồ Topology tĩnh mô phỏng kiến trúc Hybrid Cloud qua VPN Tunnel và OSPF định tuyến động.',
-        type: 'topology-design',
-        tags: ['Cloud', 'VyOS', 'OSPF', 'GRE Tunnel', 'Topology'],
-        href: 'projects/topology-design/hybrid-cloud-transit.html',
-        status: 'live',
-        dateAdded: '2026-09-20',
-    },
+
     {
         title: 'BGP Peering FSM & Technical Traps',
         description:
