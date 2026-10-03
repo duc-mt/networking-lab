@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>OSPF LSA Types (11 Loại) — Diagnostic Playbook</title>
+  <script src="../../assets/js/theme-init.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/css/theme.css" />
+  <style>
+    .font-mono { font-family: 'Fira Code', monospace; }
+
+    /* Tab pill */
+    .tab-pill { transition: all 0.2s ease; }
+    .tab-pill.active {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(99,102,241,0.35);
+    }
+    .tab-pill:not(.active) { color: #64748b; }
+    .tab-pill:not(.active):hover { color: #3b82f6; background: rgba(59,130,246,0.08); }
+    .dark .tab-pill:not(.active) { color: #94a3b8; }
+
+    /* Topology canvas */
+    #topo-canvas {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      min-height: 400px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    #topo-svg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .net-node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      transition: all 0.3s ease;
+    }
+    .node-card {
+      background: #1e293b;
+      border: 2px solid #334155;
+      border-radius: 14px;
+      padding: 8px 14px;
+      min-width: 90px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+    .dark .node-card { background: #0f172a; }
+    .node-card.highlight {
+      border-color: #6366f1;
+      box-shadow: 0 0 20px rgba(99,102,241,0.45);
+    }
+    .node-card.scope-yes {
+      border-color: #10b981;
+      box-shadow: 0 0 15px rgba(16,185,129,0.3);
+    }
+    .node-card.scope-no {
+      border-color: #475569;
+      opacity: 0.45;
+    }
+    .node-icon { font-size: 18px; margin-bottom: 2px; }
+    .node-name { font-size: 11px; font-weight: 700; color: #e2e8f0; font-family: 'Fira Code', monospace; }
+    .node-sub  { font-size: 10px; color: #64748b; font-family: 'Fira Code', monospace; }
+    .role-badge {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; font-weight: 700; padding: 1px 6px;
+      border-radius: 999px; white-space: nowrap; letter-spacing: 0.05em;
+      background: #1e293b; border: 1px solid #334155; color: #94a3b8;
+    }
+    .status-badge {
+      position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; font-weight: 700; padding: 1px 8px;
+      border-radius: 999px; white-space: nowrap;
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* zone bounding box */
+    .zone-box {
+      position: absolute;
+      border: 2px dashed;
+      border-radius: 14px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .zone-label {
+      position: absolute;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 2px 8px;
+      border-radius: 4px;
+      opacity: 0.75;
+    }
+
+    /* LSA scope pill on node */
+    .lsa-scope-tag {
+      display: inline-block;
+      font-size: 9px; font-weight: 700;
+      padding: 1px 6px; border-radius: 999px;
+      margin-top: 2px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* terminal block */
+    .terminal {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      color: #94a3b8;
+      padding: 14px 16px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+    .terminal .cmd { color: #38bdf8; }
+    .terminal .ok  { color: #34d399; }
+    .terminal .hi  { color: #a78bfa; }
+    .terminal .warn { color: #fbbf24; }
+    .terminal .err { color: #f87171; }
+
+    /* field table */
+    .field-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .field-table th { text-align: left; padding: 5px 10px; background: #1e293b; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .field-table td { padding: 6px 10px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: top; }
+    .field-table tr:last-child td { border-bottom: none; }
+    .field-table td:first-child { font-family: 'Fira Code', monospace; color: #93c5fd; font-size: 11.5px; }
+
+    /* SVG link */
+    .link-line { stroke-width: 2; stroke-linecap: round; transition: all 0.3s; }
+    .link-active { stroke: #3b82f6; stroke-dasharray: 8 4; animation: dashflow 1.2s linear infinite; }
+    .link-passive { stroke: #334155; }
+    .link-highlight { stroke: #a78bfa; stroke-width: 2.5; stroke-dasharray: 6 3; animation: dashflow 0.8s linear infinite; }
+    @keyframes dashflow { to { stroke-dashoffset: -24; } }
+
+    .transition-all-fast { transition: all 0.18s ease; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-200 bg-slate-50 dark:bg-slate-950">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-50 py-3 px-6 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <a href="../../index.html" class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-extrabold hover:shadow-lg hover:scale-105 transition-all-fast"
+         style="background: linear-gradient(135deg,#3b82f6,#6366f1)" title="Về trang chủ Portfolio">
+      <i class="fas fa-network-wired" style="font-size:14px"></i>
+    </a>
+    <div>
+      <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+        <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+      </a>
+      <div class="text-sm font-extrabold tracking-tight text-slate-800 dark:text-slate-100">OSPF — 11 Loại LSA</div>
+    </div>
+  </div>
+  <button onclick="toggleTheme()" class="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:-translate-y-0.5 hover:shadow-lg transition-all-fast" title="Đổi theme">
+    <i class="fas fa-circle-half-stroke text-sm"></i>
+  </button>
+</header>
+
+<!-- MAIN -->
+<main class="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-10 space-y-10">
+
+  <!-- Title block -->
+  <div class="text-center space-y-2">
+    <div class="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-indigo-500/20">
+      <i class="fas fa-book-open"></i> Diagnostic Playbook · Routing / OSPF
+    </div>
+    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
+      Phân biệt 11 Loại LSA trong OSPF
+    </h1>
+    <p class="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-sm">
+      Mỗi tab tương ứng một loại LSA — cùng topology OSPF multi-area, nhưng phạm vi lan truyền (flooding scope) và nội dung payload thay đổi theo từng loại. Bao gồm Type 1–7 (OSPFv2) và Type 8–11 (OSPFv3 / Opaque LSA Extensions).
+    </p>
+  </div>
+
+  <!-- Legend -->
+  <div class="flex flex-wrap items-center justify-center gap-4 text-xs">
+    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:#10b981;opacity:0.85"></span><span class="text-slate-500 dark:text-slate-400">Nằm trong flooding scope</span></span>
+    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-slate-600 opacity-40"></span><span class="text-slate-500 dark:text-slate-400">Ngoài flooding scope</span></span>
+    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:#6366f1"></span><span class="text-slate-500 dark:text-slate-400">Nguồn phát sinh LSA</span></span>
+    <span class="flex items-center gap-1.5 font-mono text-purple-400">— — —</span><span class="text-slate-500 dark:text-slate-400">Virtual Link / LSA path</span>
+  </div>
+
+  <!-- Tab row -->
+  <div class="flex flex-wrap justify-center gap-2" id="tab-row"></div>
+
+  <!-- Content panel -->
+  <div id="content-panel" class="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6"></div>
+
+</main>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const LSA_DATA = [
+  {
+    id: 'lsa1', label: 'Type 1', sublabel: 'Router LSA',
+    color: '#3b82f6',
+    summary: 'Mô tả các interface và trạng thái kết nối của một Router. Mỗi router phát sinh 1 Type 1 LSA, lan truyền trong phạm vi một Area duy nhất.',
+    scope: 'Intra-Area',
+    origin: 'Mọi OSPF Router',
+    flooding: 'Chỉ trong Area gốc — không qua ABR, không qua ASBR',
+    lsid_rule: 'Router-ID của router phát sinh',
+    key_fields: [
+      ['Router-ID', '10.0.0.1 (R1)'],
+      ['Link Count', '3'],
+      ['Link Type', 'Stub / Transit / P2P / Virtual'],
+      ['Link ID / Data', 'IP network / interface IP'],
+      ['Metric (cost)', '1–65535 per link'],
+    ],
+    scope_nodes: ['R1','R2','R3','R4'],
+    origin_node: 'R1',
+    cli: `R1# show ip ospf database router
+
+            OSPF Router with ID (10.0.0.1) (Process ID 1)
+
+                Router Link States (Area 0)
+
+  LS age: 142
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 10.0.0.1
+  Advertising Router: 10.0.0.1
+  LS Seq Number: 80000008
+  Checksum: 0x72CB
+  Length: 60
+  Number of Links: 3
+
+    Link connected to: a Transit Network
+     (Link ID) Designated Router address: 192.168.1.2
+     (Link Data) Router Interface address: 192.168.1.1
+      Number of MTID metrics: 0
+       TOS 0 Metrics: 1
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.1.0.0
+     (Link Data) Network Mask: 255.255.255.0
+      TOS 0 Metrics: 10`,
+    takeaways: [
+      'Type 1 là "bản tự giới thiệu" — router nói: "Tôi có những link này, cost thế này".',
+      'Flooding scope = 1 Area → ABR không chuyển tiếp Type 1 sang area khác.',
+      'Link State ID = Router-ID → mỗi router chỉ có đúng 1 Type 1 LSA trên toàn mạng.',
+      'Là nguyên liệu đầu vào trực tiếp để SPF tính shortest path trong area.',
+    ],
+    flood_path: ['R1','R2','R3'],
+  },
+  {
+    id: 'lsa2', label: 'Type 2', sublabel: 'Network LSA',
+    color: '#06b6d4',
+    summary: 'Mô tả một mạng multi-access (Ethernet/Frame Relay) và danh sách các Router kết nối vào đó. Chỉ Designated Router (DR) mới phát sinh Type 2 LSA.',
+    scope: 'Intra-Area',
+    origin: 'Designated Router (DR)',
+    flooding: 'Chỉ trong Area của mạng multi-access — không qua ABR',
+    lsid_rule: 'IP interface của DR trên mạng multi-access',
+    key_fields: [
+      ['Link State ID', '192.168.1.2 (IP của DR)'],
+      ['Advertising Router', '10.0.0.2 (Router-ID của DR)'],
+      ['Network Mask', '/24 — đại diện subnet này'],
+      ['Attached Router', 'R1 (10.0.0.1), R2 (10.0.0.2), R3 (10.0.0.3)'],
+      ['Metric', 'Không có — cost nằm trong Type 1 LSA'],
+    ],
+    scope_nodes: ['R1','R2','R3','R4'],
+    origin_node: 'R2',
+    cli: `R2# show ip ospf database network
+
+            OSPF Router with ID (10.0.0.2) (Process ID 1)
+
+                Net Link States (Area 0)
+
+  LS age: 88
+  Options: (No TOS-capability, DC)
+  LS Type: Network Links
+  Link State ID: 192.168.1.2 (address of Designated Router)
+  Advertising Router: 10.0.0.2
+  LS Seq Number: 80000004
+  Checksum: 0x1A3F
+  Length: 32
+  Network Mask: /24
+        Attached Router: 10.0.0.1
+        Attached Router: 10.0.0.2
+        Attached Router: 10.0.0.3`,
+    takeaways: [
+      'Type 2 chỉ tồn tại trên broadcast/NBMA segment — P2P và P2MP không sinh Type 2.',
+      'DR phát sinh, BDR sẵn sàng thế chỗ nếu DR down.',
+      'Flooding scope = intra-area, giống Type 1. Hai loại này cùng xây dựng LSDB trong một area.',
+      'Khi DR down, DR mới phát sinh Type 2 LSA mới với seq# cao hơn — Type 2 cũ sẽ expire.',
+    ],
+    flood_path: ['R2','R1','R3'],
+  },
+  {
+    id: 'lsa3', label: 'Type 3', sublabel: 'Summary LSA',
+    color: '#a78bfa',
+    summary: 'ABR phát sinh để quảng bá prefix từ area này sang area khác. Type 3 là "đại sứ" — không mang chi tiết topology, chỉ mang địa chỉ và cost tổng hợp.',
+    scope: 'Inter-Area (qua ABR)',
+    origin: 'Area Border Router (ABR)',
+    flooding: 'Lan truyền sang các area khác — nhưng không vượt qua ASBR (không ra ngoài AS)',
+    lsid_rule: 'Địa chỉ mạng được quảng bá (network prefix)',
+    key_fields: [
+      ['Link State ID', '10.1.0.0 (prefix của Area 1)'],
+      ['Advertising Router', '10.0.0.4 (Router-ID của ABR)'],
+      ['Network Mask', '255.255.255.0'],
+      ['Metric', 'Cost tích lũy từ ABR tới prefix đó'],
+      ['Area', 'Phát sinh vào Area 0 từ Area 1'],
+    ],
+    scope_nodes: ['R1','R2','R3','R4','ABR1','R5'],
+    origin_node: 'ABR1',
+    cli: `ABR1# show ip ospf database summary
+
+            OSPF Router with ID (10.0.0.4) (Process ID 1)
+
+                Summary Net Link States (Area 0)
+
+  LS age: 210
+  Options: (No TOS-capability, DC)
+  LS Type: Summary Links(Network)
+  Link State ID: 10.1.0.0 (summary Network Number)
+  Advertising Router: 10.0.0.4
+  LS Seq Number: 80000003
+  Checksum: 0x5F2A
+  Length: 28
+  Network Mask: /24
+        MTID: 0         Metric: 20
+
+                Summary Net Link States (Area 1)
+
+  Link State ID: 10.0.0.0 (summary Network Number)
+  Advertising Router: 10.0.0.4
+  LS Seq Number: 80000002
+  Checksum: 0x3B1C
+  Length: 28
+  Network Mask: /24
+        MTID: 0         Metric: 10`,
+    takeaways: [
+      'Type 3 là cầu nối giữa các area — không bao giờ chứa thông tin topology chi tiết.',
+      'ABR tạo Type 3 mới (không forward Type 1/2) → inter-area routing là distance-vector, không phải link-state.',
+      'Trong Stub/Totally Stub area, ABR chặn một phần hoặc toàn bộ Type 3 LSA.',
+      'Điều này là nguồn gốc của hiện tượng "routing loop" nếu cấu hình area sai trong topology phức tạp.',
+    ],
+    flood_path: ['ABR1','R1','R2','R3','R5'],
+  },
+  {
+    id: 'lsa4', label: 'Type 4', sublabel: 'ASBR Summary LSA',
+    color: '#f59e0b',
+    summary: 'ABR phát sinh để thông báo cho các router trong area biết "cách đến ASBR" nằm ở area khác. Type 4 không quảng bá route external — chỉ quảng bá vị trí của ASBR.',
+    scope: 'Inter-Area (quảng bá vị trí ASBR)',
+    origin: 'ABR (thay mặt ASBR ở area khác)',
+    flooding: 'Lan sang các area cần biết đường đến ASBR — không vào area chứa ASBR, không vào Stub area',
+    lsid_rule: 'Router-ID của ASBR',
+    key_fields: [
+      ['Link State ID', '10.0.0.6 (Router-ID của ASBR)'],
+      ['Advertising Router', '10.0.0.4 (ABR phát sinh)'],
+      ['Network Mask', '/0 (không dùng — luôn là 0.0.0.0)'],
+      ['Metric', 'Cost từ ABR tới ASBR trong area của ASBR'],
+      ['Mục đích', 'Đưa router ngoài area biết "cửa vào" tới external routes'],
+    ],
+    scope_nodes: ['R1','R2','R3','R4','ABR1','ASBR'],
+    origin_node: 'ABR1',
+    cli: `R1# show ip ospf database asbr-summary
+
+            OSPF Router with ID (10.0.0.1) (Process ID 1)
+
+                Summary ASB Link States (Area 0)
+
+  LS age: 302
+  Options: (No TOS-capability, DC)
+  LS Type: Summary Links(AS Boundary Router)
+  Link State ID: 10.0.0.6 (AS Boundary Router address)
+  Advertising Router: 10.0.0.4
+  LS Seq Number: 80000001
+  Checksum: 0x9D48
+  Length: 28
+  Network Mask: /0
+        MTID: 0         Metric: 5`,
+    takeaways: [
+      'Type 4 đi cùng với Type 5 — thiếu Type 4, router trong area khác không thể resolve next-hop của Type 5.',
+      'Không cần Type 4 nếu router đang ở cùng area với ASBR — vì đã có Type 1/2 để tính đường.',
+      'Stub/Totally Stub area không nhận Type 4 (cũng không nhận Type 5).',
+      'Type 4 Advertising Router = ABR, không phải ASBR — đây là điểm dễ nhầm.',
+    ],
+    flood_path: ['ABR1','R1','R2','R3'],
+  },
+  {
+    id: 'lsa5', label: 'Type 5', sublabel: 'AS External LSA',
+    color: '#ef4444',
+    summary: 'ASBR phát sinh để quảng bá các route học được từ bên ngoài OSPF (BGP, EIGRP, static, connected). Type 5 lan truyền trên toàn bộ AS — ngoại trừ Stub area.',
+    scope: 'AS-Wide (toàn bộ OSPF domain)',
+    origin: 'AS Boundary Router (ASBR)',
+    flooding: 'Toàn bộ AS — không vào Stub, Totally Stub, NSSA area',
+    lsid_rule: 'Địa chỉ mạng external được redistribute vào',
+    key_fields: [
+      ['Link State ID', '8.8.8.0 (external network)'],
+      ['Advertising Router', '10.0.0.6 (ASBR)'],
+      ['Network Mask', '255.255.255.0'],
+      ['Metric Type', 'E1 (cost tích lũy) hoặc E2 (cost cố định — default)'],
+      ['External Metric', '20 (redistributed từ BGP)'],
+      ['Forwarding Address', '0.0.0.0 → dùng ASBR làm next-hop'],
+    ],
+    scope_nodes: ['R1','R2','R3','R4','ABR1','ASBR'],
+    origin_node: 'ASBR',
+    cli: `R1# show ip ospf database external
+
+            OSPF Router with ID (10.0.0.1) (Process ID 1)
+
+                Type-5 AS External Link States
+
+  LS age: 88
+  Options: (No TOS-capability, DC)
+  LS Type: AS External Link
+  Link State ID: 8.8.8.0 (External Network Number)
+  Advertising Router: 10.0.0.6
+  LS Seq Number: 80000005
+  Checksum: 0xA21B
+  Length: 36
+  Network Mask: /24
+        Metric Type: 2 (Larger than any link state path)
+        MTID: 0
+        Metric: 20
+        Forward Address: 0.0.0.0
+        External Route Tag: 0`,
+    takeaways: [
+      'E2 (mặc định): metric không tăng theo đường đi — mọi router thấy cost = 20.',
+      'E1: metric tích lũy = external cost + OSPF cost từ router tới ASBR → phản ánh đúng hơn.',
+      'Type 5 + Type 4 phải đi đôi với nhau — Type 4 giải thích "ASBR ở đâu".',
+      'Redistribute quá nhiều route external vào OSPF làm LSDB phình to — cần dùng summary/filter cẩn thận.',
+    ],
+    flood_path: ['ASBR','ABR1','R1','R2','R3','R4','R5'],
+  },
+  {
+    id: 'lsa6', label: 'Type 6', sublabel: 'Group Membership LSA',
+    color: '#64748b',
+    summary: 'Type 6 thuộc về MOSPF (Multicast OSPF — RFC 1584) để quảng bá thông tin nhóm multicast. Loại LSA này cực kỳ hiếm gặp trong thực tế và hầu như không được triển khai.',
+    scope: 'Intra-Area (lý thuyết)',
+    origin: 'MOSPF Router (RFC 1584)',
+    flooding: 'Trong area — nhưng MOSPF gần như không được dùng trong các vendor hiện đại',
+    lsid_rule: 'Multicast group address',
+    key_fields: [
+      ['Trạng thái thực tế', 'Obsolete / Not implemented in Cisco IOS, Junos'],
+      ['RFC', 'RFC 1584 (1994) — coi như đã deprecated'],
+      ['Thay thế bằng', 'PIM-SM + MSDP + BGP Multicast'],
+      ['Cisco IOS', 'Không hỗ trợ Type 6 trong ospf process thông thường'],
+      ['Gặp trong thi?', 'Có — CCIE/CCNP vẫn hỏi để phân biệt 7 loại LSA'],
+    ],
+    scope_nodes: [],
+    origin_node: null,
+    cli: `! Type 6 (MOSPF) — RFC 1584 — Gần như không còn tồn tại
+! Cisco IOS không implement MOSPF
+! Không có lệnh "show ip ospf database group-membership"
+
+! Thay thế hiện đại:
+R1# show ip pim neighbor
+R1# show ip mroute
+R1# show ip msdp peer
+
+! Lưu ý thi:
+! - Biết Type 6 = Group Membership LSA (MOSPF)
+! - Biết nó obsolete và không deploy thực tế
+! - Vendor implementation: NONE (Cisco, Juniper, Arista đều bỏ qua)`,
+    takeaways: [
+      'Type 6 tồn tại trên giấy (RFC) nhưng không ai implement — đừng tốn công học sâu.',
+      'Trong thực tế, multicast dùng PIM (Protocol Independent Multicast) thay thế MOSPF.',
+      'Kỳ thi CCNP/CCIE vẫn liệt kê Type 6 trong danh sách 7 loại LSA — nhớ tên và mục đích là đủ.',
+      'Nếu thấy Type 6 trong LSDB thực tế — đó là dấu hiệu bất thường, cần kiểm tra lại.',
+    ],
+    flood_path: [],
+  },
+  {
+    id: 'lsa7', label: 'Type 7', sublabel: 'NSSA External LSA',
+    color: '#10b981',
+    summary: 'Tương tự Type 5 nhưng chỉ tồn tại bên trong NSSA (Not-So-Stubby Area). ASBR trong NSSA phát sinh Type 7; khi ra khỏi NSSA, ABR chuyển đổi Type 7 → Type 5.',
+    scope: 'NSSA Area + Conversion sang Type 5',
+    origin: 'ASBR trong NSSA area',
+    flooding: 'Chỉ trong NSSA area; ABR biên giới convert sang Type 5 để lan ra ngoài',
+    lsid_rule: 'Địa chỉ mạng external (giống Type 5)',
+    key_fields: [
+      ['Link State ID', '172.16.0.0 (external network)'],
+      ['Advertising Router', '10.0.0.5 (ASBR trong NSSA)'],
+      ['Metric Type', 'N1 (tương đương E1) hoặc N2 (tương đương E2)'],
+      ['P-bit (Propagate)', 'P=1 → ABR sẽ convert sang Type 5 khi ra ngoài NSSA'],
+      ['Forwarding Address', 'IP thực của ASBR — khác Type 5 (không phải 0.0.0.0)'],
+    ],
+    scope_nodes: ['R1','R2','R3','R4','ABR1','R5','ASBR_N'],
+    origin_node: 'ASBR_N',
+    cli: `R5# show ip ospf database nssa-external
+
+            OSPF Router with ID (10.0.0.5) (Process ID 1)
+
+                Type-7 AS External Link States (Area 2 - NSSA)
+
+  LS age: 55
+  Options: (No TOS-capability, N/P)
+  LS Type: AS NSSA External Link
+  Link State ID: 172.16.0.0 (External Network Number)
+  Advertising Router: 10.0.0.5
+  LS Seq Number: 80000002
+  Checksum: 0xC34D
+  Length: 36
+  Network Mask: /24
+        Metric Type: 2 (Larger than any link state path)
+        MTID: 0
+        Metric: 20
+        Forward Address: 10.0.5.1  ← Khác Type 5!
+        External Route Tag: 0
+        P-bit: Set (ABR sẽ convert sang Type 5)
+
+ABR1# show ip ospf database external
+! → Thấy Type 5 với prefix 172.16.0.0 do ABR1 generate sau khi convert`,
+    takeaways: [
+      'NSSA sinh ra để cho phép Stub-like area vẫn có thể redistribute external route.',
+      'Forwarding Address trong Type 7 là IP thực của ASBR — router ngoài area cần biết địa chỉ này.',
+      'P-bit = 1 (set) → ABR biên giới sẽ tự động tạo Type 5 tương ứng khi quảng bá ra ngoài.',
+      'Nếu có nhiều ABR biên giới NSSA, chỉ ABR có Router-ID cao nhất mới convert Type 7 → Type 5.',
+    ],
+    flood_path: ['ASBR_N','R5','ABR1'],
+  },
+  {
+    id: 'lsa8', label: 'Type 8', sublabel: 'Link LSA (OSPFv3)',
+    color: '#0ea5e9',
+    summary: 'Chỉ tồn tại trong OSPFv3. Mỗi router phát sinh một Type 8 LSA per link để quảng bá địa chỉ link-local IPv6 và danh sách prefix IPv6 trên interface đó. Phạm vi lan truyền cực hẹp — chỉ trên một link duy nhất.',
+    scope: 'Link-local Scope (chỉ 1 link)',
+    origin: 'Mọi OSPFv3 Router (1 LSA per interface)',
+    flooding: 'Chỉ trên link (segment) nơi LSA được phát sinh — không vượt qua router',
+    lsid_rule: 'Interface ID của router trên link đó',
+    key_fields: [
+      ['Chỉ có trong', 'OSPFv3 (IPv6) — không tồn tại trong OSPFv2'],
+      ['Link State ID', 'Interface ID (ví dụ: 3 — gán bởi router cho interface)'],
+      ['Advertising Router', 'Router-ID của router phát sinh'],
+      ['Router Priority', 'Dùng để bầu DR/BDR (thay cho field trong Hello packet)'],
+      ['Link-local Address', 'FE80::1 — địa chỉ link-local của interface'],
+      ['Prefix List', 'Các IPv6 prefix được gán trực tiếp trên interface này'],
+    ],
+    scope_nodes: ['R1','R2'],
+    origin_node: 'R1',
+    cli: `! OSPFv3 — Type 8 Link LSA
+R1# show ipv6 ospf database link
+
+            OSPFv3 Router with ID (10.0.0.1) (Process ID 1)
+
+                Link (Type-8) Link States (Interface GigabitEthernet0/0)
+
+  LS age: 120
+  LS Type: Link-LSA
+  Link State ID: 0x00000003 (Interface ID of this router)
+  Advertising Router: 10.0.0.1
+  LS Seq Number: 80000002
+  Checksum: 0x4A2C
+  Length: 56
+  Router Priority: 1
+  Options: (V6-Bit, E-Bit, R-Bit)
+  Link-Local Address: FE80::C800:1DFF:FE28:0
+  Number of Prefixes: 1
+  Prefix Address: 2001:DB8:0:12::
+  Prefix Length: 64
+  Prefix Options: 0x0
+
+! NOTE: Type 8 chỉ flood trong 1 link — không thấy ở router khác trên segment khác`,
+    takeaways: [
+      'Type 8 = OSPFv3 tương đương với phần "interface address" mà OSPFv2 gắn vào Type 1/2 LSA.',
+      'Flooding scope cực hẹp: link-local — không đi qua bất kỳ router nào, kể cả DR.',
+      'Tách biệt địa chỉ link-local ra khỏi Type 9 (intra-area prefix) là thiết kế quan trọng của OSPFv3.',
+      'Trong OSPFv2, thông tin tương đương nằm rải rác trong Type 1 và Type 2 — OSPFv3 tách rõ hơn.',
+    ],
+    flood_path: ['R1','R2'],
+  },
+  {
+    id: 'lsa9', label: 'Type 9', sublabel: 'Opaque LSA — Link-local',
+    color: '#f97316',
+    summary: 'Opaque LSA có phạm vi link-local. Trong OSPFv2, dùng cho Graceful Restart (RFC 3623) và LDP IGP Synchronization. Trong OSPFv3, Type 9 còn đảm nhận vai trò "Intra-Area-Prefix LSA" — quảng bá các prefix IPv6 intra-area.',
+    scope: 'Link-local Scope (OSPFv2) / Intra-Area Prefix (OSPFv3)',
+    origin: 'Mọi router hỗ trợ Opaque LSA (RFC 2370)',
+    flooding: 'Chỉ trên một link (OSPFv2 Opaque) hoặc trong area (OSPFv3 Intra-Area-Prefix)',
+    lsid_rule: 'Opaque Type (1 byte) + Opaque ID (3 bytes)',
+    key_fields: [
+      ['RFC', 'RFC 2370 (Opaque LSA), RFC 3623 (Graceful Restart), RFC 5340 (OSPFv3)'],
+      ['Opaque Type', '1 = Grace-LSA (Graceful Restart), 4 = RI LSA (Router Information)'],
+      ['Link State ID format', '0x01000001 = Type 1, Instance 1'],
+      ['Ứng dụng thực tế', 'Graceful Restart, MPLS Traffic Engineering (TE), Segment Routing'],
+      ['OSPFv3 dual-role', 'Type 9 trong OSPFv3 = Intra-Area-Prefix LSA (mang IPv6 prefix)'],
+      ['Vendor support', 'Cisco IOS, Junos, Arista EOS đều hỗ trợ'],
+    ],
+    scope_nodes: ['R1','R2'],
+    origin_node: 'R1',
+    cli: `! OSPFv2 — Type 9 Opaque LSA (Grace LSA — Graceful Restart)
+R1# show ip ospf database opaque-link
+
+            OSPF Router with ID (10.0.0.1) (Process ID 1)
+
+                Link-Local Opaque Link States (Interface GigabitEthernet0/0)
+
+  LS age: 12
+  Options: (No TOS-capability, DC)
+  LS Type: Opaque Link-Local
+  Link State ID: 1.0.0.1 (Opaque Type 1, Opaque ID 1)
+  Advertising Router: 10.0.0.1
+  LS Seq Number: 80000001
+  Checksum: 0x3B7F
+  Length: 36
+  Opaque Type: 1 (Grace-LSA)
+    TLV Type: 1 (Grace Period)
+    TLV Length: 4
+    Grace Period: 120 seconds
+    TLV Type: 2 (Graceful Restart Reason)
+    Restart Reason: Software Restart (2)
+
+! OSPFv3 — Type 9 Intra-Area-Prefix LSA
+R1# show ipv6 ospf database prefix
+  LS Type: Intra-Area-Prefix-LSA
+  Link State ID: 0x00000001
+  Advertising Router: 10.0.0.1
+  Referenced LS Type: 0x2001 (Router-LSA)
+  Number of Prefixes: 2
+  Prefix: 2001:DB8:0:1::/64  Metric: 10`,
+    takeaways: [
+      'Graceful Restart (GR): router gửi Grace-LSA báo "tôi sắp restart, hãy giữ adjacency trong 120s".',
+      'Opaque LSA là "container" mở rộng — bất kỳ ứng dụng nào (MPLS-TE, SR, BFD) có thể nhét TLV vào.',
+      'OSPFv3 tái sử dụng Type 9 làm Intra-Area-Prefix LSA để tách địa chỉ IPv6 ra khỏi Router-LSA.',
+      'Nếu thấy Grace-LSA trong production, router đang hoặc vừa thực hiện Graceful Restart — bình thường.',
+    ],
+    flood_path: ['R1','R2'],
+  },
+  {
+    id: 'lsa10', label: 'Type 10', sublabel: 'Opaque LSA — Area-scope',
+    color: '#8b5cf6',
+    summary: 'Opaque LSA với phạm vi area. Đây là loại Opaque LSA phổ biến nhất trong thực tế — MPLS Traffic Engineering dùng Type 10 để phân phối thông tin TE (bandwidth, delay, affinity) cho Constrained SPF (CSPF).',
+    scope: 'Area-local Scope',
+    origin: 'Router hỗ trợ Opaque / MPLS-TE',
+    flooding: 'Trong toàn bộ area — không vượt ABR (trừ khi ABR forward bằng Type 11)',
+    lsid_rule: 'Opaque Type (1 byte) + Opaque ID (3 bytes)',
+    key_fields: [
+      ['Opaque Type 1', 'Traffic Engineering LSA (RFC 3630) — mang TE TLVs'],
+      ['Opaque Type 4', 'Router Information (RI) LSA — mang Node Segment ID (SR)'],
+      ['TLV quan trọng', 'Router Address TLV, Link TLV (BW, delay, color/affinity, TE metric)'],
+      ['CSPF', 'Constraint SPF dùng Type 10 thay cho Type 1/2 để tính TE path'],
+      ['Segment Routing', 'SR-OSPF dùng Type 10 để quảng bá Node SID và Adj SID'],
+      ['Junos command', 'show ospf database opaque-area'],
+    ],
+    scope_nodes: ['R1','R2','R3','R4','ABR1'],
+    origin_node: 'R2',
+    cli: `! MPLS Traffic Engineering — Type 10 Opaque LSA
+R2# show ip ospf database opaque-area
+
+            OSPF Router with ID (10.0.0.2) (Process ID 1)
+
+                Area Opaque Link States (Area 0)
+
+  LS age: 340
+  Options: (No TOS-capability, DC)
+  LS Type: Opaque Area Link
+  Link State ID: 1.0.0.2 (Opaque Type 1, Opaque ID 2)
+  Advertising Router: 10.0.0.2
+  LS Seq Number: 80000006
+  Checksum: 0xF12A
+  Length: 132
+  Opaque Type: 1 (Traffic Engineering LSA)
+
+    TLV Type: 1 (Router Address)
+    TLV Length: 4
+    Router Address: 10.0.0.2
+
+    TLV Type: 2 (Link)
+      Sub-TLV Type: 1 (Link Type): Point-to-Point
+      Sub-TLV Type: 2 (Link ID): 10.0.0.1
+      Sub-TLV Type: 6 (Max Bandwidth): 1000000 kbits/sec
+      Sub-TLV Type: 7 (Max Reservable Bandwidth): 800000 kbits/sec
+      Sub-TLV Type: 8 (Unreserved Bandwidth):
+        [0]: 800000  [1]: 800000  [2]: 800000  [3]: 800000
+      Sub-TLV Type: 9 (TE Metric): 10
+      Sub-TLV Type: 22 (Unidirectional Link Delay): 500 us`,
+    takeaways: [
+      'Type 10 là "xương sống" của MPLS-TE trong OSPF — RSVP-TE dùng thông tin này để chọn đường.',
+      'TE LSA chứa Unreserved Bandwidth (8 priority levels) — CSPF dùng để tính path thỏa bandwidth constraint.',
+      'Segment Routing over OSPF (SR-OSPF) cũng dùng Type 10 để quảng bá Node SID và Adj SID.',
+      'Flooding scope = area → CSPF chỉ tính TE path trong một area; inter-area TE cần thêm cơ chế khác.',
+    ],
+    flood_path: ['R2','R1','R3','R4','ABR1'],
+  },
+  {
+    id: 'lsa11', label: 'Type 11', sublabel: 'Opaque LSA — AS-scope',
+    color: '#ec4899',
+    summary: 'Opaque LSA với phạm vi toàn bộ AS (giống Type 5). Hiếm gặp hơn Type 10 trong thực tế, nhưng được dùng cho các tính năng cần quảng bá thông tin router-level trên toàn domain như Router Information (RI) LSA và một số extension của Segment Routing.',
+    scope: 'AS-Wide Scope (toàn OSPF domain)',
+    origin: 'Router hỗ trợ Opaque / SR / RI LSA',
+    flooding: 'Toàn bộ AS — vượt qua ABR (khác Type 10), không vào Stub area',
+    lsid_rule: 'Opaque Type (1 byte) + Opaque ID (3 bytes)',
+    key_fields: [
+      ['Opaque Type 4', 'Router Information (RI) LSA — RFC 7770'],
+      ['RI Capabilities', 'OSPF Graceful Restart, TE, P2P LAN, Experimental TE'],
+      ['SR Extension', 'Segment Routing Algorithm TLV (Flex-Algo), MSD (Max SID Depth)'],
+      ['Scope vs Type 10', 'Type 11 vượt ABR → dùng khi cần thông tin router trên toàn AS'],
+      ['Flood scope', 'Giống Type 5 nhưng dành cho Opaque data, không phải routing prefix'],
+      ['Stub area', 'Không nhận Type 11 — giống Type 5'],
+    ],
+    scope_nodes: ['R1','R2','R3','R4','ABR1','R5','ASBR'],
+    origin_node: 'R4',
+    cli: `! Router Information (RI) LSA — Type 11 Opaque
+R4# show ip ospf database opaque-as
+
+            OSPF Router with ID (10.0.0.4) (Process ID 1)
+
+                AS Opaque Link States
+
+  LS age: 88
+  Options: (No TOS-capability, DC)
+  LS Type: Opaque AS Link
+  Link State ID: 4.0.0.1 (Opaque Type 4, Opaque ID 1)
+  Advertising Router: 10.0.0.4
+  LS Seq Number: 80000003
+  Checksum: 0x7C5A
+  Length: 52
+  Opaque Type: 4 (Router Information)
+
+    TLV Type: 1 (Router Informational Capabilities)
+    TLV Length: 4
+    Capabilities: GR Helper, TE, P2P LAN Adjacency
+
+    TLV Type: 6 (SR-Algorithm)
+    TLV Length: 2
+    Algorithm: 0 (Shortest Path First)
+    Algorithm: 1 (Strict Shortest Path First)
+
+    TLV Type: 7 (SID/Label Range)
+    TLV Length: 12
+    Range Size: 8000
+    Sub-TLV SID/Label: 16000`,
+    takeaways: [
+      'Type 11 RI LSA: mỗi router "giới thiệu" khả năng của mình (GR, TE, SR) cho toàn AS biết.',
+      'Segment Routing Flex-Algorithm dùng Type 11 để quảng bá thuật toán tính đường trên toàn domain.',
+      'MSD (Maximum SID Depth) trong Type 11 cho biết router có thể xử lý tối đa bao nhiêu label trong stack.',
+      'Type 11 vượt ABR → đây là điểm khác biệt then chốt với Type 10 (area-scoped).',
+    ],
+    flood_path: ['R4','R1','R2','R3','ABR1','R5','ASBR'],
+  },
+];
+
+// ─────────────────────────────────────────────
+// TOPOLOGY — nodes & links (multi-area OSPF)
+// REF_W=900, REF_H=400
+// ─────────────────────────────────────────────
+const TOPO = {
+  nodes: [
+    { id:'R1',      label:'R1',      sub:'10.0.0.1', icon:'fa-circle-nodes', role:'Internal',  x:120, y:130, area:'0' },
+    { id:'R2',      label:'R2 (DR)', sub:'10.0.0.2', icon:'fa-circle-nodes', role:'DR / Area0',x:260, y:200, area:'0' },
+    { id:'R3',      label:'R3',      sub:'10.0.0.3', icon:'fa-circle-nodes', role:'Internal',  x:120, y:280, area:'0' },
+    { id:'R4',      label:'R4',      sub:'10.0.0.4', icon:'fa-circle-nodes', role:'Internal',  x:400, y:200, area:'0' },
+    { id:'ABR1',    label:'ABR1',    sub:'10.0.0.4', icon:'fa-layer-group',  role:'ABR',       x:545, y:200, area:'ABR' },
+    { id:'R5',      label:'R5',      sub:'10.0.0.5', icon:'fa-circle-nodes', role:'NSSA / A2', x:700, y:130, area:'2' },
+    { id:'ASBR',    label:'ASBR',    sub:'10.0.0.6', icon:'fa-arrow-right-arrow-left', role:'ASBR', x:700, y:280, area:'1' },
+    { id:'ASBR_N',  label:'ASBR-N',  sub:'10.0.0.7', icon:'fa-arrow-right-arrow-left', role:'ASBR/NSSA', x:840, y:130, area:'2' },
+  ],
+  links: [
+    { from:'R1',  to:'R2',   type:'transit' },
+    { from:'R2',  to:'R3',   type:'transit' },
+    { from:'R1',  to:'R3',   type:'transit' },
+    { from:'R2',  to:'R4',   type:'transit' },
+    { from:'R4',  to:'ABR1', type:'transit' },
+    { from:'ABR1',to:'R5',   type:'inter' },
+    { from:'ABR1',to:'ASBR', type:'inter' },
+    { from:'R5',  to:'ASBR_N', type:'transit' },
+  ],
+  zones: [
+    { label:'Area 0 (Backbone)', x1:60,  y1:50,  x2:490, y2:360, color:'#3b82f6' },
+    { label:'Area 1',            x1:610, y1:200, x2:880, y2:340, color:'#6366f1' },
+    { label:'Area 2 (NSSA)',     x1:610, y1:50,  x2:880, y2:195, color:'#0ea5e9' },
+  ]
+};
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+let activeIdx = 0;
+
+function buildTabs() {
+  const row = document.getElementById('tab-row');
+  row.innerHTML = '';
+  LSA_DATA.forEach((lsa, i) => {
+    const btn = document.createElement('button');
+    btn.className = `tab-pill px-4 py-2 rounded-full text-sm font-bold border transition-all-fast ${i===activeIdx?'active':'border-slate-700/50 dark:border-slate-700'}`;
+    btn.style.borderColor = i===activeIdx ? lsa.color : '';
+    btn.innerHTML = `<span class="font-mono mr-1">${lsa.label}</span><span class="font-normal opacity-80">${lsa.sublabel}</span>`;
+    btn.onclick = () => { activeIdx = i; buildTabs(); renderPanel(); };
+    row.appendChild(btn);
+  });
+}
+
+function renderPanel() {
+  const lsa = LSA_DATA[activeIdx];
+  const panel = document.getElementById('content-panel');
+
+  // LEFT: topology + info
+  const leftHTML = `
+    <div class="space-y-5">
+      <!-- Info header -->
+      <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 space-y-3">
+        <div class="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <span class="font-mono text-xs uppercase tracking-widest" style="color:${lsa.color}">${lsa.label} — ${lsa.sublabel}</span>
+            <p class="text-slate-700 dark:text-slate-300 text-sm mt-1 max-w-xl">${lsa.summary}</p>
+          </div>
+          <span class="shrink-0 text-xs font-bold px-3 py-1 rounded-full border font-mono" style="color:${lsa.color};border-color:${lsa.color}40;background:${lsa.color}12">${lsa.scope}</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3">
+            <div class="text-xs uppercase tracking-widest text-slate-400 mb-1">Nguồn phát sinh</div>
+            <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">${lsa.origin}</div>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 sm:col-span-2">
+            <div class="text-xs uppercase tracking-widest text-slate-400 mb-1">Flooding Scope</div>
+            <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">${lsa.flooding}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Topology -->
+      <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4">
+        <div class="text-xs uppercase tracking-widest text-slate-400 mb-3 pl-1">Flooding Scope — Topology View</div>
+        <div id="topo-canvas" style="min-height:400px">
+          <svg id="topo-svg"></svg>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // RIGHT: fields + cli + takeaways
+  const fieldsHTML = lsa.key_fields.map(([k,v]) =>
+    `<tr><td>${k}</td><td class="text-slate-300">${v}</td></tr>`
+  ).join('');
+
+  const takeHTML = lsa.takeaways.map(t =>
+    `<li class="flex gap-2 text-sm text-slate-400 dark:text-slate-400"><span style="color:${lsa.color}" class="mt-0.5 shrink-0"><i class="fas fa-circle-check text-xs"></i></span><span>${t}</span></li>`
+  ).join('');
+
+  const rightHTML = `
+    <div class="space-y-5">
+      <!-- Key fields -->
+      <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+          <span class="text-xs uppercase tracking-widest text-slate-400">Key Fields trong LSA Header</span>
+        </div>
+        <table class="field-table">
+          <tbody>${fieldsHTML}</tbody>
+        </table>
+      </div>
+
+      <!-- CLI -->
+      <div class="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden">
+        <div class="px-4 py-2 border-b border-slate-800 flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-red-500/70"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-500/70"></span>
+          <span class="w-3 h-3 rounded-full bg-green-500/70"></span>
+          <span class="ml-2 text-xs text-slate-500 font-mono">show ip ospf database</span>
+        </div>
+        <pre class="terminal p-4 text-xs">${colorCLI(lsa.cli)}</pre>
+      </div>
+
+      <!-- Takeaways -->
+      <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
+        <div class="text-xs uppercase tracking-widest text-slate-400 mb-3">Điểm cốt lõi cần nhớ</div>
+        <ul class="space-y-2">${takeHTML}</ul>
+      </div>
+    </div>
+  `;
+
+  panel.innerHTML = leftHTML + rightHTML;
+  // Draw topology after DOM ready
+  setTimeout(() => drawTopology(lsa), 30);
+}
+
+function colorCLI(text) {
+  return text
+    .replace(/^(.*#\s*show.*)$/gm, '<span class="cmd">$1</span>')
+    .replace(/\b(FULL|UP|ONLINE|Set)\b/g, '<span class="ok">$1</span>')
+    .replace(/\b(OSPF|Router-ID|Advertising|LS Type|Type-5|Type-7|P-bit)\b/g, '<span class="hi">$1</span>')
+    .replace(/!.*/g, '<span class="warn">$&</span>');
+}
+
+function drawTopology(lsa) {
+  const canvas = document.getElementById('topo-canvas');
+  if (!canvas) return;
+  const svg = document.getElementById('topo-svg');
+  if (!svg) return;
+
+  const W = canvas.clientWidth || 900;
+  const H = Math.max(canvas.clientHeight, 400);
+  canvas.style.minHeight = H + 'px';
+
+  const REF_W = 900, REF_H = 400;
+  const sx = W / REF_W, sy = H / REF_H;
+
+  // Clear old nodes
+  canvas.querySelectorAll('.net-node').forEach(n => n.remove());
+  svg.innerHTML = '';
+
+  const isDark = document.documentElement.classList.contains('dark');
+  const bgCard = isDark ? '#0f172a' : '#f8fafc';
+  const textClr = isDark ? '#e2e8f0' : '#1e293b';
+  const subClr  = isDark ? '#475569' : '#94a3b8';
+
+  // Draw zone bounding boxes
+  TOPO.zones.forEach(z => {
+    const box = document.createElement('div');
+    box.className = 'zone-box';
+    box.style.cssText = `
+      left:${z.x1/REF_W*100}%; top:${z.y1/REF_H*100}%;
+      width:${(z.x2-z.x1)/REF_W*100}%; height:${(z.y2-z.y1)/REF_H*100}%;
+      border-color:${z.color}66;
+      background:${z.color}0D;
+    `;
+    const lbl = document.createElement('div');
+    lbl.className = 'zone-label';
+    lbl.style.cssText = `top:6px;left:10px;color:${z.color};background:${z.color}18;font-size:9px;`;
+    lbl.textContent = z.label;
+    box.appendChild(lbl);
+    canvas.appendChild(box);
+  });
+
+  // node positions in px
+  const nodePos = {};
+  TOPO.nodes.forEach(n => {
+    nodePos[n.id] = { x: n.x * sx, y: n.y * sy };
+  });
+
+  // Draw links (SVG)
+  TOPO.links.forEach(link => {
+    const a = nodePos[link.from], b = nodePos[link.to];
+    if (!a || !b) return;
+    const isFloodPath = lsa.flood_path.includes(link.from) && lsa.flood_path.includes(link.to);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+    line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+    line.className.baseVal = `link-line ${isFloodPath ? 'link-highlight' : 'link-passive'}`;
+    svg.appendChild(line);
+  });
+
+  // Draw nodes
+  TOPO.nodes.forEach(n => {
+    const inScope = lsa.scope_nodes.includes(n.id);
+    const isOrigin = n.id === lsa.origin_node;
+    const pos = nodePos[n.id];
+
+    const el = document.createElement('div');
+    el.className = 'net-node';
+    el.id = 'node-' + n.id;
+    el.style.left = (pos.x / W * 100) + '%';
+    el.style.top  = (pos.y / H * 100) + '%';
+
+    const scopeClass = isOrigin ? 'highlight' : (inScope ? 'scope-yes' : 'scope-no');
+
+    el.innerHTML = `
+      <div class="node-card ${scopeClass}">
+        <div class="role-badge">${n.role}</div>
+        <div class="node-icon"><i class="fas ${n.icon}" style="color:${isOrigin?lsa.color:(inScope?'#10b981':'#475569')}"></i></div>
+        <div class="node-name">${n.label}</div>
+        <div class="node-sub">${n.sub}</div>
+        ${isOrigin ? `<div class="lsa-scope-tag" style="background:${lsa.color}22;color:${lsa.color}">ORIGIN</div>` : ''}
+        <div class="status-badge ${inScope?'bg-emerald-900/60 text-emerald-400 border border-emerald-800':'bg-slate-800 text-slate-500 border border-slate-700'}">
+          ${inScope ? (isOrigin ? 'GENERATES' : 'RECEIVES') : 'BLOCKED'}
+        </div>
+      </div>`;
+    canvas.appendChild(el);
+  });
+
+  // clamp nodes
+  clampNodes(canvas);
+  // redraw links after clamp
+  setTimeout(() => redrawLinks(svg, canvas, nodePos, W, H, lsa), 60);
+}
+
+function redrawLinks(svg, canvas, nodePos, W, H, lsa) {
+  svg.innerHTML = '';
+  TOPO.links.forEach(link => {
+    const na = canvas.querySelector('#node-' + link.from);
+    const nb = canvas.querySelector('#node-' + link.to);
+    if (!na || !nb) return;
+    const ax = parseFloat(na.style.left)/100 * W;
+    const ay = parseFloat(na.style.top)/100  * H;
+    const bx = parseFloat(nb.style.left)/100 * W;
+    const by = parseFloat(nb.style.top)/100  * H;
+    const isFloodPath = lsa.flood_path.includes(link.from) && lsa.flood_path.includes(link.to);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', ax); line.setAttribute('y1', ay);
+    line.setAttribute('x2', bx); line.setAttribute('y2', by);
+    line.className.baseVal = `link-line ${isFloodPath?'link-highlight':'link-passive'}`;
+    svg.appendChild(line);
+  });
+}
+
+function clampNodes(canvas) {
+  if (!canvas) return;
+  const cr = canvas.getBoundingClientRect();
+  if (!cr.width) return;
+  const BADGE_PX = 22, EDGE_PX = 8;
+  canvas.querySelectorAll('[id^="node-"]').forEach(node => {
+    const nr = node.getBoundingClientRect();
+    const hPx = cr.height / 100, wPx = cr.width / 100;
+    let top  = parseFloat(node.style.top)  || 50;
+    let left = parseFloat(node.style.left) || 50;
+    const topClip   = (cr.top  + BADGE_PX) - nr.top;    if (topClip   > 0) top  += topClip   / hPx;
+    const botClip   = nr.bottom - (cr.bottom - EDGE_PX); if (botClip   > 0) top  -= botClip   / hPx;
+    const leftClip  = (cr.left + EDGE_PX)  - nr.left;   if (leftClip  > 0) left += leftClip  / wPx;
+    const rightClip = nr.right - (cr.right  - EDGE_PX);  if (rightClip > 0) left -= rightClip / wPx;
+    node.style.top  = top  + '%';
+    node.style.left = left + '%';
+  });
+}
+
+// ─────────────────────────────────────────────
+// THEME
+// ─────────────────────────────────────────────
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle('dark');
+  localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light');
+  renderPanel();
+}
+
+// ─────────────────────────────────────────────
+// RESIZE
+// ─────────────────────────────────────────────
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const lsa = LSA_DATA[activeIdx];
+    const canvas = document.getElementById('topo-canvas');
+    const svg = document.getElementById('topo-svg');
+    if (canvas && svg) {
+      const W = canvas.clientWidth || 900;
+      const H = Math.max(canvas.clientHeight, 400);
+      clampNodes(canvas);
+      redrawLinks(svg, canvas, {}, W, H, lsa);
+    }
+  }, 120);
+});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+buildTabs();
+renderPanel();
+</script>
+</body>
+</html>

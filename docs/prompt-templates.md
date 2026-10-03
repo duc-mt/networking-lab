@@ -23,17 +23,17 @@ After generating a page with any of these prompts:
 
 ## Which one to reach for
 
-| Prompt                    | `type` key            | Folder                          | Core engine logic                                                                     | Best used for                                                                                     |
-| ------------------------- | --------------------- | ------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Protocol Simulator        | `protocol`            | `projects/protocol/`            | Timeline of states, packet/RFC breakdown                                              | Training material, explaining how a protocol works internally                                     |
-| Troubleshooting Lab       | `troubleshooting`     | `projects/troubleshooting/`     | Logic tree — symptom → ruled-out hypotheses → root cause                              | Post-mortems, incident write-ups, knowledge base, portfolio case studies                          |
-| Security Packet Walk      | `packet-walk`         | `projects/packet-walk/`         | Sequential pipeline — Ingress → NAT → Policy → Egress                                 | Debugging firewall/NAT behavior, explaining zone design, policy audits                            |
-| Change / MOP Flow         | `change-mop`          | `projects/change-mop/`          | Process — Pre-checks → Execution → Post-checks → Rollback                             | Cutover planning, risk review (SPOF, lockout), documenting a maintenance window                   |
-| Automation Workflow       | `automation`          | `projects/automation/`          | API/script request-response, error handling                                           | Reviewing automation code, demonstrating retry/error-handling logic                               |
-| Failover / HA Drill       | `failover`            | `projects/failover/`            | Trigger → timers → convergence → impact                                               | Chaos-engineering style resilience testing, tuning Hello/Hold/Dead timers                         |
-| Topology Design Reference | `topology-design`     | `projects/topology-design/`     | Static graph — topology + routing tables + path lookup, no timeline                   | Documenting a network design, showcasing addressing/area layout, reference material               |
-| Diagnostic Playbook       | `diagnostic-playbook` | `projects/diagnostic-playbook/` | Tabbed catalog — N static failure snapshots on one shared topology                    | A "field guide" of failure signatures for one subsystem (e.g. every way DNS resolution can break) |
-| **Algorithm Visualizer**  | **`algorithm-viz`**   | **`projects/algorithm-viz/`**   | **Reactive graph + live algorithm engine — user edits topology, result recomputes instantly** | **Teaching graph algorithms (Dijkstra SPF, CSPF, Bellman-Ford) with interactive topology**  |
+| Prompt                    | `type` key            | Folder                          | Core engine logic                                                                             | Best used for                                                                                     |
+| ------------------------- | --------------------- | ------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Protocol Simulator        | `protocol`            | `projects/protocol/`            | Timeline of states, packet/RFC breakdown                                                      | Training material, explaining how a protocol works internally                                     |
+| Troubleshooting Lab       | `troubleshooting`     | `projects/troubleshooting/`     | Logic tree — symptom → ruled-out hypotheses → root cause                                      | Post-mortems, incident write-ups, knowledge base, portfolio case studies                          |
+| Security Packet Walk      | `packet-walk`         | `projects/packet-walk/`         | Sequential pipeline — Ingress → NAT → Policy → Egress                                         | Debugging firewall/NAT behavior, explaining zone design, policy audits                            |
+| Change / MOP Flow         | `change-mop`          | `projects/change-mop/`          | Process — Pre-checks → Execution → Post-checks → Rollback                                     | Cutover planning, risk review (SPOF, lockout), documenting a maintenance window                   |
+| Automation Workflow       | `automation`          | `projects/automation/`          | API/script request-response, error handling                                                   | Reviewing automation code, demonstrating retry/error-handling logic                               |
+| Failover / HA Drill       | `failover`            | `projects/failover/`            | Trigger → timers → convergence → impact                                                       | Chaos-engineering style resilience testing, tuning Hello/Hold/Dead timers                         |
+| Topology Design Reference | `topology-design`     | `projects/topology-design/`     | Static graph — topology + routing tables + path lookup, no timeline                           | Documenting a network design, showcasing addressing/area layout, reference material               |
+| Diagnostic Playbook       | `diagnostic-playbook` | `projects/diagnostic-playbook/` | Tabbed catalog — N static failure snapshots on one shared topology                            | A "field guide" of failure signatures for one subsystem (e.g. every way DNS resolution can break) |
+| **Algorithm Visualizer**  | **`algorithm-viz`**   | **`projects/algorithm-viz/`**   | **Reactive graph + live algorithm engine — user edits topology, result recomputes instantly** | **Teaching graph algorithms (Dijkstra SPF, CSPF, Bellman-Ford) with interactive topology**        |
 
 ---
 
@@ -41,7 +41,7 @@ After generating a page with any of these prompts:
 
 Use this for "how does X actually work" labs — a protocol forming state over time (OSPF, STP, DHCP, TCP handshake, BGP peering, etc).
 
-```
+````
 Act as a Principal Network Architect and Senior UI/UX Frontend Engineer.
 
 I want you to build a premium, single-file "Interactive Network Protocol Simulator"
@@ -97,9 +97,84 @@ Requirements:
 
 8. All visible UI text in Vietnamese.
 
+9. OPTIONAL — Cumulative/Delta pattern: use this sub-pattern instead of plain
+   per-step snapshots when the lab's subject matter is a database/table that
+   *builds up* over time (e.g. "watch the LSDB form", "watch the MAC table
+   populate", "watch the BGP table converge") rather than a state that simply
+   transitions (e.g. FSM adjacency). In this variant, each `labTimeline` step
+   carries a `*_delta` array (only the NEW rows that appear at this step, e.g.
+   `lsdb_delta: [{ type, origin, scope, desc }]`) instead of a full table. The
+   engine accumulates deltas into a persistent array across steps:
+   ```javascript
+   const cumulativeTable = [];
+   function renderStep(idx) {
+     const s = TIMELINE[idx];
+     s.some_delta.forEach(entry => {
+       if (!cumulativeTable.find(e => /* same identity fields */)) {
+         cumulativeTable.push({ ...entry, addedStep: idx, isNew: true });
+       }
+     });
+     cumulativeTable.forEach(e => { e.isNew = (e.addedStep === idx); });
+     // render cumulativeTable, giving `.isNew` rows a highlight + "NEW" tag
+     // that fades after the step moves on (see .lsa-row.new / fadeIn keyframe)
+   }
+````
+
+Going backward (Prev) must still show the correct cumulative state up to
+that step — either recompute from scratch each time, or only ever append
+(never delete) and simply filter by `addedStep <= idx` when going back.
+
 Generate the complete HTML code, with `labTimeline` fully populated with
 accurate, detailed technical data for the specified topic.
-```
+
+````
+
+### Reference implementation — Dynamic Packet Animation (Requirement 3)
+
+Copy this pattern rather than re-inventing it — it is the validated implementation
+of the Web Animations API requirement above, used consistently across every
+Protocol Simulator lab built so far:
+
+```javascript
+let pktTimers = [];
+function animatePackets(packets) {
+  pktTimers.forEach(t => clearTimeout(t));
+  pktTimers = [];
+  document.getElementById('pkt-layer').innerHTML = '';
+
+  packets.forEach((pkt, i) => {
+    const t = setTimeout(() => {
+      const wrap = document.getElementById('topo-wrap'); // or #canvas
+      const W = wrap.clientWidth, H = Math.max(wrap.clientHeight, 340);
+      const fromNode = wrap.querySelector('#node-' + pkt.from);
+      const toNode   = wrap.querySelector('#node-' + pkt.to);
+      if (!fromNode || !toNode) return;
+      const ax = parseFloat(fromNode.style.left)/100*W, ay = parseFloat(fromNode.style.top)/100*H;
+      const bx = parseFloat(toNode.style.left)/100*W,   by = parseFloat(toNode.style.top)/100*H;
+
+      const dot = document.createElement('div');
+      dot.className = 'pkt-dot'; // position:absolute; z-index:20; pointer-events:none
+      dot.style.left = ax+'px'; dot.style.top = ay+'px';
+      dot.innerHTML = `<div class="pkt-pill" style="background:${pkt.color}25;color:${pkt.color};border:1px solid ${pkt.color}50">${pkt.label||pkt.type}</div>`;
+      document.getElementById('pkt-layer').appendChild(dot);
+
+      dot.animate([
+        { left:ax+'px', top:ay+'px', opacity:1 },
+        { left:bx+'px', top:by+'px', opacity:.8 },
+        { left:bx+'px', top:by+'px', opacity:0 },
+      ], { duration:1200, easing:'ease-in-out', fill:'forwards' });
+
+      setTimeout(() => dot.remove(), 1300);
+    }, i * 450); // stagger multiple packets in the same step
+    pktTimers.push(t);
+  });
+}
+````
+
+Call `animatePackets(step.packets)` at the end of `renderStep()`, after nodes
+have been positioned (so `#node-<id>` elements exist with their final `left/top`).
+Always clear `pktTimers` first to avoid orphaned dots when the user navigates
+away mid-animation (Prev/Next/seek while packets are still in flight).
 
 ---
 
@@ -434,6 +509,115 @@ Populate `failoverTimeline` with realistic timer values and a believable
 convergence sequence for the given mechanism and trigger event.
 ```
 
+### Reference implementation — Trigger Outage button (Requirement 3)
+
+```html
+<button
+    id="btn-trigger"
+    onclick="Lab.triggerOutage()"
+    class="h-8 px-4 rounded-lg text-xs font-bold flex items-center gap-1.5"
+>
+    <i class="fas fa-bolt text-[11px]"></i>
+    <span>Trigger Outage</span>
+</button>
+```
+
+```css
+#btn-trigger {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.4);
+    animation: pulse-trigger 1.5s infinite;
+}
+#btn-trigger.fired {
+    animation: none;
+    background: #1e293b;
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+@keyframes pulse-trigger {
+    0%,
+    100% {
+        box-shadow: 0 0 16px rgba(220, 38, 38, 0.35);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(220, 38, 38, 0.65);
+    }
+}
+```
+
+```javascript
+function triggerOutage() {
+    if (triggered) return;
+    triggered = true;
+    const btn = document.getElementById('btn-trigger');
+    btn.classList.add('fired');
+    btn.innerHTML = '<i class="fas fa-bolt text-[11px]"></i><span>Outage Active</span>';
+    ['btn-prev', 'btn-play', 'btn-next'].forEach(
+        (id) => (document.getElementById(id).disabled = false)
+    );
+    renderStep(1); // jump straight into the failure sequence
+}
+```
+
+Playback buttons (`btn-prev`/`btn-play`/`btn-next`) must start `disabled` in
+the HTML and only become usable after `triggerOutage()` fires — this is what
+makes the lab "sit on step 0 indefinitely" per Requirement 3.
+
+### Reference implementation — Live Timer Bar (Requirement 4)
+
+```html
+<div class="flex items-center justify-between mb-1">
+    <span class="text-[10px] mono text-slate-500 uppercase tracking-wider" id="timer-name"></span>
+    <span class="text-sm font-bold mono" id="timer-val"></span>
+</div>
+<div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+```
+
+```css
+.timer-wrap {
+    height: 8px;
+    border-radius: 999px;
+    background: #1e293b;
+    overflow: hidden;
+}
+.timer-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.1s linear;
+}
+```
+
+```javascript
+let timerInterval = null;
+function renderTimer(timerDef) {
+    clearInterval(timerInterval);
+    if (!timerDef) {
+        document.getElementById('timer-section').style.display = 'none';
+        return;
+    }
+    document.getElementById('timer-section').style.display = 'block';
+    document.getElementById('timer-name').textContent = timerDef.name;
+    const bar = document.getElementById('timer-bar');
+    bar.style.background = timerDef.color;
+    let rem = timerDef.remaining,
+        tot = timerDef.total;
+    document.getElementById('timer-val').textContent = rem.toFixed(1) + 's';
+    bar.style.width = (rem / tot) * 100 + '%';
+    timerInterval = setInterval(() => {
+        rem = Math.max(0, rem - 0.1);
+        bar.style.width = (rem / tot) * 100 + '%';
+        document.getElementById('timer-val').textContent = rem.toFixed(1) + 's';
+        if (rem <= 0) clearInterval(timerInterval);
+    }, 100);
+}
+```
+
+Call `clearInterval(timerInterval)` at the top of every `renderStep()` (not
+just inside `renderTimer`) so navigating away mid-countdown never leaves a
+stray interval running in the background.
+
 ---
 
 ## 7. Topology design reference
@@ -520,7 +704,7 @@ Requirements:
 
 Use this one for a "field guide" of failure modes — not one incident, but every way a subsystem can break, catalogued side by side on the same topology so a viewer can flip through them. This is the format the "Network Bắt Bệnh" DNS lab (KB1 healthy → KB8 nscd) is built from: same LAN, same client/server layout in every tab, only the fault and the diagnostic evidence change.
 
-```
+````
 Act as a Principal Network Architect and Senior UI/UX Frontend Engineer.
 
 Build a single-file "Interactive Diagnostic Playbook" — a tabbed reference
@@ -583,11 +767,34 @@ Requirements:
 
 4. Legend row: explain the visual language once (e.g. solid arrow = healthy
    query path, dashed red = broken path, ⊗ = no response, dotted box = an
-   address with no device behind it).
+   address with no device behind it). Place it directly under the H1/subtitle,
+   above the KB tab row, as a single `flex flex-wrap justify-center gap-4`
+   row of small colored dots + short labels — it does not change per tab:
+   ```html
+   <div class="flex flex-wrap items-center justify-center gap-4 text-xs">
+     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:#10b981;opacity:.85"></span><span class="text-slate-500">Nằm trong flooding/query scope</span></span>
+     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-slate-600 opacity-40"></span><span class="text-slate-500">Ngoài scope</span></span>
+     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:#6366f1"></span><span class="text-slate-500">Nguồn phát sinh</span></span>
+   </div>
+````
 
 5. KB tab row: one pill per case, each showing its `label` and a status dot
    (green = healthy, red/orange = broken), active tab visually highlighted.
    Clicking a tab swaps the topology state, diagnostics, and takeaways below.
+
+5b. OPTIONAL — Node relationship status badge: when the catalog's cases are
+about scope/reachability rather than binary health (e.g. "which routers
+receive this LSA type", "which segment does this VLAN reach"), give each
+node card a 3-state status badge describing its _relationship to the
+active case_ instead of (or alongside) its operational health:
+`javascript
+    const nodeStatus = !inScope ? 'BLOCKED' : isOrigin ? 'GENERATES' : 'RECEIVES';
+    `
+Render it as the `.n-status`/`.nbadge` pill under the node card. This is
+distinct from the health Status Badge in Section 14.4 — it describes the
+node's role in _this specific case_, not whether the device itself is up
+or down, so it's allowed to change every time the tab changes even for a
+perfectly healthy node.
 
 6. Detail panel below the tabs, two columns: left = config/script snippet
    and command output in a dark monospace terminal block; right = the
@@ -598,6 +805,7 @@ Requirements:
 Populate `playbookCases` with technically accurate command output for each
 case — exit codes, timing, and DNS response codes should be realistic and
 internally consistent with what's "broken" in that case.
+
 ```
 
 ---
@@ -616,6 +824,7 @@ Use this for labs where the educational goal is **watching an algorithm compute 
 - STP port role election (Bellman-Ford) khi link cost thay đổi
 
 ```
+
 Act as a Principal Network Architect and Senior UI/UX Frontend Engineer.
 
 Build a single-file "Interactive Algorithm Visualizer" — a reactive lab where
@@ -630,17 +839,18 @@ Output: ONE self-contained HTML file, inline CSS + vanilla JS only.
 
 ==================================================
 Algorithm & Scenario:
+
 - Algorithm: (e.g. "Dijkstra — OSPF SPF", "Bellman-Ford — STP", "CSPF with BW constraint")
 - Topology: (nodes with Router-ID / role / area, links with default bandwidth/cost)
 - Source node: (default selected source for path computation)
 - Destination node: (default selected destination)
 - Preset scenarios: (list 4–6 named scenarios — each is a set of link patches
   applied on top of the baseline graph, e.g.:
-    "Link Failure: shutdown R2-R4"
-    "Cost Tuning: change R1-R2 to T1 Serial (cost 64)"
-    "ECMP: all links GigabitEthernet, R1→R4 via two equal-cost paths"
-    "Dual Failure: shutdown R2-R4 and R3-R4, observe unreachable nodes")
-==================================================
+  "Link Failure: shutdown R2-R4"
+  "Cost Tuning: change R1-R2 to T1 Serial (cost 64)"
+  "ECMP: all links GigabitEthernet, R1→R4 via two equal-cost paths"
+  "Dual Failure: shutdown R2-R4 and R3-R4, observe unreachable nodes")
+  \==================================================
 
 Requirements:
 
@@ -679,15 +889,17 @@ let graph = deepClone(BASE_GRAPH);
 Implement thuật toán thực trong JavaScript. KHÔNG hardcode kết quả path. Mọi thay đổi topology phải trigger `runAlgorithm()` → kết quả tính lại từ đầu.
 
 **Chuẩn Dijkstra cho OSPF SPF:**
+
 ```javascript
 function dijkstra(nodes, links, srcId) {
-  // Build adjacency từ active links (state === 'up') only
-  // Record TỪNG BƯỚC: { action, processing, settled[], candidates[], dist{}, prev{}, desc }
-  // Return { dist, prev, prevLink, steps }
+    // Build adjacency từ active links (state === 'up') only
+    // Record TỪNG BƯỚC: { action, processing, settled[], candidates[], dist{}, prev{}, desc }
+    // Return { dist, prev, prevLink, steps }
 }
 ```
 
 **Yêu cầu bắt buộc của engine:**
+
 - Loại link `state: 'down'` khỏi adjacency trước khi chạy — không chỉ ẩn chúng trên UI.
 - Record từng iteration của thuật toán vào mảng `steps[]` để SPF step-by-step panel hiển thị.
 - Xử lý ECMP: khi hai path có cùng cost, lưu cả hai vào `prevMulti{}` và highlight cả hai trên topology.
@@ -745,37 +957,41 @@ Khi click vào link (hit area hoặc cost label), hiện floating popup với:
 
 ### 6. Node states — màu sắc trong quá trình algorithm chạy
 
-| State | Ý nghĩa | Border + Glow |
-|---|---|---|
-| `source` | Node nguồn được chọn | Blue `#3b82f6` |
-| `dest` | Node đích được chọn | Amber `#f59e0b` |
-| `processing` | Đang được expand trong iteration hiện tại | Pink `#ec4899` + pulse animation |
-| `candidate` | Trong candidate list, chưa settle | Violet `#a78bfa` |
-| `settled` | Đã settle vào SPF tree | Emerald `#10b981` |
-| `path` | Nằm trên best path src→dst | Emerald `#34d399` (sáng hơn settled) |
-| `normal` | Chưa được xét | Slate `#334155` |
+| State        | Ý nghĩa                                   | Border + Glow                        |
+| ------------ | ----------------------------------------- | ------------------------------------ |
+| `source`     | Node nguồn được chọn                      | Blue `#3b82f6`                       |
+| `dest`       | Node đích được chọn                       | Amber `#f59e0b`                      |
+| `processing` | Đang được expand trong iteration hiện tại | Pink `#ec4899` + pulse animation     |
+| `candidate`  | Trong candidate list, chưa settle         | Violet `#a78bfa`                     |
+| `settled`    | Đã settle vào SPF tree                    | Emerald `#10b981`                    |
+| `path`       | Nằm trên best path src→dst                | Emerald `#34d399` (sáng hơn settled) |
+| `normal`     | Chưa được xét                             | Slate `#334155`                      |
 
 Hiển thị cost hiện tại của node (từ `step.dist`) dưới dạng badge nhỏ dưới card, cập nhật theo từng bước.
 
 ### 7. Right panel — 3 tab cố định
 
 **Tab "Algorithm Steps" (default):**
+
 - Card highlight bước hiện tại: action type + node đang processing + mô tả tiếng Việt.
 - Candidate list: danh sách node + cost, màu violet.
 - Settled set: danh sách node + cost, màu emerald.
 - Distance vector table: tất cả node, cost hiện tại, via (prev node).
 
 **Tab "State DB" (LSDB / Link State DB):**
+
 - Một card per node: Type 1 LSA (OSPF) hoặc tương đương — liệt kê active neighbors + cost.
 - Highlight link DOWN bằng card riêng màu đỏ.
 - Cập nhật ngay khi topology thay đổi.
 
 **Tab "Routing Table":**
+
 - Một row per destination node: next-hop + total cost.
 - So sánh với baseline (BASE_GRAPH + src mặc định): row "CHANGED" highlight emerald, row "UNREACHABLE" highlight đỏ.
 - Row nào có path từ previous scenario bị mất → hiện text gạch ngang + cost cũ.
 
 **Teaching note (pinned bottom của right panel):**
+
 - Hiện `scenario.note` khi load scenario — mô tả ngắn gọn điều gì đang xảy ra và tại sao.
 - Không tự ẩn — người dùng phải load scenario khác mới thay.
 
@@ -783,11 +999,11 @@ Hiển thị cost hiện tại của node (từ `step.dist`) dưới dạng badg
 
 ```javascript
 // Các nút:
-spfPrev()       // spfStepIdx-- → renderTopology() + renderPanel()
-spfPlayPause()  // toggle interval, tốc độ từ speed-slider
-spfNext()       // spfStepIdx++ → renderTopology() + renderPanel()
-spfReset()      // spfStepIdx = 0 → renderTopology() + renderPanel()
-resetTopology() // reload active scenario từ BASE_GRAPH + patches
+spfPrev(); // spfStepIdx-- → renderTopology() + renderPanel()
+spfPlayPause(); // toggle interval, tốc độ từ speed-slider
+spfNext(); // spfStepIdx++ → renderTopology() + renderPanel()
+spfReset(); // spfStepIdx = 0 → renderTopology() + renderPanel()
+resetTopology(); // reload active scenario từ BASE_GRAPH + patches
 ```
 
 - Speed slider: `min=200 max=1800 step=200`, interval = `2000 - value + 200` ms.
@@ -813,7 +1029,8 @@ resetTopology() // reload active scenario từ BASE_GRAPH + patches
 ### 11. All visible UI text in Vietnamese (ngoại trừ H1 title và technical labels).
 
 Populate `BASE_GRAPH` và `SCENARIOS` với dữ liệu kỹ thuật chính xác cho topology được yêu cầu.
-```
+
+````
 
 ---
 
@@ -871,7 +1088,7 @@ Dùng khi lab có **≥ 2 biến thể/chế độ** thể hiện **cùng một 
         </button>
     </div>
 </div>
-```
+````
 
 **Quy tắc HTML bất biến:**
 
@@ -986,20 +1203,20 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 
 ### Bảng đối chiếu quy ước:
 
-| Thành phần UI                            | Ngôn ngữ                      | Quy tắc & Ví dụ cụ thể                                                                                                                                                                                                                                                                                                                                                                      |
-| :--------------------------------------- | :---------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Tiêu đề Lab (`<title>`, `<h1>`)**      | **English**                   | Ngắn gọn, chuyên nghiệp, giữ nguyên thuật ngữ quốc tế.<br>• `Port Security Misconfiguration`<br>• `Rogue DHCP Server & Layer 2 Security`<br>• `ClusterXL Zero-Downtime Patching`<br>• `STP Link Failure & Convergence`<br>• `OSPF SPF Algorithm Visualizer`                                                                                                                                  |
-| **Thanh Stepper (`phase`)**              | **UPPERCASE English**         | Luôn dùng từ ngắn gọn in hoa. **KHÔNG** dùng tiếng Việt dài dòng làm tràn nút trên mobile.<br>• _Troubleshooting:_ `TRIAGE`, `ISOLATE`, `ROOT CAUSE`, `FIX`, `VERIFY`<br>• _Protocol:_ `DOWN`, `INIT`, `2-WAY`, `EXCHANGE`, `FULL` / `BLOCKING`, `FORWARDING`<br>• _Failover:_ `NORMAL`, `FAILOVER`, `REBOOTING`, `RESTORED`<br>• _MOP:_ `PRE-CHECK`, `EXECUTION`, `POST-CHECK`, `ROLLBACK`<br>• _Algorithm Visualizer:_ `INIT`, `SETTLE`, `EXPAND`, `DONE` |
-| **Scenario Pills (Algorithm Visualizer)**| **English**                   | Tên ngắn gọn, dùng icon Font Awesome trước. Ví dụ: `Baseline`, `Link Failure`, `Cost Tuning`, `ECMP`, `Dual Failure`. |
-| **Tiêu đề từng bước (`title`)**          | **Tiếng Việt Kỹ thuật**       | Ngắn gọn, nêu bật hành động hoặc kết quả. **KHÔNG** thêm tiền tố `"Bước 1:"`, `"Bước 2:"` (vì stepper đã có số bước). |
-| **Mô tả chi tiết (`description`)**       | **Tiếng Việt + Thuật ngữ EN** | Diễn giải mạch lạc bằng tiếng Việt, kết hợp thẻ `<code class="font-mono ...">` cho các câu lệnh và thông số kỹ thuật (IP, MAC, VLAN, Default Gateway, DHCP Discover/Offer/ACK, v.v.). |
-| **Vai trò thiết bị (Role Badge)**        | **English**                   | Nhãn nhỏ `-top-3` trên mỗi node card:<br>`Core Switch`, `Access Switch`, `DHCP Server`, `Victim PC 1`, `Rogue Router`, `File Server`, `Backbone`, `ABR`, `ASBR`. |
-| **Tên thiết bị (Hostnames `<h3>`)**      | **Standard Hostname**         | Chữ in hoa dạng chuẩn quy hoạch mạng:<br>`SW-CORE-01`, `SW-ACC-01`, `SRV-DHCP-01`, `PC-VICTIM-01`, `ROUTER-WIFI`. |
-| **Trạng thái thiết bị (State Badge)**    | **UPPERCASE English**         | Trạng thái kỹ thuật in hoa:<br>`ONLINE`, `FORWARDING`, `NORMAL`, `MISCONFIGURED`, `ROGUE ACTIVE`, `POISONED`, `BLOCKED`, `PROTECTED`, `RESTORED ✓`, `DOWN`, `ERR-DISABLE`.<br>_Algorithm Visualizer:_ `SETTLED`, `CANDIDATE`, `PROCESSING`, `UNREACHABLE`. |
-| **Khối điều tra (Investigation Panels)** | **Tiếng Việt**                | Chuẩn hóa tiêu đề các card bên phải:<br>• `Danh sách Giả thuyết`<br>• `Nguyên nhân gốc rễ`<br>• `Biện pháp Khắc phục`<br>• Nhãn trạng thái giả thuyết: `Đang xét`, `Loại trừ` (gạch ngang chữ), `Xác nhận` (đỏ/cam). |
-| **Checklist & Rollback Table**           | **Tiếng Việt + CLI**          | Bảng tiêu chuẩn kiểm thử và an toàn vận hành:<br>• Cột: `Hành động`, `Lệnh kiểm tra / Thao tác`, `Trạng thái kỳ vọng (Expected Output)`, `Phương án Rollback`. |
-| **Cửa sổ CLI / Terminal**                | **English Console + CLI**     | Header: `SW-ACC-01# — Console` hoặc `PC-VICTIM-02> ipconfig /all`.<br>Logs: Output nguyên bản của Cisco IOS/Linux/Windows, kèm chú thích `! ` hoặc `→ ` nếu cần diễn giải. |
-| **Đăng ký `assets/js/projects.js`**      | **Title EN, Desc VI**         | `title: 'Rogue DHCP & Layer 2 Security'`<br>`description: 'Chẩn đoán sự cố mạng do Router Wi-Fi cá nhân gây Rogue DHCP, cấp phát sai Gateway và giải pháp phòng thủ triệt để với DHCP Snooping, DAI, IP Source Guard.'` |
+| Thành phần UI                             | Ngôn ngữ                      | Quy tắc & Ví dụ cụ thể                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| :---------------------------------------- | :---------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tiêu đề Lab (`<title>`, `<h1>`)**       | **English**                   | Ngắn gọn, chuyên nghiệp, giữ nguyên thuật ngữ quốc tế.<br>• `Port Security Misconfiguration`<br>• `Rogue DHCP Server & Layer 2 Security`<br>• `ClusterXL Zero-Downtime Patching`<br>• `STP Link Failure & Convergence`<br>• `OSPF SPF Algorithm Visualizer`                                                                                                                                                                                                 |
+| **Thanh Stepper (`phase`)**               | **UPPERCASE English**         | Luôn dùng từ ngắn gọn in hoa. **KHÔNG** dùng tiếng Việt dài dòng làm tràn nút trên mobile.<br>• _Troubleshooting:_ `TRIAGE`, `ISOLATE`, `ROOT CAUSE`, `FIX`, `VERIFY`<br>• _Protocol:_ `DOWN`, `INIT`, `2-WAY`, `EXCHANGE`, `FULL` / `BLOCKING`, `FORWARDING`<br>• _Failover:_ `NORMAL`, `FAILOVER`, `REBOOTING`, `RESTORED`<br>• _MOP:_ `PRE-CHECK`, `EXECUTION`, `POST-CHECK`, `ROLLBACK`<br>• _Algorithm Visualizer:_ `INIT`, `SETTLE`, `EXPAND`, `DONE` |
+| **Scenario Pills (Algorithm Visualizer)** | **English**                   | Tên ngắn gọn, dùng icon Font Awesome trước. Ví dụ: `Baseline`, `Link Failure`, `Cost Tuning`, `ECMP`, `Dual Failure`.                                                                                                                                                                                                                                                                                                                                       |
+| **Tiêu đề từng bước (`title`)**           | **Tiếng Việt Kỹ thuật**       | Ngắn gọn, nêu bật hành động hoặc kết quả. **KHÔNG** thêm tiền tố `"Bước 1:"`, `"Bước 2:"` (vì stepper đã có số bước).                                                                                                                                                                                                                                                                                                                                       |
+| **Mô tả chi tiết (`description`)**        | **Tiếng Việt + Thuật ngữ EN** | Diễn giải mạch lạc bằng tiếng Việt, kết hợp thẻ `<code class="font-mono ...">` cho các câu lệnh và thông số kỹ thuật (IP, MAC, VLAN, Default Gateway, DHCP Discover/Offer/ACK, v.v.).                                                                                                                                                                                                                                                                       |
+| **Vai trò thiết bị (Role Badge)**         | **English**                   | Nhãn nhỏ `-top-3` trên mỗi node card:<br>`Core Switch`, `Access Switch`, `DHCP Server`, `Victim PC 1`, `Rogue Router`, `File Server`, `Backbone`, `ABR`, `ASBR`.                                                                                                                                                                                                                                                                                            |
+| **Tên thiết bị (Hostnames `<h3>`)**       | **Standard Hostname**         | Chữ in hoa dạng chuẩn quy hoạch mạng:<br>`SW-CORE-01`, `SW-ACC-01`, `SRV-DHCP-01`, `PC-VICTIM-01`, `ROUTER-WIFI`.                                                                                                                                                                                                                                                                                                                                           |
+| **Trạng thái thiết bị (State Badge)**     | **UPPERCASE English**         | Trạng thái kỹ thuật in hoa:<br>`ONLINE`, `FORWARDING`, `NORMAL`, `MISCONFIGURED`, `ROGUE ACTIVE`, `POISONED`, `BLOCKED`, `PROTECTED`, `RESTORED ✓`, `DOWN`, `ERR-DISABLE`.<br>_Algorithm Visualizer:_ `SETTLED`, `CANDIDATE`, `PROCESSING`, `UNREACHABLE`.                                                                                                                                                                                                  |
+| **Khối điều tra (Investigation Panels)**  | **Tiếng Việt**                | Chuẩn hóa tiêu đề các card bên phải:<br>• `Danh sách Giả thuyết`<br>• `Nguyên nhân gốc rễ`<br>• `Biện pháp Khắc phục`<br>• Nhãn trạng thái giả thuyết: `Đang xét`, `Loại trừ` (gạch ngang chữ), `Xác nhận` (đỏ/cam).                                                                                                                                                                                                                                        |
+| **Checklist & Rollback Table**            | **Tiếng Việt + CLI**          | Bảng tiêu chuẩn kiểm thử và an toàn vận hành:<br>• Cột: `Hành động`, `Lệnh kiểm tra / Thao tác`, `Trạng thái kỳ vọng (Expected Output)`, `Phương án Rollback`.                                                                                                                                                                                                                                                                                              |
+| **Cửa sổ CLI / Terminal**                 | **English Console + CLI**     | Header: `SW-ACC-01# — Console` hoặc `PC-VICTIM-02> ipconfig /all`.<br>Logs: Output nguyên bản của Cisco IOS/Linux/Windows, kèm chú thích `! ` hoặc `→ ` nếu cần diễn giải.                                                                                                                                                                                                                                                                                  |
+| **Đăng ký `assets/js/projects.js`**       | **Title EN, Desc VI**         | `title: 'Rogue DHCP & Layer 2 Security'`<br>`description: 'Chẩn đoán sự cố mạng do Router Wi-Fi cá nhân gây Rogue DHCP, cấp phát sai Gateway và giải pháp phòng thủ triệt để với DHCP Snooping, DAI, IP Source Guard.'`                                                                                                                                                                                                                                     |
 
 ---
 
@@ -1110,13 +1327,13 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 
 > **MỤC TIÊU:** Mỗi màu ngữ nghĩa (emerald / amber / rose / violet / blue) chỉ được mang **đúng một ý nghĩa** trên toàn trang. Không gộp các trạng thái có bản chất khác nhau vào cùng một màu chỉ vì "đều là cảnh báo".
 
-| Trục | Trả lời câu hỏi | Thể hiện | Màu |
-| :--- | :--- | :--- | :--- |
-| **Health** (viền + glow) | Thiết bị đang chạy thế nào? | `green` = UP · `amber` = chạy nhưng lỗi/suy giảm · `red` = DOWN | emerald / amber / rose |
-| **Inactive** | Có bị tắt chủ động không? | Viền `slate` nét đứt, `opacity-60`, không glow | slate |
-| **Risk** | Thiết kế có điểm yếu không? (SPOF, No HA, single uplink) | **Chip riêng** ở góc thẻ hoặc dưới Status Badge, KHÔNG đổi viền | violet |
-| **Highlight** | Đang chọn / đang trace? | Đường trace, node được chọn, hover | blue / cyan |
-| **Algorithm states** | Node đang ở bước nào trong thuật toán? | Chỉ dùng trong `algorithm-viz` — xem Section 9 Req 6 | pink/violet/emerald/blue/amber |
+| Trục                     | Trả lời câu hỏi                                          | Thể hiện                                                        | Màu                            |
+| :----------------------- | :------------------------------------------------------- | :-------------------------------------------------------------- | :----------------------------- |
+| **Health** (viền + glow) | Thiết bị đang chạy thế nào?                              | `green` = UP · `amber` = chạy nhưng lỗi/suy giảm · `red` = DOWN | emerald / amber / rose         |
+| **Inactive**             | Có bị tắt chủ động không?                                | Viền `slate` nét đứt, `opacity-60`, không glow                  | slate                          |
+| **Risk**                 | Thiết kế có điểm yếu không? (SPOF, No HA, single uplink) | **Chip riêng** ở góc thẻ hoặc dưới Status Badge, KHÔNG đổi viền | violet                         |
+| **Highlight**            | Đang chọn / đang trace?                                  | Đường trace, node được chọn, hover                              | blue / cyan                    |
+| **Algorithm states**     | Node đang ở bước nào trong thuật toán?                   | Chỉ dùng trong `algorithm-viz` — xem Section 9 Req 6            | pink/violet/emerald/blue/amber |
 
 **Quy tắc phân loại (áp dụng theo thứ tự):**
 
@@ -1134,3 +1351,95 @@ Khi `render()` đổi class của node (ví dụ `border-red-500`), browser chư
 - **Status Badge (pill dưới thẻ):** màu pill phải khớp với trục mà text mô tả. `DISABLED` → slate; `DUP MGMT IP` → amber; `NO HA` → violet.
 
 **Tự kiểm tra trước khi xuất file:** liệt kê mọi vị trí dùng `amber`, `rose`, `violet`. Nếu một màu xuất hiện với hơn một ý nghĩa (ví dụ amber vừa là "disabled" vừa là "SPOF"), phải sửa lại theo bảng trên.
+
+---
+
+## 15. Shared UI Components Library
+
+> **MỤC TIÊU:** Một số mẫu UI đã xuất hiện lặp lại và nhất quán trên nhiều template khác nhau (Protocol Simulator, Algorithm Visualizer, Failover Drill), chứng tỏ chúng là pattern dùng chung thay vì đặc thù 1 template. Section này chuẩn hoá chúng để AI tái sử dụng thay vì phát minh lại mỗi lần — và ghi lại quy ước màu Zone đã sửa lỗi thực tế (xem mục 3).
+
+### 1. Teaching Note box (ghim cố định)
+
+Dùng cho bất kỳ template nào có timeline/scenario (Protocol Simulator, Algorithm
+Visualizer, Failover Drill, Change/MOP) để giải thích **ý nghĩa sư phạm** của
+bước/scenario hiện tại — khác với mô tả kỹ thuật thuần tuý ở phần `title`/`desc`.
+
+```html
+<div
+    id="teaching-note"
+    class="mx-3 mb-3 px-3 py-2.5 rounded-xl text-[11.5px] text-slate-400 leading-relaxed border-l-2 border-indigo-500"
+    style="background:#6366f108"
+>
+    <i class="fas fa-lightbulb text-indigo-400 mr-1.5"></i>
+    <b>Tên cơ chế:</b>
+    giải thích ngắn gọn tại sao bước này quan trọng...
+</div>
+```
+
+Quy tắc:
+
+- Luôn đặt ở **cuối panel bên phải**, ghim cố định (không cuộn theo nội dung phía trên).
+- Nội dung thay đổi theo step/scenario hiện tại, nhưng khung UI giữ nguyên vị trí.
+- Nếu step không có note, ẩn hẳn box (`display:none`) thay vì để trống.
+- Border màu `indigo-500` cố định — đây là "giọng nói sư phạm" của hệ thống, không đổi theo ngữ cảnh (không dùng amber/emerald ở đây dù nội dung đang nói về cảnh báo hay thành công).
+
+### 2. Packet Animation Engine, Timer Bar, Trigger Outage button
+
+Đã có code mẫu đầy đủ tại Section 1 (sau Requirement 9) và Section 6 (sau
+Requirement 4/Requirement 3) — không lặp lại ở đây. Bất kỳ template nào cần
+packet animation, countdown timer, hoặc nút kích hoạt sự cố đều PHẢI tham
+chiếu các implementation đó thay vì viết lại từ đầu.
+
+### 3. Standard Area/Zone Color Convention (áp dụng cho mọi lab OSPF/multi-area)
+
+**Bối cảnh lỗi thực tế:** 3 lab OSPF multi-area đầu tiên (LSDB Formation, SPF
+Visualizer, 11-LSA Diagnostic Playbook) đều tô Area 1 = violet và Area 2/NSSA
+= emerald cho zone bounding box — vi phạm trực tiếp Semantic Color Contract
+(Section 14.6) vì violet/emerald đã dành cho Risk/Health. Bug lặp lại ở cả 3
+file vì không có bảng màu mẫu cụ thể để chép theo — chỉ có danh sách "màu được
+phép dùng" chung chung. Để tránh tái diễn, đây là bảng màu MẶC ĐỊNH bắt buộc
+dùng cho mọi lab có từ 2 area/zone OSPF trở lên trừ khi đề bài yêu cầu khác:
+
+| Area / Zone                                           | Màu bắt buộc | Hex       |
+| :---------------------------------------------------- | :----------- | :-------- |
+| Area 0 (Backbone)                                     | blue         | `#3b82f6` |
+| Area 1                                                | indigo       | `#6366f1` |
+| Area 2 / NSSA                                         | sky          | `#0ea5e9` |
+| Area 3+ (nếu có)                                      | cyan         | `#06b6d4` |
+| Vùng trung lập (ABR/transit, không thuộc area cụ thể) | slate        | `#64748b` |
+
+Áp dụng cho CẢ topology zone box LẪN bất kỳ panel/legend nào tham chiếu lại
+cùng area đó (ví dụ panel "LSDB by Area" phải dùng đúng màu area đã vẽ trên
+topology — không tự chọn màu khác cho cùng 1 Area ở 2 nơi khác nhau trong
+cùng 1 file).
+
+### 4. Khuyến nghị kỹ thuật (không bắt buộc): hàm vẽ link + flood-highlight dùng chung
+
+3 lab OSPF (LSDB Formation, SPF Visualizer, 11-LSA Diagnostic Playbook) đều tự
+viết lại gần như y hệt logic "vẽ SVG link + highlight đường flood/path" với
+các biến thể nhỏ khác nhau (`link-active`/`link-flood` vs `link-path`/
+`link-candidate` vs `link-highlight`). Nếu một lab mới cũng thuộc nhóm
+OSPF-multi-area-topology, nên cân nhắc viết 1 hàm dùng chung dạng:
+
+```javascript
+function drawTopologyLinks(linksArray, { highlightSet, activeSet, downSet }) {
+    // trả về <line> với class tương ứng: lnk-down / lnk-up / lnk-active / lnk-flood
+}
+```
+
+Đây là khuyến nghị tối ưu hoá, không phải quy tắc bắt buộc — một lab đơn lẻ
+không cần refactor chỉ vì lý do này.
+
+### 5. Layout variants: cuộn dọc (mặc định) vs split-screen (lab nhiều dữ liệu)
+
+- **Mặc định — cuộn dọc:** mọi lab Protocol / Troubleshooting / Failover / Packet-walk / Change-MOP dùng `min-h-screen`, `<main>` cuộn tự nhiên, `max-w-7xl` (riêng `topology-design` dùng `max-w-[1600px]` theo Section 14.1).
+- **Biến thể split-screen (được phép):** chỉ dùng khi người học cần **nhìn đồng thời** topology đang chạy VÀ một bảng/log lớn cập nhật theo từng bước (ví dụ LSDB theo router, VRRP/OSPF state, SPF distance table). Cấu trúc: `<main class="flex-1 flex flex-col xl:flex-row overflow-hidden" style="height:calc(100vh - <header+stepper>)">`, topology bên trái (`flex-1`), panel bên phải cố định `xl:w-[400px]`/`[420px]` có cuộn riêng (`overflow-y-auto`). Dưới `xl` tự xếp dọc.
+- `algorithm-viz` luôn dùng split-screen (Section 9). Lab khác chỉ chuyển sang split-screen khi thỏa điều kiện trên — độ dài file KHÔNG phải tiêu chí (`vxlan-mtu-blackhole`, `stp-visual-compare` dài ~900–1000 dòng vẫn dùng cuộn dọc).
+
+### 6. Kiến trúc JS theo template
+
+- Template theo timeline (Protocol, Troubleshooting, Failover, Packet-walk): `class XxxSimulator { constructor(){…} }` + `let app; document.addEventListener('DOMContentLoaded', () => { app = new XxxSimulator(); });`, mọi `onclick` gọi `app.method()`.
+- `algorithm-viz`: module `const App = (() => {…})()` được chấp nhận (engine reactive, không có stepper cố định).
+- Diagnostic Playbook / Topology Design / Change-MOP: hàm toàn cục hoặc object đơn giản (tab/state tĩnh), không bắt buộc class.
+- `clampNodes()` chỉ cần cho canvas có node định vị tuyệt đối bằng `%` (data-driven). Lab dùng flexbox card cố định (`bgp-peering`, `ospf-adjacency`) hoặc không có topology (`change-mop/*`, `wireguard-pfsense-walk`, `dns-resolution`) không cần. Khi retrofit vào file cũ, chỉ ghi lại `style.top/left` khi thực sự có clip (tránh ghi đè node không có inline style).
+- Các lab đã có panel giải thích riêng (`lessons-panel`, "Rủi ro & Lưu ý", Root Cause) không cần thêm Teaching Note box — dùng box ở mục 15.1 cho lab chưa có phần "tại sao bước này quan trọng".

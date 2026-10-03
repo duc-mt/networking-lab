@@ -183,8 +183,8 @@
 
     <!-- Topology Canvas -->
     <!-- Golden Standard Wrapper -->
-            <div class="w-full overflow-x-auto">
-                <div id="topology-container" style="min-width: 900px;" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full max-w-[1180px] mx-auto h-[500px] my-6">
+            <div class="w-full">
+                <div id="topology-container" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full max-w-[1600px] mx-auto h-[500px] my-6">
       <!-- Zones -->
       <div id="zones-layer"></div>
       
@@ -245,8 +245,8 @@
     const data = {
       zones: [
         { id: "on-prem", label: "ON-PREMISES SITE", color: "#3b82f6", bounds: { left: 40, top: 40, width: 280, height: 420 } },
-        { id: "mpls", label: "MPLS TRANSIT (WAN)", color: "#f59e0b", bounds: { left: 340, top: 40, width: 500, height: 420 } },
-        { id: "cloud", label: "CLOUD REGION", color: "#8b5cf6", bounds: { left: 860, top: 40, width: 280, height: 420 } }
+        { id: "mpls", label: "MPLS TRANSIT (WAN)", color: "#6366f1", bounds: { left: 340, top: 40, width: 500, height: 420 } },
+        { id: "cloud", label: "CLOUD REGION", color: "#0ea5e9", bounds: { left: 860, top: 40, width: 280, height: 420 } }
       ],
       nodes: [
         { id: "vtep-onprem", name: "VTEP-OnPrem", role: "VTEP / L2 GW", zone: "on-prem", icon: "fa-network-wired", x: 180, y: 150, health: "green", status: "BGP UP", specs: { loopback: "10.255.0.1", vtep_ip: "10.255.0.1", vni: "10100" }, tableType: "bgp", tableData: [ { neighbor: "10.255.0.2", asn: "65000", state: "Establ", prefixes: "2" } ] },
@@ -382,7 +382,29 @@
         nodesLayer.appendChild(el);
       });
 
+      clampNodes();
       drawLinks();
+    }
+
+    function clampNodes() {
+      // Giữ node (và role badge -top-3) không bị overflow-hidden của canvas cắt mất (docs Section 11).
+      const canvas = document.getElementById('topology-container');
+      if (!canvas) return;
+      const cr = canvas.getBoundingClientRect();
+      if (!cr.width || !cr.height) return;
+      const BADGE_PX = 22, EDGE_PX = 6;
+      canvas.querySelectorAll('[id^="node-"]').forEach(node => {
+        if (!node.style.left || !node.style.top) return;
+        const nr = node.getBoundingClientRect();
+        const hPx = cr.height / 100, wPx = cr.width / 100;
+        let top = parseFloat(node.style.top), left = parseFloat(node.style.left);
+        const topClip = (cr.top + BADGE_PX) - nr.top;      if (topClip > 0)   top  += topClip / hPx;
+        const botClip = nr.bottom - (cr.bottom - EDGE_PX);  if (botClip > 0)   top  -= botClip / hPx;
+        const leftClip = (cr.left + EDGE_PX) - nr.left;     if (leftClip > 0)  left += leftClip / wPx;
+        const rightClip = nr.right - (cr.right - EDGE_PX);  if (rightClip > 0) left -= rightClip / wPx;
+        if (topClip > 0 || botClip > 0) node.style.top = top + '%';
+        if (leftClip > 0 || rightClip > 0) node.style.left = left + '%';
+      });
     }
 
     function drawLinks() {
@@ -476,7 +498,7 @@
     }
 
     // Add resize listener
-    window.addEventListener('resize', drawLinks);
+    window.addEventListener('resize', () => { clampNodes(); drawLinks(); });
 
     function switchView(view) {
       currentView = view;

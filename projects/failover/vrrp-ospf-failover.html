@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>VRRP + OSPF Failover Drill — VyOS Track</title>
+<script src="../../assets/js/theme-init.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class'};</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../../assets/css/theme.css" />
+<style>
+.mono{font-family:'Fira Code',monospace}
+
+/* ── Topology canvas ── */
+#canvas{position:relative;width:100%;overflow:hidden;min-height:480px}
+#topo-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+#node-layer{position:absolute;inset:0;z-index:10}
+#pkt-layer{position:absolute;inset:0;z-index:20;pointer-events:none}
+
+/* node card */
+.ncard{position:absolute;transform:translate(-50%,-50%);user-select:none;transition:all .35s ease}
+.ninner{border:2px solid #334155;border-radius:13px;padding:8px 13px;min-width:88px;text-align:center;transition:all .35s ease;background:#0f172a}
+.dark .ninner{background:#020617}
+.nrole{position:absolute;top:-11px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;padding:1px 7px;border-radius:999px;white-space:nowrap;letter-spacing:.05em;background:#1e293b;border:1px solid #334155;color:#94a3b8}
+.nicon{font-size:18px;margin-bottom:2px}
+.nlabel{font-size:11.5px;font-weight:700;font-family:'Fira Code',monospace;color:#e2e8f0}
+.nsub{font-size:9.5px;color:#64748b;font-family:'Fira Code',monospace}
+.nbadge{position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;font-family:'Fira Code',monospace;border:1px solid}
+
+/* node state styles */
+.ns-normal .ninner{border-color:#334155}
+.ns-master .ninner{border-color:#10b981;box-shadow:0 0 16px rgba(16,185,129,.35)}
+.ns-standby .ninner{border-color:#3b82f620;opacity:.65}
+.ns-failing .ninner{border-color:#ef4444;box-shadow:0 0 18px rgba(239,68,68,.45);animation:pulse-red .5s infinite alternate}
+.ns-failed  .ninner{border-color:#334155;opacity:.35}
+.ns-takeover .ninner{border-color:#f59e0b;box-shadow:0 0 18px rgba(245,158,11,.5);animation:pulse-amber .5s infinite alternate}
+.ns-newmaster .ninner{border-color:#10b981;box-shadow:0 0 20px rgba(16,185,129,.5);animation:pulse-green .7s infinite alternate}
+.ns-ospf-reconverge .ninner{border-color:#6366f1;box-shadow:0 0 16px rgba(99,102,241,.4);animation:pulse-indigo .6s infinite alternate}
+.ns-wan{border-radius:8px}
+.ns-wan .ninner{border-radius:8px;background:#0c1a2e;border-color:#1e3a5f}
+.ns-host .ninner{border-radius:8px;background:#0f1a12;border-color:#14532d}
+.ns-host-affected .ninner{border-radius:8px;background:#1a0f0f;border-color:#7f1d1d;box-shadow:0 0 14px rgba(239,68,68,.3)}
+
+@keyframes pulse-red{from{box-shadow:0 0 10px rgba(239,68,68,.3)}to{box-shadow:0 0 24px rgba(239,68,68,.7)}}
+@keyframes pulse-amber{from{box-shadow:0 0 10px rgba(245,158,11,.3)}to{box-shadow:0 0 24px rgba(245,158,11,.6)}}
+@keyframes pulse-green{from{box-shadow:0 0 12px rgba(16,185,129,.3)}to{box-shadow:0 0 22px rgba(16,185,129,.6)}}
+@keyframes pulse-indigo{from{box-shadow:0 0 10px rgba(99,102,241,.2)}to{box-shadow:0 0 22px rgba(99,102,241,.55)}}
+
+/* link */
+.lk{fill:none;stroke-linecap:round;transition:stroke .3s,opacity .3s}
+.lk-up{stroke:#334155;stroke-width:2}
+.lk-active{stroke:#10b981;stroke-width:2.5;stroke-dasharray:8 4;animation:dash .9s linear infinite}
+.lk-fail{stroke:#ef444466;stroke-width:2;stroke-dasharray:5 4;opacity:.5}
+.lk-garp{stroke:#f59e0b;stroke-width:3;stroke-dasharray:6 3;animation:dash .6s linear infinite}
+.lk-ospf{stroke:#6366f1;stroke-width:2.5;stroke-dasharray:7 3;animation:dash .8s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-28}}
+
+/* packet */
+.pkt{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:25}
+.pkt-pill{font-size:9px;font-weight:700;padding:2px 8px;border-radius:999px;font-family:'Fira Code',monospace;white-space:nowrap;box-shadow:0 0 8px currentColor}
+
+/* timer bar */
+.timer-wrap{height:8px;border-radius:999px;background:#1e293b;overflow:hidden;position:relative}
+.timer-bar{height:100%;border-radius:999px;transition:width .1s linear}
+.timer-anim{animation:none}
+
+/* impact banner */
+.impact-banner{border-radius:12px;padding:10px 14px;font-size:12px;display:flex;align-items:center;gap:8px;transition:all .3s}
+
+/* stepper */
+.sbtn{padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;border:none}
+.sbtn.active{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;box-shadow:0 2px 10px rgba(99,102,241,.35)}
+.sbtn:not(.active){color:#64748b;background:transparent}
+.sbtn:not(.active):hover{color:#94a3b8;background:#1e293b}
+
+/* priority meter */
+.pri-bar{height:6px;border-radius:999px;transition:width .5s ease,background .5s}
+
+/* cli */
+.cli{background:#020617;border:1px solid #1e293b;border-radius:10px;font-family:'Fira Code',monospace;font-size:11px;line-height:1.75;color:#94a3b8;padding:12px 14px;white-space:pre-wrap;overflow-x:auto}
+.cli .cmd{color:#38bdf8}.cli .ok{color:#34d399}.cli .warn{color:#fbbf24}.cli .err{color:#f87171}.cli .hi{color:#a78bfa}
+
+/* VRRP state table */
+.vt-row{display:grid;grid-template-columns:100px 1fr 80px 80px;gap:6px;padding:5px 8px;border-radius:8px;font-size:11px;align-items:center}
+.vt-row:hover{background:#1e293b}
+
+/* zone */
+.zone{position:absolute;border:2px dashed;border-radius:14px;pointer-events:none;z-index:0}
+.zone-lbl{position:absolute;top:6px;left:10px;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.07em}
+
+/* trigger btn */
+#btn-trigger{background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;box-shadow:0 0 20px rgba(220,38,38,.4);animation:pulse-trigger 1.5s infinite}
+@keyframes pulse-trigger{0%,100%{box-shadow:0 0 16px rgba(220,38,38,.35)}50%{box-shadow:0 0 28px rgba(220,38,38,.65)}}
+#btn-trigger.fired{animation:none;background:#1e293b;color:#64748b;box-shadow:none;cursor:not-allowed}
+</style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-200">
+
+<!-- ═══ HEADER ═══ -->
+<header class="sticky top-0 z-50 px-4 py-2.5 flex items-center justify-between gap-3">
+  <div class="flex items-center gap-3">
+    <a href="../../index.html" class="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 hover:shadow-lg hover:scale-105 transition-all-fast"
+         style="background:linear-gradient(135deg,#ec4899,#6366f1)" title="Về trang chủ Portfolio">
+      <i class="fas fa-shield-halved text-sm"></i>
+    </a>
+    <div class="hidden sm:block">
+      <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+        <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+      </a>
+      <div class="text-sm font-extrabold tracking-tight text-slate-900 dark:text-slate-50 leading-none">VRRP + OSPF — Track Failover</div>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <!-- TRIGGER OUTAGE -->
+    <button id="btn-trigger" onclick="app.triggerOutage()"
+            class="h-8 px-4 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all">
+      <i class="fas fa-bolt text-[11px]"></i><span>Trigger Outage</span>
+    </button>
+    <!-- playback -->
+    <button onclick="app.prev()" id="btn-prev" class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all text-xs disabled:opacity-30" disabled><i class="fas fa-chevron-left"></i></button>
+    <button onclick="app.playPause()" id="btn-play" class="w-7 h-7 rounded-lg bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white transition-all text-xs" disabled>
+      <i class="fas fa-play text-[10px]" id="play-icon"></i>
+    </button>
+    <button onclick="app.next()" id="btn-next" class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all text-xs disabled:opacity-30" disabled><i class="fas fa-chevron-right"></i></button>
+    <button onclick="app.reset()" class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all text-xs" title="Reset"><i class="fas fa-rotate-left text-[10px]"></i></button>
+    <button onclick="app.toggleTheme()" class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400 transition-all text-xs ml-1"><i class="fas fa-circle-half-stroke"></i></button>
+  </div>
+</header>
+
+<!-- stepper -->
+<div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 py-2 overflow-x-auto">
+  <div class="flex items-center gap-1.5 min-w-max" id="stepper">
+    <span class="text-xs text-slate-500 mono">Bấm "Trigger Outage" để bắt đầu</span>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<main class="flex-1 flex flex-col xl:flex-row overflow-hidden" style="height:calc(100vh - 95px)">
+
+  <!-- LEFT: topology + impact -->
+  <div class="flex-1 flex flex-col min-h-[480px] xl:min-h-0 bg-white dark:bg-slate-950 border-b xl:border-b-0 xl:border-r border-slate-200 dark:border-slate-800/60">
+
+    <!-- impact banner -->
+    <div class="px-4 pt-3 pb-1 shrink-0">
+      <div class="impact-banner" id="impact-banner" style="background:#05966910;border:1px solid #05966940">
+        <i class="fas fa-circle-check text-emerald-400 text-sm shrink-0"></i>
+        <div>
+          <div class="font-bold text-emerald-400 text-xs">STEADY STATE — Không có sự cố</div>
+          <div class="text-slate-400 text-[11px] mt-0.5" id="impact-desc">Tất cả thiết bị hoạt động bình thường. VyOS-1A là VRRP Master, eth1 WAN UP. OSPF converged.</div>
+        </div>
+        <div class="ml-auto shrink-0" id="split-brain-badge"></div>
+      </div>
+    </div>
+
+    <!-- timer -->
+    <div class="px-4 py-2 shrink-0" id="timer-section" style="display:none">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-[10px] mono text-slate-500 uppercase tracking-wider" id="timer-name">Master Down Timer</span>
+        <span class="text-sm font-bold mono" id="timer-val" style="color:#f59e0b">3.6s</span>
+      </div>
+      <div class="timer-wrap">
+        <div class="timer-bar" id="timer-bar" style="width:100%;background:#f59e0b"></div>
+      </div>
+    </div>
+
+    <!-- topology -->
+    <div id="canvas" class="flex-1">
+      <svg id="topo-svg"><defs>
+        <marker id="arr-green" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#10b981"/></marker>
+        <marker id="arr-amber" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#f59e0b"/></marker>
+        <marker id="arr-indigo" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#6366f1"/></marker>
+      </defs><g id="svg-links"></g></svg>
+      <div id="node-layer"></div>
+      <div id="pkt-layer"></div>
+    </div>
+
+    <!-- legend -->
+    <div class="px-4 py-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-500 shrink-0">
+      <span><span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>VRRP Master / UP</span>
+      <span><span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>Failing / Down</span>
+      <span><span class="inline-block w-2 h-2 rounded-full bg-amber-400 mr-1"></span>Takeover / GARP</span>
+      <span><span class="inline-block w-2 h-2 rounded-full bg-indigo-400 mr-1"></span>OSPF re-converge</span>
+    </div>
+  </div>
+
+  <!-- RIGHT: detail panel -->
+  <div class="w-full xl:w-[420px] flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <!-- tabs -->
+    <div class="flex items-center gap-1.5 px-3 py-2.5 border-b border-slate-200 dark:border-slate-800 shrink-0">
+      <button class="sbtn active" id="tab-vrrp" onclick="app.setTab('vrrp')">VRRP State</button>
+      <button class="sbtn" id="tab-ospf" onclick="app.setTab('ospf')">OSPF</button>
+      <button class="sbtn" id="tab-cli"  onclick="app.setTab('cli')">CLI</button>
+    </div>
+    <div class="flex-1 overflow-y-auto px-3 py-3 space-y-3" id="panel-body"></div>
+
+    <!-- teaching note -->
+    <div id="teaching-note" class="mx-3 mb-3 px-3 py-2.5 rounded-xl text-[11.5px] text-slate-400 leading-relaxed border-l-2 border-indigo-500" style="background:#6366f108;display:none"></div>
+  </div>
+</main>
+
+<script>
+// ══════════════════════════════════════════════
+// TOPOLOGY NODES  (REF: 960 × 420)
+// ══════════════════════════════════════════════
+const NODES = {
+  WAN:  {label:'Internet / WAN', sub:'BGP Upstream', role:'Upstream', icon:'fa-globe',        x:480, y:40,  type:'wan'},
+  V1A:  {label:'VyOS-1A',        sub:'10.0.1.2',     role:'VRRP Pair 1 — eth1 WAN',icon:'fa-server', x:280, y:150, type:'vyos'},
+  V1B:  {label:'VyOS-1B',        sub:'10.0.1.3',     role:'VRRP Pair 1 — Standby', icon:'fa-server', x:680, y:150, type:'vyos'},
+  VIP1: {label:'VIP 10.0.1.1',   sub:'VRRP Group 1', role:'Virtual IP — Pair 1',   icon:'fa-circle-dot',x:480,y:150,type:'vip'},
+  V2A:  {label:'VyOS-2A',        sub:'10.0.2.2',     role:'VRRP Pair 2 — Master',  icon:'fa-server', x:280, y:310, type:'vyos'},
+  V2B:  {label:'VyOS-2B',        sub:'10.0.2.3',     role:'VRRP Pair 2 — Standby', icon:'fa-server', x:680, y:310, type:'vyos'},
+  VIP2: {label:'VIP 10.0.2.1',   sub:'VRRP Group 2', role:'Virtual IP — Pair 2',   icon:'fa-circle-dot',x:480,y:310,type:'vip'},
+  HOST: {label:'LAN Hosts',       sub:'10.0.2.0/24',  role:'Default GW = 10.0.2.1', icon:'fa-computer', x:480,y:400,type:'host'},
+};
+
+const LINKS_DEF = [
+  {id:'wan-v1a', from:'WAN',  to:'V1A',  label:'eth1 WAN'},
+  {id:'wan-v1b', from:'WAN',  to:'V1B',  label:'eth1 WAN'},
+  {id:'v1a-vip1',from:'V1A',  to:'VIP1', label:''},
+  {id:'v1b-vip1',from:'V1B',  to:'VIP1', label:''},
+  {id:'v1a-v2a', from:'V1A',  to:'V2A',  label:'OSPF'},
+  {id:'v1b-v2b', from:'V1B',  to:'V2B',  label:'OSPF'},
+  {id:'v1a-v2b', from:'V1A',  to:'V2B',  label:'ECMP'},
+  {id:'v2a-vip2',from:'V2A',  to:'VIP2', label:''},
+  {id:'v2b-vip2',from:'V2B',  to:'VIP2', label:''},
+  {id:'vip2-host',from:'VIP2',to:'HOST', label:'GW'},
+];
+
+const REF_W=960, REF_H=440;
+
+// ══════════════════════════════════════════════
+// TIMELINE
+// ══════════════════════════════════════════════
+const TIMELINE = [
+  // ── Step 0: Steady State
+  {
+    step:0, event:'STEADY STATE', phase:'normal', phaseColor:'#10b981',
+    title:'Trạng thái bình thường — tất cả UP',
+    timer:null,
+    impact:'None', impactDesc:'Tất cả hoạt động bình thường. VyOS-1A giữ VIP1 (VRRP Master, priority 150). OSPF DR trên segment upstream.',
+    splitBrain:false,
+    nodeStates:{WAN:'normal',V1A:'master',V1B:'standby',VIP1:'master',V2A:'master',V2B:'standby',VIP2:'master',HOST:'normal'},
+    linkStates:{
+      'wan-v1a':'active','wan-v1b':'up',
+      'v1a-vip1':'active','v1b-vip1':'up',
+      'v1a-v2a':'active','v1b-v2b':'up','v1a-v2b':'up',
+      'v2a-vip2':'active','v2b-vip2':'up',
+      'vip2-host':'active'
+    },
+    vrrp:[
+      {node:'VyOS-1A', group:1, state:'MASTER', pri:150, vip:'10.0.1.1', track:'eth1 UP → +0'},
+      {node:'VyOS-1B', group:1, state:'BACKUP', pri:100, vip:'—',        track:'—'},
+      {node:'VyOS-2A', group:2, state:'MASTER', pri:150, vip:'10.0.2.1', track:'eth0 UP → +0'},
+      {node:'VyOS-2B', group:2, state:'BACKUP', pri:100, vip:'—',        track:'—'},
+    ],
+    ospf:{
+      neighbors:[
+        {from:'VyOS-1A',to:'VyOS-2A',state:'FULL',role:'DR → DROTHER'},
+        {from:'VyOS-1A',to:'VyOS-2B',state:'FULL',role:'DR → DROTHER'},
+        {from:'VyOS-1B',to:'VyOS-2A',state:'FULL',role:'BDR → DROTHER'},
+      ],
+      routes:['O 10.0.2.0/24 via 10.0.1.2 [110/2]','O 10.0.1.0/24 connected','O E2 0.0.0.0/0 via WAN'],
+      ecmp:'ECMP active: 10.0.2.0/24 via VyOS-2A AND VyOS-2B → vấn đề latent!'
+    },
+    cli:`VyOS-1A# run show vrrp
+Interface  Group  State   Last Change  Priority
+eth0       1      MASTER  2m ago       150
+VIP: 10.0.1.1/24  Preempt: yes  Advert: 1s
+
+VyOS-1A# run show ip ospf neighbor
+Neighbor ID   Pri  State   Dead Time  Address
+10.0.2.2       1   FULL/DR  00:00:38  10.0.1.254  ← VyOS-2A
+10.0.2.3       1   FULL/DR  00:00:36  10.0.1.253  ← VyOS-2B
+
+! OSPF ECMP đang tạo path xuống cả VyOS-2A lẫn VyOS-2B
+! VyOS-2B (Standby) không giữ VIP2 → traffic tới VIP2 qua 2B sẽ DROP`,
+    note:'<b>Vấn đề latent:</b> OSPF ECMP đang forward traffic xuống cả VyOS-2A (Master) và VyOS-2B (Standby). VyOS-2B không giữ VIP2 → packet đến VIP2 qua 2B bị drop. Đây chính là bug đang gặp phải.',
+    packets:[{from:'HOST',to:'VIP2',to2:'V2A',to3:'WAN',color:'#10b981',label:'traffic OK'}],
+  },
+  // ── Step 1: eth1 down detected
+  {
+    step:1, event:'OUTAGE TRIGGERED', phase:'failing', phaseColor:'#ef4444',
+    title:'eth1 WAN của VyOS-1A DOWN',
+    timer:{name:'Track weight đánh giá', total:0.5, remaining:0.5, color:'#ef4444'},
+    impact:'Degraded', impactDesc:'⚠ eth1 của VyOS-1A vừa mất. VRRP Track phát hiện interface down. Đang tính lại priority.',
+    splitBrain:false,
+    nodeStates:{WAN:'normal',V1A:'failing',V1B:'standby',VIP1:'master',V2A:'master',V2B:'standby',VIP2:'master',HOST:'normal'},
+    linkStates:{
+      'wan-v1a':'fail','wan-v1b':'up',
+      'v1a-vip1':'active','v1b-vip1':'up',
+      'v1a-v2a':'active','v1b-v2b':'up','v1a-v2b':'up',
+      'v2a-vip2':'active','v2b-vip2':'up',
+      'vip2-host':'active'
+    },
+    vrrp:[
+      {node:'VyOS-1A', group:1, state:'MASTER', pri:150, vip:'10.0.1.1', track:'eth1 DOWN → -60 = 90'},
+      {node:'VyOS-1B', group:1, state:'BACKUP', pri:100, vip:'—',        track:'Chờ Advertisement'},
+      {node:'VyOS-2A', group:2, state:'MASTER', pri:150, vip:'10.0.2.1', track:'OK'},
+      {node:'VyOS-2B', group:2, state:'BACKUP', pri:100, vip:'—',        track:'—'},
+    ],
+    ospf:{
+      neighbors:[
+        {from:'VyOS-1A',to:'VyOS-2A',state:'FULL',role:'DR → DROTHER'},
+        {from:'VyOS-1A',to:'VyOS-2B',state:'FULL',role:'DR → DROTHER'},
+        {from:'VyOS-1B',to:'VyOS-2A',state:'FULL',role:'BDR → DROTHER'},
+      ],
+      routes:['O 10.0.2.0/24 via 10.0.1.2 [110/2]','! WAN route sắp mất'],
+      ecmp:'ECMP vẫn còn — VyOS-2B vẫn nhận traffic và DROP'
+    },
+    cli:`VyOS-1A# run show interfaces ethernet eth1
+eth1: <NO-CARRIER> mtu 1500 ...
+  Link: down
+  
+! VRRP Track phát hiện eth1 down ngay lập tức
+! Priority: 150 - 60 (track weight) = 90
+! Sẽ gửi Advertisement với priority=90 trong interval tiếp theo (≤1s)`,
+    note:'<b>VRRP Track:</b> Cấu hình <code>track interface eth1 weight 60</code> — khi eth1 down, priority tự động giảm 60: 150 → 90. VyOS-1B (priority 100) sẽ cao hơn → sẽ preempt.',
+    packets:[],
+  },
+  // ── Step 2: Advertisement với priority thấp
+  {
+    step:2, event:'PRIORITY DROP', phase:'failing', phaseColor:'#f59e0b',
+    title:'VyOS-1A gửi Advertisement priority=90',
+    timer:{name:'Preempt delay (VyOS-1B nhận và so sánh)', total:1.0, remaining:1.0, color:'#f59e0b'},
+    impact:'Degraded', impactDesc:'VyOS-1A broadcast Advertisement với priority 90 < 100 (VyOS-1B). VyOS-1B phát hiện mình cao hơn, chuẩn bị preempt.',
+    splitBrain:false,
+    nodeStates:{WAN:'normal',V1A:'failing',V1B:'takeover',VIP1:'master',V2A:'master',V2B:'standby',VIP2:'master',HOST:'normal'},
+    linkStates:{
+      'wan-v1a':'fail','wan-v1b':'up',
+      'v1a-vip1':'active','v1b-vip1':'garp',
+      'v1a-v2a':'active','v1b-v2b':'up','v1a-v2b':'up',
+      'v2a-vip2':'active','v2b-vip2':'up','vip2-host':'active'
+    },
+    vrrp:[
+      {node:'VyOS-1A', group:1, state:'MASTER', pri:90,  vip:'10.0.1.1', track:'eth1 DOWN — pri=90'},
+      {node:'VyOS-1B', group:1, state:'BACKUP→MASTER', pri:100, vip:'Chuẩn bị takeover', track:'100 > 90 → PREEMPT'},
+      {node:'VyOS-2A', group:2, state:'MASTER', pri:150, vip:'10.0.2.1', track:'OK'},
+      {node:'VyOS-2B', group:2, state:'BACKUP', pri:100, vip:'—',        track:'—'},
+    ],
+    ospf:{
+      neighbors:[
+        {from:'VyOS-1A',to:'VyOS-2A',state:'FULL',role:'DR'},
+        {from:'VyOS-1B',to:'VyOS-2A',state:'FULL',role:'BDR'},
+      ],
+      routes:['O 10.0.2.0/24 [110/2] — còn giữ'],
+      ecmp:'ECMP vẫn còn — đây là khoảng thời gian packet loss'
+    },
+    cli:`! VyOS-1A phát Advertisement:
+VRRP Advertisement: VRID=1, Priority=90, Interval=1s
+Src: 10.0.1.2 → 224.0.0.18 (multicast)
+
+! VyOS-1B nhận và so sánh:
+VyOS-1B: Received Advert priority=90, my priority=100
+VyOS-1B: 100 > 90 AND preempt=true → Initiating MASTER takeover
+VyOS-1B: Waiting 0ms (preempt_delay=0) → immediate takeover`,
+    note:'<b>Preempt mechanism:</b> Vì cả hai VyOS cấu hình <code>preempt true</code>, VyOS-1B không cần đợi Master Down Timer (3.6s). Nó preempt ngay khi thấy Advertisement với priority thấp hơn mình. Đây là lý do failover nhanh hơn nhiều.',
+    packets:[{from:'V1A',to:'V1B',color:'#f59e0b',label:'Advert pri=90'}],
+  },
+  // ── Step 3: GARP
+  {
+    step:3, event:'GARP BROADCAST', phase:'takeover', phaseColor:'#f59e0b',
+    title:'VyOS-1B lên Master — phát GARP',
+    timer:{name:'GARP broadcast + ARP cache update', total:2.0, remaining:2.0, color:'#f59e0b'},
+    impact:'Degraded', impactDesc:'VyOS-1B đã giành VIP1. Đang gửi Gratuitous ARP để update MAC table của toàn segment. Khoảng 100–500ms packet loss.',
+    splitBrain:false,
+    nodeStates:{WAN:'normal',V1A:'failed',V1B:'newmaster',VIP1:'takeover',V2A:'master',V2B:'standby',VIP2:'master',HOST:'normal'},
+    linkStates:{
+      'wan-v1a':'fail','wan-v1b':'active',
+      'v1a-vip1':'up','v1b-vip1':'garp',
+      'v1a-v2a':'fail','v1b-v2b':'active','v1a-v2b':'fail',
+      'v2a-vip2':'active','v2b-vip2':'up','vip2-host':'active'
+    },
+    vrrp:[
+      {node:'VyOS-1A', group:1, state:'BACKUP', pri:90,  vip:'—', track:'eth1 DOWN — demoted'},
+      {node:'VyOS-1B', group:1, state:'MASTER', pri:100, vip:'10.0.1.1', track:'eth1 UP — holding VIP'},
+      {node:'VyOS-2A', group:2, state:'MASTER', pri:150, vip:'10.0.2.1', track:'OK'},
+      {node:'VyOS-2B', group:2, state:'BACKUP', pri:100, vip:'—',        track:'—'},
+    ],
+    ospf:{
+      neighbors:[
+        {from:'VyOS-1B',to:'VyOS-2A',state:'FULL',role:'BDR → chuẩn bị DR election'},
+        {from:'VyOS-1A',to:'VyOS-2A',state:'FULL→2WAY',role:'DR cũ → down'},
+      ],
+      routes:['O 10.0.2.0/24 stale — đang re-converge'],
+      ecmp:'ECMP path qua VyOS-1A bị xóa — chỉ còn VyOS-1B'
+    },
+    cli:`VyOS-1B# 
+VRRP: Sending 3× Gratuitous ARP for 10.0.1.1
+ARP: Who has 10.0.1.1? Tell 10.0.1.3
+     (reply: 10.0.1.1 is at aa:bb:cc:dd:ee:02 ← MAC của VyOS-1B)
+
+! Tất cả switch/host trên segment update ARP cache
+! VyOS-1A OSPF neighbor bắt đầu dead timer countdown (40s default)
+! Nhưng VyOS-1B đã có OSPF neighbor với VyOS-2A/2B → re-elect DR`,
+    note:'<b>GARP — Gratuitous ARP:</b> VyOS-1B gửi 3 ARP broadcast báo "10.0.1.1 bây giờ tại MAC của tôi". Mọi thiết bị trên segment cập nhật ARP cache trong vài trăm ms. Đây là khoảng packet loss thực sự của VRRP failover.',
+    packets:[{from:'V1B',to:'VIP1',color:'#f59e0b',label:'GARP ×3'},{from:'VIP1',to:'V2A',color:'#f59e0b',label:'ARP update'}],
+  },
+  // ── Step 4: OSPF re-converge
+  {
+    step:4, event:'OSPF RE-CONVERGE', phase:'ospf', phaseColor:'#6366f1',
+    title:'OSPF DR election lại — VyOS-1B lên DR',
+    timer:{name:'OSPF Dead Timer (VyOS-1A)', total:40, remaining:38, color:'#6366f1'},
+    impact:'Degraded', impactDesc:'OSPF phát hiện VyOS-1A mất uplink. VyOS-1B (BDR) trở thành DR mới. LSA flood trong area. ECMP path qua VyOS-2B được xóa.',
+    splitBrain:false,
+    nodeStates:{WAN:'normal',V1A:'failed',V1B:'ospf-reconverge',VIP1:'master',V2A:'ospf-reconverge',V2B:'standby',VIP2:'master',HOST:'normal'},
+    linkStates:{
+      'wan-v1a':'fail','wan-v1b':'active',
+      'v1a-vip1':'up','v1b-vip1':'active',
+      'v1a-v2a':'fail','v1b-v2b':'active','v1a-v2b':'fail',
+      'v2a-vip2':'active','v2b-vip2':'up','vip2-host':'active'
+    },
+    vrrp:[
+      {node:'VyOS-1A', group:1, state:'BACKUP', pri:90,  vip:'—', track:'eth1 DOWN'},
+      {node:'VyOS-1B', group:1, state:'MASTER', pri:100, vip:'10.0.1.1', track:'OK — OSPF DR mới'},
+      {node:'VyOS-2A', group:2, state:'MASTER', pri:150, vip:'10.0.2.1', track:'OSPF neighbor UP'},
+      {node:'VyOS-2B', group:2, state:'BACKUP', pri:100, vip:'—',        track:'OSPF neighbor đang xét lại'},
+    ],
+    ospf:{
+      neighbors:[
+        {from:'VyOS-1B',to:'VyOS-2A',state:'FULL',role:'DR (mới) → DROTHER'},
+        {from:'VyOS-1B',to:'VyOS-2B',state:'FULL',role:'DR (mới) → DROTHER'},
+      ],
+      routes:['O 10.0.2.0/24 via VyOS-2A [110/2] ← chỉ còn 1 path!','O E2 0.0.0.0/0 via WAN via VyOS-1B'],
+      ecmp:'ECMP đã bị xóa — chỉ còn path qua VyOS-2A (Master) → Vấn đề ban đầu đã được giải quyết!'
+    },
+    cli:`VyOS-1B# run show ip ospf neighbor
+Neighbor ID   Pri  State    Dead Time  Address
+10.0.2.2       1   FULL/DR  00:00:38   10.0.1.254  VyOS-2A
+10.0.2.3       1   FULL/DR  00:00:36   10.0.1.253  VyOS-2B
+
+! Type 1 LSA flood — VyOS-1A seq# increment, link down flagged
+! VyOS-2B OSPF cost vẫn cao (nếu đã apply fix) → không được chọn
+
+VyOS-1B# run show ip route ospf
+O    10.0.2.0/24  [110/2]  via 10.0.2.2, eth0  ← chỉ VyOS-2A!
+O E2 0.0.0.0/0   [110/1]  via WAN
+! ECMP đã bị eliminate — traffic không còn đi qua VyOS-2B nữa`,
+    note:'<b>Fix tự nhiên sau failover:</b> Khi VyOS-1A mất eth1 và OSPF neighbor reset, routing table được tính lại. Nếu đã apply <code>ospf cost 200</code> trên VyOS-2B, chỉ còn 1 path qua VyOS-2A — vấn đề ECMP drop đã được loại bỏ.',
+    packets:[{from:'V1B',to:'V2A',color:'#6366f1',label:'LSA flood'},{from:'V2A',to:'V1B',color:'#6366f1',label:'LSAck'}],
+  },
+  // ── Step 5: Converged
+  {
+    step:5, event:'CONVERGED', phase:'done', phaseColor:'#10b981',
+    title:'Hệ thống converged — VyOS-1B là Master mới',
+    timer:null,
+    impact:'None', impactDesc:'✅ Failover hoàn tất. VyOS-1B giữ VIP1. OSPF route qua VyOS-2A (Master). Traffic hosts thông suốt. Vấn đề ECMP đã biến mất.',
+    splitBrain:false,
+    nodeStates:{WAN:'normal',V1A:'failed',V1B:'master',VIP1:'master',V2A:'master',V2B:'standby',VIP2:'master',HOST:'normal'},
+    linkStates:{
+      'wan-v1a':'fail','wan-v1b':'active',
+      'v1a-vip1':'up','v1b-vip1':'active',
+      'v1a-v2a':'fail','v1b-v2b':'active','v1a-v2b':'fail',
+      'v2a-vip2':'active','v2b-vip2':'up','vip2-host':'active'
+    },
+    vrrp:[
+      {node:'VyOS-1A', group:1, state:'BACKUP', pri:90,  vip:'—', track:'Chờ eth1 recovery'},
+      {node:'VyOS-1B', group:1, state:'MASTER', pri:100, vip:'10.0.1.1', track:'eth1 UP — stable'},
+      {node:'VyOS-2A', group:2, state:'MASTER', pri:150, vip:'10.0.2.1', track:'OK — sole path'},
+      {node:'VyOS-2B', group:2, state:'BACKUP', pri:100, vip:'—',        track:'OSPF cost 200 — không nhận traffic'},
+    ],
+    ospf:{
+      neighbors:[
+        {from:'VyOS-1B',to:'VyOS-2A',state:'FULL',role:'DR → DROTHER'},
+        {from:'VyOS-1B',to:'VyOS-2B',state:'FULL',role:'DR → DROTHER (cost 200 — ignored)'},
+      ],
+      routes:['O 10.0.2.0/24 via 10.0.2.2 [110/2] ← VyOS-2A only','O E2 0.0.0.0/0 via WAN'],
+      ecmp:'Không còn ECMP. VyOS-2B cost 200 > VyOS-2A cost 10 → bị loại khỏi path'
+    },
+    cli:`VyOS-1B# run show vrrp
+Interface  Group  State   Priority  VIP
+eth0       1      MASTER  100       10.0.1.1
+
+VyOS-2A# run show vrrp  
+Interface  Group  State   Priority  VIP
+eth0       2      MASTER  150       10.0.2.1
+
+VyOS-1B# run show ip route
+O    10.0.2.0/24 [110/2]  via 10.0.2.2  ← VyOS-2A ONLY ✓
+O E2 0.0.0.0/0  [110/1]  via WAN upstream ✓
+
+! Khi eth1 VyOS-1A được restore:
+! priority sẽ tăng lại 90+60=150 → preempt VyOS-1B → trở về trạng thái ban đầu`,
+    note:'<b>Tóm tắt toàn bộ cơ chế:</b> VRRP Track (eth1 -60) → priority drop 150→90 → VyOS-1B preempt → GARP update ARP → OSPF re-elect DR → routing table clean → ECMP tự nhiên bị loại bỏ. Tổng thời gian: ~2–4 giây.',
+    packets:[{from:'HOST',to:'VIP2',to2:'V2A',to3:'V1B',to4:'WAN',color:'#10b981',label:'traffic OK ✓'}],
+  },
+];
+
+// ══════════════════════════════════════════════
+// LAB ENGINE
+// ══════════════════════════════════════════════
+class VrrpFailoverSimulator {
+  constructor() {
+    this.cur = 0;
+    this.triggered = false;
+    this.playing = false;
+    this.timer = null;
+    this.timerInterval = null;
+    this.activeTab = 'vrrp';
+    this.pktTimers = [];
+    this.resT = null;
+
+    window.addEventListener('resize', () => {
+      clearTimeout(this.resT);
+      this.resT = setTimeout(() => { this.clampNodes(); this.drawLinks(TIMELINE[this.cur]); }, 120);
+    });
+
+    this.renderStep(0);
+  }
+
+  // ── Trigger ─────────────────────────────────
+  triggerOutage() {
+    if (this.triggered) return;
+    this.triggered = true;
+    const btn = document.getElementById('btn-trigger');
+    btn.classList.add('fired');
+    btn.innerHTML = '<i class="fas fa-bolt text-[11px]"></i><span>Outage Active</span>';
+    ['btn-prev','btn-play','btn-next'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.disabled = false; el.classList.remove('disabled:opacity-30'); }
+    });
+    this.renderStep(1);
+  }
+
+  reset() {
+    this.triggered = false;
+    if (this.playing) this.playPause();
+    this.clearAllTimers();
+    const btn = document.getElementById('btn-trigger');
+    btn.classList.remove('fired');
+    btn.innerHTML = '<i class="fas fa-bolt text-[11px]"></i><span>Trigger Outage</span>';
+    ['btn-prev','btn-play','btn-next'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = true;
+    });
+    this.renderStep(0);
+  }
+
+  // ── Navigation ───────────────────────────────
+  seek(i) {
+    if (!this.triggered && i > 0) return;
+    if (this.playing) this.playPause();
+    this.renderStep(i);
+  }
+  next() { if (this.cur < TIMELINE.length-1) this.renderStep(this.cur+1); else if (this.playing) this.playPause(); }
+  prev() { if (this.cur > 0) this.renderStep(this.cur-1); }
+
+  playPause() {
+    if (!this.triggered) return;
+    this.playing = !this.playing;
+    document.getElementById('play-icon').className = `fas ${this.playing?'fa-pause':'fa-play'} text-[10px]`;
+    if (this.playing) this.timer = setInterval(() => this.next(), 2800);
+    else clearInterval(this.timer);
+  }
+
+  // ── Render step ──────────────────────────────
+  renderStep(idx) {
+    this.cur = idx;
+    const s = TIMELINE[idx];
+    this.clearAllTimers();
+
+    this.buildStepper();
+    this.renderImpact(s);
+    this.renderTimer(s.timer);
+    this.renderTopology(s);
+    this.renderPanel(s);
+
+    const tn = document.getElementById('teaching-note');
+    if (s.note) {
+      tn.innerHTML = '<i class="fas fa-lightbulb text-indigo-400 mr-1.5"></i>' + s.note;
+      tn.style.display = 'block';
+    } else { tn.style.display = 'none'; }
+
+    if (s.packets && s.packets.length) this.animatePackets(s.packets);
+  }
+
+  // ── Stepper ──────────────────────────────────
+  buildStepper() {
+    const el = document.getElementById('stepper');
+    if (!this.triggered) {
+      el.innerHTML = '<span class="text-xs text-slate-500 mono">Bấm "Trigger Outage" để bắt đầu</span>';
+      return;
+    }
+    el.innerHTML = '';
+    TIMELINE.forEach((s, i) => {
+      const btn = document.createElement('button');
+      btn.className = `sbtn ${i===this.cur?'active':''}`;
+      btn.innerHTML = `<span class="mono text-[9px] mr-1">${i}.</span>${s.event}`;
+      btn.onclick = () => this.seek(i);
+      el.appendChild(btn);
+    });
+  }
+
+  // ── Impact banner ────────────────────────────
+  renderImpact(s) {
+    const banner = document.getElementById('impact-banner');
+    const sbBadge = document.getElementById('split-brain-badge');
+    const cfg = {
+      'None':         {bg:'#05966910',border:'#05966940',icon:'fa-circle-check',   color:'#34d399', label:'NORMAL'},
+      'Degraded':     {bg:'#92400e18',border:'#92400e50',icon:'fa-triangle-exclamation',color:'#fbbf24',label:'DEGRADED'},
+      'Total Outage': {bg:'#7f1d1d18',border:'#7f1d1d50',icon:'fa-circle-xmark',   color:'#f87171', label:'OUTAGE'},
+    }[s.impact] || {bg:'#05966910',border:'#05966940',icon:'fa-circle-check',color:'#34d399',label:'OK'};
+    banner.style.cssText = `background:${cfg.bg};border:1px solid ${cfg.border}`;
+    banner.innerHTML = `<i class="fas ${cfg.icon} text-sm shrink-0" style="color:${cfg.color}"></i>
+      <div>
+        <div class="font-bold text-xs" style="color:${cfg.color}">${cfg.label} — ${s.event}</div>
+        <div class="text-slate-400 text-[11px] mt-0.5">${s.impactDesc}</div>
+      </div>`;
+    sbBadge.innerHTML = s.splitBrain
+      ? '<span class="text-[9px] font-bold px-2 py-1 rounded-full bg-red-900/40 border border-red-700 text-red-400 mono">⚠ SPLIT-BRAIN RISK</span>'
+      : '';
+  }
+
+  // ── Timer ─────────────────────────────────────
+  renderTimer(timerDef) {
+    const sec = document.getElementById('timer-section');
+    if (!timerDef) { sec.style.display='none'; return; }
+    sec.style.display = 'block';
+    document.getElementById('timer-name').textContent = timerDef.name;
+    document.getElementById('timer-val').style.color = timerDef.color;
+    const bar = document.getElementById('timer-bar');
+    bar.style.background = timerDef.color;
+    bar.style.width = '100%';
+    let rem = timerDef.remaining;
+    const tot = timerDef.total;
+    document.getElementById('timer-val').textContent = rem.toFixed(1) + 's';
+    this.timerInterval = setInterval(() => {
+      rem = Math.max(0, rem - 0.1);
+      bar.style.width = (rem/tot*100) + '%';
+      document.getElementById('timer-val').textContent = rem.toFixed(1) + 's';
+      if (rem <= 0) { clearInterval(this.timerInterval); }
+    }, 100);
+  }
+
+  clearAllTimers() {
+    clearInterval(this.timerInterval);
+    this.pktTimers.forEach(t => clearTimeout(t));
+    this.pktTimers = [];
+    document.getElementById('pkt-layer').innerHTML = '';
+  }
+
+  // ── Topology ─────────────────────────────────
+  renderTopology(s) {
+    const canvas = document.getElementById('canvas');
+    const W = canvas.clientWidth || REF_W;
+    const H = Math.max(canvas.clientHeight, 440);
+
+    // zones — Area/Zone colors follow the standard blue/indigo/sky convention (docs Section 15.3)
+    canvas.querySelectorAll('.zone').forEach(e=>e.remove());
+    const zones = [
+      {label:'VRRP Pair 1 — Upstream Gateway', x1:60,y1:95,x2:900,y2:215,color:'#3b82f6'},
+      {label:'VRRP Pair 2 — Downstream Gateway',x1:60,y1:250,x2:900,y2:380,color:'#6366f1'},
+    ];
+    zones.forEach(z => {
+      const box = document.createElement('div');
+      box.className = 'zone';
+      box.style.cssText = `left:${z.x1/REF_W*100}%;top:${z.y1/REF_H*100}%;width:${(z.x2-z.x1)/REF_W*100}%;height:${(z.y2-z.y1)/REF_H*100}%;border-color:${z.color}44;background:${z.color}06`;
+      const lbl = document.createElement('div');
+      lbl.className = 'zone-lbl';
+      lbl.style.cssText = `color:${z.color};background:${z.color}18;font-size:9px;font-weight:700;letter-spacing:.07em`;
+      lbl.textContent = z.label;
+      box.appendChild(lbl);
+      canvas.appendChild(box);
+    });
+
+    // nodes
+    canvas.querySelectorAll('.ncard').forEach(e=>e.remove());
+    Object.entries(NODES).forEach(([id, n]) => {
+      const st = s.nodeStates[id] || 'normal';
+      const el = document.createElement('div');
+      el.className = `ncard ns-${st} ns-${n.type}`;
+      el.id = 'node-' + id;
+      el.style.left = (n.x/REF_W*100) + '%';
+      el.style.top  = (n.y/REF_H*100) + '%';
+
+      const stColor = {
+        normal:'#475569',master:'#10b981',standby:'#334155',
+        failing:'#ef4444',failed:'#334155',takeover:'#f59e0b',
+        newmaster:'#10b981','ospf-reconverge':'#6366f1'
+      }[st]||'#475569';
+
+      const stLabel = {
+        normal:'ONLINE',master:'MASTER',standby:'STANDBY',
+        failing:'FAILING',failed:'DOWN',takeover:'TAKEOVER',
+        newmaster:'NEW MASTER','ospf-reconverge':'OSPF RE-ELECT'
+      }[st]||'';
+
+      const vrrpInfo = s.vrrp ? s.vrrp.find(v => v.node === n.label) : null;
+      const priHTML = vrrpInfo ? `<div class="nsub" style="color:${stColor}">pri=${vrrpInfo.pri}</div>` : '';
+
+      el.innerHTML = `<div class="ninner">
+        <div class="nrole">${n.role}</div>
+        <div class="nicon"><i class="fas ${n.icon}" style="color:${stColor}"></i></div>
+        <div class="nlabel">${n.label}</div>
+        <div class="nsub">${n.sub}</div>
+        ${priHTML}
+        ${stLabel?`<div class="nbadge" style="color:${stColor};border-color:${stColor}40;background:${stColor}14">${stLabel}</div>`:''}
+      </div>`;
+      canvas.appendChild(el);
+    });
+
+    // SVG links — after nodes placed
+    setTimeout(() => {
+      this.clampNodes();
+      this.drawLinks(s, W, H);
+    }, 45);
+  }
+
+  drawLinks(s, W, H) {
+    const canvas = document.getElementById('canvas');
+    W = W || canvas.clientWidth || REF_W;
+    H = H || Math.max(canvas.clientHeight, 440);
+    const svg = document.getElementById('svg-links');
+    svg.innerHTML = '';
+
+    LINKS_DEF.forEach(lnk => {
+      const na = canvas.querySelector('#node-' + lnk.from);
+      const nb = canvas.querySelector('#node-' + lnk.to);
+      if (!na || !nb) return;
+      const ax = parseFloat(na.style.left)/100*W;
+      const ay = parseFloat(na.style.top)/100*H;
+      const bx = parseFloat(nb.style.left)/100*W;
+      const by = parseFloat(nb.style.top)/100*H;
+      const lst = s.linkStates[lnk.id] || 'up';
+      const cls = {up:'lk lk-up',active:'lk lk-active',fail:'lk lk-fail',garp:'lk lk-garp',ospf:'lk lk-ospf'}[lst]||'lk lk-up';
+      const marker = lst==='active'?'url(#arr-green)':lst==='garp'?'url(#arr-amber)':lst==='ospf'?'url(#arr-indigo)':'';
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',ax);line.setAttribute('y1',ay);
+      line.setAttribute('x2',bx);line.setAttribute('y2',by);
+      line.className.baseVal = cls;
+      if (marker) line.setAttribute('marker-end', marker);
+      svg.appendChild(line);
+
+      if (lnk.label && lst !== 'fail') {
+        const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+        txt.setAttribute('x',(ax+bx)/2);txt.setAttribute('y',(ay+by)/2-5);
+        txt.setAttribute('text-anchor','middle');
+        txt.setAttribute('fill','#475569');txt.setAttribute('font-size','9');
+        txt.setAttribute('font-family','Fira Code');
+        txt.textContent = lnk.label;
+        svg.appendChild(txt);
+      }
+    });
+  }
+
+  clampNodes() {
+    const canvas = document.getElementById('canvas');
+    if (!canvas) return;
+    const cr = canvas.getBoundingClientRect();
+    if (!cr.width) return;
+    const BADGE=22, EDGE=6;
+    canvas.querySelectorAll('[id^="node-"]').forEach(node => {
+      const nr = node.getBoundingClientRect();
+      const hPx=cr.height/100, wPx=cr.width/100;
+      let top=parseFloat(node.style.top)||50;
+      let left=parseFloat(node.style.left)||50;
+      const tc=(cr.top+BADGE)-nr.top; if(tc>0) top+=tc/hPx;
+      const bc=nr.bottom-(cr.bottom-EDGE); if(bc>0) top-=bc/hPx;
+      const lc=(cr.left+EDGE)-nr.left; if(lc>0) left+=lc/wPx;
+      const rc=nr.right-(cr.right-EDGE); if(rc>0) left-=rc/wPx;
+      node.style.top=top+'%'; node.style.left=left+'%';
+    });
+  }
+
+  // ── Packet animation ──────────────────────────
+  animatePackets(pkts) {
+    pkts.forEach((pkt, i) => {
+      const t = setTimeout(() => {
+        const canvas = document.getElementById('canvas');
+        const W = canvas.clientWidth || REF_W;
+        const H = Math.max(canvas.clientHeight, 440);
+        const fromNode = canvas.querySelector('#node-' + pkt.from);
+        const toNode   = canvas.querySelector('#node-' + pkt.to);
+        if (!fromNode || !toNode) return;
+        const ax = parseFloat(fromNode.style.left)/100*W;
+        const ay = parseFloat(fromNode.style.top)/100*H;
+        const bx = parseFloat(toNode.style.left)/100*W;
+        const by = parseFloat(toNode.style.top)/100*H;
+
+        const dot = document.createElement('div');
+        dot.className = 'pkt';
+        dot.style.left = ax+'px'; dot.style.top = ay+'px';
+        dot.innerHTML = `<div class="pkt-pill" style="background:${pkt.color}25;color:${pkt.color};border:1px solid ${pkt.color}50">
+          ${pkt.label}
+        </div>`;
+        document.getElementById('pkt-layer').appendChild(dot);
+        dot.animate([
+          {left:ax+'px',top:ay+'px',opacity:1},
+          {left:bx+'px',top:by+'px',opacity:.8},
+          {left:bx+'px',top:by+'px',opacity:0},
+        ],{duration:1200,easing:'ease-in-out',fill:'forwards'});
+        setTimeout(()=>dot.remove(),1300);
+      }, i * 500);
+      this.pktTimers.push(t);
+    });
+  }
+
+  // ── Panel ─────────────────────────────────────
+  setTab(t) {
+    this.activeTab = t;
+    ['vrrp','ospf','cli'].forEach(x => {
+      document.getElementById('tab-'+x).className = `sbtn${x===t?' active':''}`;
+    });
+    this.renderPanel(TIMELINE[this.cur]);
+  }
+
+  renderPanel(s) {
+    const body = document.getElementById('panel-body');
+    if (this.activeTab === 'cli')  { this.renderCLI(body, s);  return; }
+    if (this.activeTab === 'ospf') { this.renderOSPF(body, s); return; }
+    this.renderVRRP(body, s);
+  }
+
+  renderVRRP(body, s) {
+    if (!s.vrrp) { body.innerHTML=''; return; }
+    let html = `<div class="text-[9px] uppercase tracking-widest text-slate-500 mono mb-2">VRRP State — Step ${s.step}</div>`;
+
+    html += `<div class="vt-row text-[9px] text-slate-500 uppercase tracking-wider mb-1">
+      <span>Router</span><span>State / VIP</span><span>Priority</span><span>Track</span>
+    </div>`;
+
+    s.vrrp.forEach(v => {
+      const isMaster = v.state === 'MASTER';
+      const stColor = isMaster ? '#10b981' : v.state.includes('BACKUP') ? '#475569' : '#f59e0b';
+      const priColor = v.pri >= 150 ? '#10b981' : v.pri >= 100 ? '#60a5fa' : '#f87171';
+      const priWidth = (v.pri/254*100).toFixed(0);
+
+      html += `<div class="vt-row rounded-lg ${isMaster?'bg-emerald-900/10 border border-emerald-800/30':'bg-slate-800/40'} mb-1">
+        <span class="mono font-bold text-xs" style="color:${stColor}">${v.node}</span>
+        <div>
+          <div class="text-xs font-bold mono" style="color:${stColor}">${v.state}</div>
+          <div class="text-[10px] mono text-slate-400">${v.vip} · G${v.group}</div>
+        </div>
+        <div>
+          <div class="text-xs font-bold mono" style="color:${priColor}">${v.pri}</div>
+          <div class="pri-bar mt-1" style="width:${priWidth}%;background:${priColor}"></div>
+        </div>
+        <div class="text-[9px] mono text-slate-500 leading-tight">${v.track}</div>
+      </div>`;
+    });
+
+    html += `<div class="mt-3 rounded-xl bg-indigo-500/8 border border-indigo-500/20 p-3">
+      <div class="text-[9px] uppercase tracking-widest text-indigo-400 mb-2 mono">VyOS Track Config</div>
+      <pre class="text-[10.5px] mono text-slate-400 leading-relaxed">set interfaces ethernet eth0 vrrp \\
+  vrrp-group 1 track interface eth1 \\
+  weight 60
+<span style="color:#34d399">! eth1 down → priority 150-60=90</span>
+<span style="color:#34d399">! VyOS-1B (100) > 90 → preempt</span></pre>
+    </div>`;
+
+    body.innerHTML = html;
+  }
+
+  renderOSPF(body, s) {
+    if (!s.ospf) { body.innerHTML=''; return; }
+    const o = s.ospf;
+    let html = '';
+
+    html += `<div class="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 overflow-hidden mb-3">
+      <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 text-[9px] uppercase tracking-widest text-slate-400 mono">OSPF Neighbors</div>
+      <div class="divide-y divide-slate-700/30">
+        ${o.neighbors.map(n => {
+          const fc = n.state==='FULL'?'#34d399':'#f59e0b';
+          return `<div class="flex items-center gap-2 px-3 py-2 text-xs">
+            <span class="mono font-bold" style="color:${fc}">${n.state}</span>
+            <span class="mono text-slate-400">${n.from} ↔ ${n.to}</span>
+            <span class="ml-auto text-[9px] mono text-slate-500">${n.role}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+    html += `<div class="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 overflow-hidden mb-3">
+      <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 text-[9px] uppercase tracking-widest text-slate-400 mono">Routing Table</div>
+      <div class="px-3 py-2 space-y-1">
+        ${o.routes.map(r => `<div class="text-[10.5px] mono ${r.startsWith('!')?'text-slate-500':'text-slate-300'}">${r}</div>`).join('')}
+      </div>
+    </div>`;
+
+    html += `<div class="rounded-xl p-3 border ${s.step<4?'bg-red-900/10 border-red-800/40':'bg-emerald-900/10 border-emerald-800/40'}">
+      <div class="text-[9px] uppercase tracking-widest mono mb-1 ${s.step<4?'text-red-400':'text-emerald-400'}">ECMP Status</div>
+      <div class="text-[11px] mono ${s.step<4?'text-red-300':'text-emerald-300'}">${o.ecmp}</div>
+    </div>`;
+
+    body.innerHTML = html;
+  }
+
+  renderCLI(body, s) {
+    body.innerHTML = `<div class="rounded-xl bg-slate-950 border border-slate-800 overflow-hidden">
+      <div class="flex items-center gap-1.5 px-3 py-2 border-b border-slate-800">
+        <span class="w-2.5 h-2.5 rounded-full bg-red-500/70"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/70"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-green-500/70"></span>
+        <span class="ml-2 text-[10px] mono text-slate-500">VyOS — ${s.event}</span>
+      </div>
+      <pre class="cli p-4 text-[11px]">${this.colorCLI(s.cli||'')}</pre>
+    </div>`;
+  }
+
+  colorCLI(txt) {
+    return txt
+      .replace(/^(.*#\s*run.*)$/gm,'<span class="cmd">$1</span>')
+      .replace(/\b(FULL|MASTER|UP|Converged|stable)\b/g,'<span class="ok">$1</span>')
+      .replace(/\b(BACKUP|STANDBY|DROTHER)\b/g,'<span class="hi">$1</span>')
+      .replace(/\b(DOWN|fail|FAILING|drop|DROP)\b/gi,'<span class="err">$&</span>')
+      .replace(/!.*/g,'<span class="warn">$&</span>');
+  }
+
+  toggleTheme() {
+    const d = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('portfolio-theme',d?'dark':'light');
+    this.renderStep(this.cur);
+  }
+}
+
+let app;
+document.addEventListener('DOMContentLoaded', () => { app = new VrrpFailoverSimulator(); });
+</script>
+</body>
+</html>

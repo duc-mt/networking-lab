@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Project registry for the portfolio.
 //
-// The site is organized around the 6 lab formats documented in
+// The site is organized around the 9 lab formats documented in
 // docs/prompt-templates.md. Each lab has a `type` — one of the keys in
 // PROJECT_TYPES below — which drives its folder, its icon/color on the
 // homepage, and the filter chips. You do NOT need to pick an icon or color
@@ -83,6 +83,13 @@ const PROJECT_TYPES = {
         icon: 'fa-book-medical',
         accent: 'from-lime-500 to-green-600',
         description: 'Danh mục các kịch bản lỗi trên cùng một topology — dưới dạng tab tĩnh.',
+    },
+    'algorithm-viz': {
+        label: 'Trực Quan Hóa Thuật Toán',
+        short: 'Thuật Toán',
+        icon: 'fa-share-nodes',
+        accent: 'from-violet-500 to-indigo-700',
+        description: 'Đồ thị tương tác — thuật toán tính lại ngay khi bạn thay đổi topology.',
     },
 };
 
@@ -346,5 +353,45 @@ const PROJECTS = [
         href: 'projects/protocol/bgp-peering.html',
         status: 'live',
         dateAdded: '2026-09-20',
+    },
+    {
+        title: 'OSPF Multi-Area LSDB Formation',
+        description:
+            'Quan sát Link-State Database hình thành theo thời gian thực trong OSPF multi-area — từ Hello discovery, Type 1/2 flooding trong Area 0, đến Type 3/4/5/7 lan truyền qua ABR/ASBR và NSSA.',
+        type: 'protocol',
+        tags: ['OSPF', 'LSDB', 'Multi-Area', 'LSA', 'Routing', 'NSSA'],
+        href: 'projects/protocol/ospf-lsdb-formation.html',
+        status: 'live',
+        dateAdded: '2026-10-02',
+    },
+    {
+        title: 'OSPF SPF Algorithm Visualizer',
+        description:
+            'Lab tương tác cho thuật toán Dijkstra/SPF — click để shutdown link hoặc đổi loại cáp (cost), xem path, routing table và LSDB cập nhật theo thời gian thực qua 5 preset scenario.',
+        type: 'algorithm-viz',
+        tags: ['OSPF', 'SPF', 'Dijkstra', 'ECMP', 'Routing', 'Algorithm'],
+        href: 'projects/algorithm-viz/ospf-spf-visualizer.html',
+        status: 'live',
+        dateAdded: '2026-10-02',
+    },
+    {
+        title: 'VRRP + OSPF Failover Drill — VyOS Track',
+        description:
+            'Chaos-drill tái hiện bug ECMP + VRRP Standby drop packet thực tế trên VyOS — trigger uplink down, quan sát priority drop, GARP, và OSPF re-converge loại bỏ ECMP về đúng Master.',
+        type: 'failover',
+        tags: ['VRRP', 'OSPF', 'VyOS', 'ECMP', 'HA', 'Track'],
+        href: 'projects/failover/vrrp-ospf-failover.html',
+        status: 'live',
+        dateAdded: '2026-10-02',
+    },
+    {
+        title: 'OSPF — 11 Loại LSA (Diagnostic Playbook)',
+        description:
+            'Catalog đầy đủ 11 loại LSA (Type 1–11, bao gồm OSPFv3 Link/Opaque LSA) trên cùng 1 topology multi-area — flip tab để so sánh flooding scope, origin và CLI output từng loại.',
+        type: 'diagnostic-playbook',
+        tags: ['OSPF', 'LSA', 'OSPFv3', 'Opaque LSA', 'NSSA', 'Routing'],
+        href: 'projects/diagnostic-playbook/ospf-lsa-types.html',
+        status: 'live',
+        dateAdded: '2026-10-02',
     },
 ];

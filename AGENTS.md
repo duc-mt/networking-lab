@@ -38,26 +38,30 @@ Mỗi khi khởi tạo, chỉnh sửa HTML/CSS hoặc các thành phần giao di
 
 - Bất cứ khi nào được yêu cầu tạo bài Lab mới, AI **PHẢI** đọc qua file `docs/prompt-templates.md` để chọn đúng 1 trong 9 cấu trúc có sẵn (Ví dụ: Protocol Simulator, Troubleshooting, Algorithm Visualizer, v.v.).
 - Bắt buộc tuân thủ các quy tắc bất biến trong template như: cách dùng hàm `clampNodes()`, cách làm nút `Mode Toggle`, và các Quy ước song ngữ Anh-Việt (Bilingual Standards) đã ghi chú trong đó.
+- Trước khi viết code mới cho Packet Animation, Timer Bar, Trigger Outage button, hoặc Teaching Note box, AI **PHẢI** kiểm tra Section 15 (`Shared UI Components Library`) của `prompt-templates.md` — các pattern này đã có implementation mẫu đã kiểm chứng, không được viết lại từ đầu.
+- Layout: mặc định cuộn dọc; split-screen chỉ cho lab nhiều dữ liệu (xem Section 15.5). Kiến trúc JS: template timeline dùng `class XxxSimulator` + biến `app` (Section 15.6).
+- Mọi lab có ≥ 2 area/zone OSPF (hoặc kiến trúc multi-area tương tự) **PHẢI** dùng đúng bảng màu Area/Zone chuẩn tại Section 15.3: Area 0 = blue `#3b82f6`, Area 1 = indigo `#6366f1`, Area 2/NSSA = sky `#0ea5e9`, Area 3+ = cyan `#06b6d4`. Đây là bug đã lặp lại 3 lần trong thực tế (dùng nhầm violet/emerald) — không được tái diễn.
 
 ### Bảng 9 template — chọn nhanh:
 
-| Template | `type` key | Dùng khi |
-| -------- | ---------- | -------- |
-| Protocol Simulator | `protocol` | Giải thích protocol hoạt động theo thời gian (FSM, packet exchange) |
-| Troubleshooting Lab | `troubleshooting` | Tái hiện quy trình xử lý sự cố: symptom → root cause → fix |
-| Security Packet Walk | `packet-walk` | Trace packet qua firewall/NAT pipeline |
-| Change / MOP Flow | `change-mop` | Lập tài liệu maintenance window: pre-check → execute → rollback |
-| Automation Workflow | `automation` | Minh họa script/API: payload → response → error handling |
-| Failover / HA Drill | `failover` | Resilience test: trigger → timer countdown → convergence |
-| Topology Design Reference | `topology-design` | HLD/blueprint kiến trúc mạng hoàn chỉnh, không có timeline |
-| Diagnostic Playbook | `diagnostic-playbook` | Catalog N failure mode trên cùng topology — flip tab để so sánh |
-| **Algorithm Visualizer** | **`algorithm-viz`** | **Graph algorithm chạy live trên topology có thể tương tác (Dijkstra SPF, Bellman-Ford, CSPF…)** |
+| Template                  | `type` key            | Dùng khi                                                                                         |
+| ------------------------- | --------------------- | ------------------------------------------------------------------------------------------------ |
+| Protocol Simulator        | `protocol`            | Giải thích protocol hoạt động theo thời gian (FSM, packet exchange)                              |
+| Troubleshooting Lab       | `troubleshooting`     | Tái hiện quy trình xử lý sự cố: symptom → root cause → fix                                       |
+| Security Packet Walk      | `packet-walk`         | Trace packet qua firewall/NAT pipeline                                                           |
+| Change / MOP Flow         | `change-mop`          | Lập tài liệu maintenance window: pre-check → execute → rollback                                  |
+| Automation Workflow       | `automation`          | Minh họa script/API: payload → response → error handling                                         |
+| Failover / HA Drill       | `failover`            | Resilience test: trigger → timer countdown → convergence                                         |
+| Topology Design Reference | `topology-design`     | HLD/blueprint kiến trúc mạng hoàn chỉnh, không có timeline                                       |
+| Diagnostic Playbook       | `diagnostic-playbook` | Catalog N failure mode trên cùng topology — flip tab để so sánh                                  |
+| **Algorithm Visualizer**  | **`algorithm-viz`**   | **Graph algorithm chạy live trên topology có thể tương tác (Dijkstra SPF, Bellman-Ford, CSPF…)** |
 
 ### Khi nào chọn Algorithm Visualizer (type: `algorithm-viz`):
 
 Dùng khi mục tiêu học là **quan sát thuật toán tính toán trên graph** và người học cần **tự thay đổi topology** để thấy kết quả thay đổi ngay lập tức. Khác với Protocol Simulator (timeline tuyến tính, passive), Algorithm Visualizer là **reactive**: người dùng click link để shutdown hoặc đổi cost → thuật toán tự chạy lại → path/table cập nhật real-time.
 
 Ví dụ lab phù hợp:
+
 - OSPF SPF / Dijkstra — click link để shutdown hoặc đổi cable type, xem path thay đổi
 - IS-IS SPF trên dual-topology (L1/L2)
 - MPLS-TE CSPF với bandwidth constraint
