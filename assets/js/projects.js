@@ -335,4 +335,16 @@ const PROJECTS = [
         status: 'live',
         dateAdded: '2026-09-20',
     },
+    {
+        id: 'ospf-lsa-propagation',
+        title: 'OSPF LSA Propagation Simulator',
+        category: 'diagnostic-playbook',
+        type: 'diagnostic-playbook',
+        status: 'live',
+        dateAdded: '2026-10-03',
+        description:
+            'Trực quan hóa cơ chế tạo và lan truyền của các loại OSPF LSA (Type 1, 2, 3, 5, 7) qua mô hình OSPF Đa Vùng (Multi-Area).',
+        tags: ['OSPF', 'LSA', 'Multi-Area', 'ABR', 'ASBR', 'Flooding Scope'],
+        href: 'projects/diagnostic-playbook/ospf-lsa-propagation.html',
+    },
 ];

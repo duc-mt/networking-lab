@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSPF LSA Propagation Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Fira Code', 'monospace'] },
+                    colors: {
+                        slate: { 50: '#f8fafc', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+    <script src="../../assets/js/theme-init.js"></script>
+    <style>
+        .glass-header { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .light .glass-header { background: rgba(255, 255, 255, 0.8); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        
+        .lnk-flood { stroke: #10b981; stroke-width: 3; stroke-dasharray: 6 4; animation: march 1s linear infinite; }
+        .lnk-outside { stroke: #475569; stroke-width: 2; stroke-dasharray: 4 4; opacity: 0.3; }
+        .lnk-translate { stroke: #f59e0b; stroke-width: 3; stroke-dasharray: 6 4; animation: march 1s linear infinite; }
+
+        @keyframes march { to { stroke-dashoffset: -20; } }
+        
+        .area-box { fill: none; stroke-width: 2; stroke-dasharray: 4 4; opacity: 0.2; }
+        .light .area-box { opacity: 0.4; }
+        
+        /* Tab styling */
+        .kb-tab { transition: all 0.2s; }
+        .kb-tab.active { background: rgba(99, 102, 241, 0.1); border-color: #6366f1; color: #6366f1; }
+        .dark .kb-tab.active { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+        
+        /* Node Status Badges */
+        .status-generates { background: #6366f1; color: white; }
+        .status-receives { background: #10b981; color: white; }
+        .status-blocked { background: #475569; color: #e2e8f0; opacity: 0.8; }
+        .status-translates { background: #f59e0b; color: white; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased pb-20">
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-lime-500 to-green-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0" title="Về trang chủ Portfolio">
+                    <i class="fas fa-book-medical"></i>
+                </a>
+                <div class="h-6 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block shrink-0"></div>
+                <div class="flex flex-col min-w-0">
+                    <a href="../../index.html" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                        <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                    </a>
+                    <h1 class="text-base md:text-xl font-bold text-slate-900 dark:text-white leading-tight truncate">OSPF LSA Propagation Simulator</h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+                <button onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" title="Đổi giao diện Sáng/Tối" aria-label="Đổi giao diện Sáng/Tối">
+                    <i id="theme-icon" class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="py-8 max-w-7xl mx-auto px-4 md:px-8">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-extrabold tracking-tight mb-3 text-slate-900 dark:text-white">OSPF LSA Propagation Simulator</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm max-w-2xl mx-auto">
+                Khảo sát cách các loại bản tin LSA được tạo ra và lan truyền trong mạng OSPF Đa Vùng (Multi-Area).
+                Chọn một loại LSA bên dưới để xem thiết bị nào tạo ra nó (Originator) và phạm vi lan truyền (Flooding Scope).
+            </p>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex flex-wrap items-center justify-center gap-6 text-xs mb-8">
+            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-indigo-500"></span><span class="text-slate-500 font-medium uppercase tracking-wider">Nguồn phát sinh (Origin)</span></span>
+            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-emerald-500"></span><span class="text-slate-500 font-medium uppercase tracking-wider">Trong vùng Scope (Receives)</span></span>
+            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-amber-500"></span><span class="text-slate-500 font-medium uppercase tracking-wider">Dịch thuật (Translates)</span></span>
+            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-slate-500 opacity-50"></span><span class="text-slate-500 font-medium uppercase tracking-wider">Ngoài vùng (Blocked)</span></span>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex flex-wrap items-center justify-center gap-3 mb-10" id="tabs-container">
+            <!-- Rendered by JS -->
+        </div>
+
+        <!-- Topology Canvas -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 mb-8 shadow-sm relative overflow-hidden h-[480px]" id="topology-canvas">
+            <!-- SVG Paths -->
+            <svg class="absolute inset-0 w-full h-full pointer-events-none" id="svg-layer">
+                <!-- Areas -->
+                <rect class="area-box" x="2%" y="10%" width="30%" height="80%" stroke="#6366f1" rx="16"></rect>
+                <text x="4%" y="16%" class="area-label font-bold text-sm" fill="#6366f1" opacity="0.5">AREA 1 (Standard)</text>
+
+                <rect class="area-box" x="35%" y="10%" width="30%" height="80%" stroke="#3b82f6" rx="16"></rect>
+                <text x="37%" y="16%" class="area-label font-bold text-sm" fill="#3b82f6" opacity="0.5">AREA 0 (Backbone)</text>
+
+                <rect class="area-box" x="68%" y="10%" width="30%" height="80%" stroke="#0ea5e9" rx="16"></rect>
+                <text x="70%" y="16%" class="area-label font-bold text-sm" fill="#0ea5e9" opacity="0.5">AREA 2 (NSSA)</text>
+
+                <!-- Links will be drawn here by JS -->
+                <g id="links-layer"></g>
+            </svg>
+            
+            <!-- Nodes will be injected here by JS -->
+            <div id="nodes-layer" class="absolute inset-0"></div>
+        </div>
+
+        <!-- Details Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- CLI Panel -->
+            <div class="bg-[#0f172a] rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-lg">
+                <div class="bg-slate-900 px-4 py-2 flex items-center border-b border-slate-800/50">
+                    <div class="flex gap-1.5 mr-4">
+                        <div class="w-3 h-3 rounded-full bg-rose-500/20 border border-rose-500/50"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/50"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/50"></div>
+                    </div>
+                    <span class="text-xs text-slate-500 font-mono" id="cli-title">show ip ospf database</span>
+                </div>
+                <div class="p-5 font-mono text-sm leading-relaxed overflow-x-auto text-slate-300" id="cli-content" style="white-space: pre-wrap;">
+                    <!-- CLI output -->
+                </div>
+            </div>
+
+            <!-- Analysis Panel -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col">
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <i class="fas fa-book-open text-indigo-500"></i>
+                    Analysis & Takeaways
+                </h3>
+                <ul class="space-y-4 text-sm text-slate-600 dark:text-slate-300 flex-1" id="takeaways-content">
+                    <!-- Takeaways -->
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const nodesData = {
+            'R1': { id: 'R1', name: 'R1', ip: '10.1.1.1', role: 'Internal', icon: 'fa-router', x: 17, y: 50 },
+            'R2': { id: 'R2', name: 'R2', ip: '10.0.1.2', role: 'ABR', icon: 'fa-network-wired', x: 35, y: 35 },
+            'R3': { id: 'R3', name: 'R3', ip: '10.0.1.3', role: 'Backbone', icon: 'fa-server', x: 50, y: 70 },
+            'R4': { id: 'R4', name: 'R4', ip: '10.0.2.4', role: 'ABR', icon: 'fa-network-wired', x: 65, y: 35 },
+            'R5': { id: 'R5', name: 'R5', ip: '10.2.2.5', role: 'ASBR', icon: 'fa-globe', x: 83, y: 50 }
+        };
+
+        const playbookCases = [
+            {
+                id: 'lsa1',
+                label: 'Type 1 (Router LSA)',
+                icon: 'fa-microchip',
+                topology: {
+                    nodes: [
+                        { id: 'R1', caseRole: 'origin' },
+                        { id: 'R2', caseRole: 'receives' },
+                        { id: 'R3', caseRole: 'blocked' },
+                        { id: 'R4', caseRole: 'blocked' },
+                        { id: 'R5', caseRole: 'blocked' }
+                    ],
+                    links: [
+                        { from: 'R1', to: 'R2', state: 'flood' },
+                        { from: 'R2', to: 'R3', state: 'outside' },
+                        { from: 'R2', to: 'R4', state: 'outside' },
+                        { from: 'R4', to: 'R5', state: 'outside' }
+                    ]
+                },
+                diagnostics: {
+                    cmd: 'R1# show ip ospf database router',
+                    output: `OSPF Router with ID (10.1.1.1) (Process ID 1)
+
+                Router Link States (Area 1)
+
+ADV Router      Age         Seq#       Checksum Link count
+10.1.1.1        142         0x80000005 0x00A13B 2
+10.0.1.2        115         0x8000000A 0x0045B2 1`
+                },
+                takeaways: [
+                    "<b>Originator:</b> Mọi router OSPF (ở đây ví dụ là R1) đều tạo ra một bản tin Type 1 LSA cho mỗi Area mà nó kết nối.",
+                    "<b>Content:</b> Chứa danh sách các interface của router, IP/Subnet tương ứng và trạng thái link (cost).",
+                    "<b>Flooding Scope:</b> Tuyệt đối <b>không vượt qua giới hạn của một Area</b>. Type 1 của R1 chỉ nằm trong Area 1. ABR (R2) nhận được nhưng không chuyển tiếp nguyên bản Type 1 sang Area 0."
+                ]
+            },
+            {
+                id: 'lsa2',
+                label: 'Type 2 (Network LSA)',
+                icon: 'fa-project-diagram',
+                topology: {
+                    nodes: [
+                        { id: 'R1', caseRole: 'receives' },
+                        { id: 'R2', caseRole: 'origin' },
+                        { id: 'R3', caseRole: 'blocked' },
+                        { id: 'R4', caseRole: 'blocked' },
+                        { id: 'R5', caseRole: 'blocked' }
+                    ],
+                    links: [
+                        { from: 'R2', to: 'R1', state: 'flood' },
+                        { from: 'R2', to: 'R3', state: 'outside' },
+                        { from: 'R2', to: 'R4', state: 'outside' },
+                        { from: 'R4', to: 'R5', state: 'outside' }
+                    ]
+                },
+                diagnostics: {
+                    cmd: 'R1# show ip ospf database network',
+                    output: `OSPF Router with ID (10.1.1.1) (Process ID 1)
+
+                Net Link States (Area 1)
+
+ADV Router      Age         Seq#       Checksum
+10.0.1.2        98          0x80000002 0x00A13B  (Designated Router address 10.1.1.2)`
+                },
+                takeaways: [
+                    "<b>Originator:</b> DR (Designated Router) trên một phân đoạn mạng multi-access (ví dụ Broadcast Ethernet). Ở đây giả sử R2 là DR cho phân đoạn kết nối với R1.",
+                    "<b>Content:</b> Liệt kê danh sách tất cả các router đang kết nối vào phân đoạn multi-access đó.",
+                    "<b>Flooding Scope:</b> Tương tự Type 1, Type 2 <b>chỉ lan truyền trong nội bộ một Area</b> (Area 1). Không vượt qua ABR (R2) để vào Area 0."
+                ]
+            },
+            {
+                id: 'lsa3',
+                label: 'Type 3 (Summary LSA)',
+                icon: 'fa-layer-group',
+                topology: {
+                    nodes: [
+                        { id: 'R1', caseRole: 'blocked' },
+                        { id: 'R2', caseRole: 'origin' },
+                        { id: 'R3', caseRole: 'receives' },
+                        { id: 'R4', caseRole: 'translates' },
+                        { id: 'R5', caseRole: 'receives' }
+                    ],
+                    links: [
+                        { from: 'R1', to: 'R2', state: 'outside' },
+                        { from: 'R2', to: 'R3', state: 'flood' },
+                        { from: 'R2', to: 'R4', state: 'flood' },
+                        { from: 'R4', to: 'R5', state: 'translate' }
+                    ]
+                },
+                diagnostics: {
+                    cmd: 'R4# show ip ospf database summary',
+                    output: `OSPF Router with ID (10.0.2.4) (Process ID 1)
+
+                Summary Net Link States (Area 0)
+
+ADV Router      Age         Seq#       Checksum
+10.0.1.2        210         0x80000002 0x003A4C  (Subnet 10.1.1.0/24)`
+                },
+                takeaways: [
+                    "<b>Originator:</b> ABR (Area Border Router) như R2 hoặc R4.",
+                    "<b>Mechanism:</b> R2 tổng hợp các thông tin Type 1/Type 2 từ Area 1, biến đổi chúng thành Type 3 LSA và đẩy vào Area 0 để thông báo 'Tôi biết đường đến subnet 10.1.1.0/24'.",
+                    "<b>Flooding Scope:</b> Lan truyền qua toàn bộ OSPF domain. Khi Type 3 từ R2 đến R4 (một ABR khác), R4 sẽ tạo lại Type 3 mới để đẩy tiếp vào Area 2. Cost sẽ được cộng dồn."
+                ]
+            },
+            {
+                id: 'lsa5',
+                label: 'Type 5 (External LSA)',
+                icon: 'fa-globe-americas',
+                topology: {
+                    nodes: [
+                        { id: 'R1', caseRole: 'receives' },
+                        { id: 'R2', caseRole: 'receives' },
+                        { id: 'R3', caseRole: 'origin' },
+                        { id: 'R4', caseRole: 'blocked' },
+                        { id: 'R5', caseRole: 'blocked' }
+                    ],
+                    links: [
+                        { from: 'R3', to: 'R2', state: 'flood' },
+                        { from: 'R2', to: 'R1', state: 'flood' },
+                        { from: 'R2', to: 'R4', state: 'flood' },
+                        { from: 'R4', to: 'R5', state: 'outside' }
+                    ]
+                },
+                diagnostics: {
+                    cmd: 'R1# show ip ospf database external',
+                    output: `OSPF Router with ID (10.1.1.1) (Process ID 1)
+
+                Type-5 AS External Link States
+
+ADV Router      Age         Seq#       Checksum Tag
+10.0.1.3        58          0x80000001 0x00B2C4 0  (Subnet 8.8.8.0/24)`
+                },
+                takeaways: [
+                    "<b>Originator:</b> ASBR (Autonomous System Boundary Router) - ở đây là R3 (redistribute từ BGP/Static vào).",
+                    "<b>Content:</b> Thông tin về route ngoại lai (External Route), ví dụ E1 hoặc E2.",
+                    "<b>Flooding Scope:</b> Lan truyền khắp toàn bộ OSPF domain (Area 0, Area 1), NGOẠI TRỪ các vùng đặc biệt (Stub, Totally Stub, NSSA). Do Area 2 là NSSA, LSA Type 5 bị block tại ABR R4."
+                ]
+            },
+            {
+                id: 'lsa7',
+                label: 'Type 7 (NSSA External)',
+                icon: 'fa-random',
+                topology: {
+                    nodes: [
+                        { id: 'R1', caseRole: 'receives' },
+                        { id: 'R2', caseRole: 'receives' },
+                        { id: 'R3', caseRole: 'receives' },
+                        { id: 'R4', caseRole: 'translates' },
+                        { id: 'R5', caseRole: 'origin' }
+                    ],
+                    links: [
+                        { from: 'R5', to: 'R4', state: 'flood' },
+                        { from: 'R4', to: 'R2', state: 'translate' },
+                        { from: 'R2', to: 'R3', state: 'translate' },
+                        { from: 'R2', to: 'R1', state: 'translate' }
+                    ]
+                },
+                diagnostics: {
+                    cmd: 'R4# show ip ospf database nssa-external',
+                    output: `OSPF Router with ID (10.0.2.4) (Process ID 1)
+
+                Type-7 AS External Link States (Area 2)
+
+ADV Router      Age         Seq#       Checksum Tag
+10.2.2.5        12          0x80000001 0x00F83C 0  (Subnet 192.168.100.0/24)`
+                },
+                takeaways: [
+                    "<b>Originator:</b> ASBR nằm trong vùng NSSA (R5).",
+                    "<b>Problem:</b> Vùng NSSA không cho phép LSA Type 5 tồn tại, nhưng R5 lại muốn inject external route (192.168.100.0/24). Giải pháp là dùng Type 7 (chỉ hợp lệ trong NSSA).",
+                    "<b>Flooding & Translation:</b> Type 7 chỉ flood trong Area 2. Khi đến ABR R4, R4 đóng vai trò người dịch (Translator), biến LSA Type 7 thành LSA Type 5 và tiếp tục flood vào Area 0 và các Area khác."
+                ]
+            }
+        ];
+
+        let activeCaseId = 'lsa1';
+
+        function initTabs() {
+            const container = document.getElementById('tabs-container');
+            container.innerHTML = playbookCases.map(c => `
+                <button onclick="switchTab('${c.id}')" id="tab-${c.id}" class="kb-tab flex items-center gap-2 px-5 py-2.5 rounded-full border ${c.id === activeCaseId ? 'active-tab' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'} font-medium text-sm">
+                    <i class="fas ${c.icon}"></i> ${c.label}
+                </button>
+            `).join('');
+        }
+
+        window.switchTab = function(id) {
+            activeCaseId = id;
+            initTabs();
+            renderCase();
+        }
+
+        function renderCase() {
+            const currentCase = playbookCases.find(c => c.id === activeCaseId);
+            if (!currentCase) return;
+
+            // Render Nodes
+            const nodesContainer = document.getElementById('nodes-layer');
+            nodesContainer.innerHTML = '';
+            
+            Object.values(nodesData).forEach(node => {
+                const caseNode = currentCase.topology.nodes.find(n => n.id === node.id);
+                const role = caseNode ? caseNode.caseRole : 'blocked';
+                
+                let badgeClass = 'status-blocked';
+                let badgeText = 'OUTSIDE SCOPE';
+                
+                if (role === 'origin') { badgeClass = 'status-generates'; badgeText = 'ORIGINATES'; }
+                else if (role === 'receives') { badgeClass = 'status-receives'; badgeText = 'RECEIVES'; }
+                else if (role === 'translates') { badgeClass = 'status-translates'; badgeText = 'TRANSLATES TO T5'; }
+
+                const opacityClass = role === 'blocked' ? 'opacity-60 grayscale' : 'opacity-100';
+                const ringClass = role === 'origin' ? 'ring-2 ring-indigo-500 ring-offset-4 dark:ring-offset-slate-900' : '';
+
+                nodesContainer.innerHTML += `
+                    <div class="absolute flex flex-col items-center ${opacityClass} ${ringClass} node-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 w-32 shadow-sm" style="left: calc(${node.x}% - 64px); top: calc(${node.y}% - 40px); z-index: 10;">
+                        <i class="fas ${node.icon} text-2xl text-slate-700 dark:text-slate-200 mb-2"></i>
+                        <span class="font-bold text-sm">${node.name}</span>
+                        <span class="text-[10px] text-slate-500 mb-2">${node.ip}</span>
+                        <div class="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${badgeClass} shadow-sm whitespace-nowrap">
+                            ${badgeText}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Render Links
+            const linksLayer = document.getElementById('links-layer');
+            linksLayer.innerHTML = '';
+            
+            currentCase.topology.links.forEach(link => {
+                const fromNode = nodesData[link.from];
+                const toNode = nodesData[link.to];
+                
+                let linkClass = 'lnk-outside';
+                if (link.state === 'flood') linkClass = 'lnk-flood';
+                if (link.state === 'translate') linkClass = 'lnk-translate';
+
+                linksLayer.innerHTML += `
+                    <line x1="${fromNode.x}%" y1="${fromNode.y}%" x2="${toNode.x}%" y2="${toNode.y}%" class="${linkClass}"></line>
+                `;
+            });
+
+            // Update Details Panel
+            document.getElementById('cli-title').innerText = currentCase.diagnostics.cmd;
+            document.getElementById('cli-content').innerText = currentCase.diagnostics.output;
+            
+            document.getElementById('takeaways-content').innerHTML = currentCase.takeaways.map(t => `
+                <li class="flex items-start gap-3">
+                    <i class="fas fa-check-circle text-indigo-500 mt-1 shrink-0"></i>
+                    <span>${t}</span>
+                </li>
+            `).join('');
+        }
+
+        function applyTheme(isDark) {
+            document.documentElement.classList.toggle('dark', isDark);
+            const icon = document.getElementById('theme-icon');
+            if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        window.toggleTheme = function() {
+            const isDark = !document.documentElement.classList.contains('dark');
+            applyTheme(isDark);
+            try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('theme-icon');
+            if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            initTabs();
+            renderCase();
+        });
+    </script>
+</body>
+</html>
