@@ -87,6 +87,67 @@
         </div>
     </div>
 
+    
+    <!-- Topology Canvas -->
+    <div class="w-full overflow-x-auto mb-6">
+        <section id="topology-container" class="relative bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden w-full mx-auto h-[400px]" style="min-width: 900px;">
+            <!-- Zones Layer -->
+            <div id="zones-layer" class="absolute inset-0 pointer-events-none z-0">
+                <!-- On-Prem Zone -->
+                <div class="absolute top-[5%] bottom-[15%] left-0 w-[30%] bg-blue-50/50 dark:bg-blue-900/10 border-r border-blue-200/50 dark:border-blue-800/30">
+                    <div class="absolute bottom-4 left-4 text-xs font-bold text-blue-400 uppercase tracking-widest">On-Premises</div>
+                </div>
+                <!-- VPC Zone -->
+                <div class="absolute top-[5%] bottom-[15%] right-0 w-[30%] bg-indigo-50/50 dark:bg-indigo-900/10 border-l border-indigo-200/50 dark:border-indigo-800/30">
+                    <div class="absolute bottom-4 right-4 text-xs font-bold text-indigo-400 uppercase tracking-widest">AWS VPC</div>
+                </div>
+            </div>
+
+            <!-- Links Layer -->
+            <svg id="links-layer" class="absolute inset-0 w-full h-full pointer-events-none z-[5]"></svg>
+
+            <!-- Nodes Layer -->
+            <div id="nodes-layer" class="absolute inset-0 z-10">
+                <!-- Node 1: pfSense -->
+                <div id="node-pfsense" class="absolute w-32 bg-white dark:bg-slate-800 rounded-xl shadow-lg border-2 border-emerald-500 flex flex-col items-center p-3 transition-transform duration-300 hover:-translate-y-1 z-10" style="left: 15%; top: 50%; transform: translate(-50%, -50%);">
+                    <span class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-bold rounded border border-slate-200 dark:border-slate-600 whitespace-nowrap shadow-sm">FW / VPN</span>
+                    <div class="w-12 h-12 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner mb-2">
+                        <i class="fas fa-shield-alt text-slate-700 dark:text-slate-300 text-xl"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white mb-1">pfSense</h3>
+                    <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">10.254.1.1</span>
+                </div>
+
+                <!-- Node 2: Internet -->
+                <div id="node-internet" class="absolute w-28 flex flex-col items-center transition-transform duration-300 hover:-translate-y-1 z-10" style="left: 50%; top: 50%; transform: translate(-50%, -50%);">
+                    <i class="fas fa-cloud text-slate-300 dark:text-slate-700 text-6xl drop-shadow-md"></i>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-2">Internet (ESP)</h3>
+                </div>
+
+                <!-- Node 3: VyOS -->
+                <div id="node-vyos" class="absolute w-32 bg-white dark:bg-slate-800 rounded-xl shadow-lg border-2 border-emerald-500 flex flex-col items-center p-3 transition-transform duration-300 hover:-translate-y-1 z-10" style="left: 85%; top: 50%; transform: translate(-50%, -50%);">
+                    <span class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-bold rounded border border-slate-200 dark:border-slate-600 whitespace-nowrap shadow-sm">VPC Router</span>
+                    <div class="w-12 h-12 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner mb-2">
+                        <i class="fas fa-route text-slate-700 dark:text-slate-300 text-xl"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white mb-1">VyOS</h3>
+                    <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">10.254.1.2</span>
+                </div>
+            </div>
+
+            <!-- Animated Packet Container -->
+            <div id="animated-packet" class="absolute z-50 hidden flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold text-white whitespace-nowrap shadow-lg pointer-events-none bg-cyan-500 border border-cyan-400" style="left:0; top:0; transform:translate(-50%,-50%);">
+                <i id="packet-icon" class="fas fa-envelope"></i>
+                <span id="packet-label">OSPF</span>
+            </div>
+            
+            <!-- Fullscreen Toggle -->
+            <button id="btn-fullscreen" class="absolute top-4 right-4 z-[99] w-8 h-8 flex items-center justify-center rounded-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors shadow-sm" title="Bật/Tắt Toàn Màn Hình">
+                <i class="fas fa-expand"></i>
+            </button>
+        </section>
+    </div>
+
     <!-- Horizontal Pipeline Stepper -->
     <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
         <div class="min-w-[700px] relative">
@@ -615,8 +676,202 @@ class PacketWalkApp {
         if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
 
         this.buildPipelineStages();
+        this.initTopology();
         this.render(0);
     }
+
+
+    initTopology() {
+        this.nodes = {
+            pfsense: document.getElementById('node-pfsense'),
+            internet: document.getElementById('node-internet'),
+            vyos: document.getElementById('node-vyos')
+        };
+        this.container = document.getElementById('topology-container');
+        this.svg = document.getElementById('links-layer');
+        this.packet = document.getElementById('animated-packet');
+        this.packetLabel = document.getElementById('packet-label');
+        
+        window.addEventListener('resize', () => {
+            clearTimeout(this.resizeTimer);
+            this.resizeTimer = setTimeout(() => {
+                this.clampNodes();
+                this.drawLinks();
+            }, 100);
+        });
+
+        // Init Fullscreen
+        const btnFs = document.getElementById('btn-fullscreen');
+        if(btnFs) {
+            btnFs.onclick = () => {
+                if (!document.fullscreenElement) {
+                    if (this.container.requestFullscreen) {
+                        this.container.requestFullscreen();
+                    } else if (this.container.webkitRequestFullscreen) { // Safari
+                        this.container.webkitRequestFullscreen();
+                    } else {
+                        // iOS fallback
+                        this.container.classList.toggle('!fixed');
+                        this.container.classList.toggle('!inset-0');
+                        this.container.classList.toggle('!z-[9999]');
+                        this.container.classList.toggle('!w-screen');
+                        this.container.classList.toggle('!h-screen');
+                        this.container.classList.toggle('!m-0');
+                        this.container.classList.toggle('!rounded-none');
+                        this.container.classList.toggle('!max-w-none');
+                    }
+                    btnFs.innerHTML = '<i class="fas fa-compress"></i>';
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                    btnFs.innerHTML = '<i class="fas fa-expand"></i>';
+                }
+                setTimeout(() => { this.clampNodes(); this.drawLinks(); }, 200);
+            };
+        }
+        
+        setTimeout(() => {
+            this.clampNodes();
+            this.drawLinks();
+        }, 100);
+    }
+
+    clampNodes() {
+        if (!this.container) return;
+        const containerRect = this.container.getBoundingClientRect();
+        const EDGE_PX = 12;
+
+        Object.values(this.nodes).forEach(node => {
+            if (!node) return;
+            if (!node.dataset.rawTop) {
+                node.dataset.rawTop = parseFloat(node.style.top) || 50;
+                node.dataset.rawLeft = parseFloat(node.style.left) || 50;
+            }
+
+            let top = parseFloat(node.dataset.rawTop);
+            let left = parseFloat(node.dataset.rawLeft);
+
+            const pxLeft = (left / 100) * containerRect.width;
+            const pxTop = (top / 100) * containerRect.height;
+            const halfW = node.offsetWidth / 2;
+            const halfH = node.offsetHeight / 2;
+
+            if (pxLeft - halfW < EDGE_PX) left = ((halfW + EDGE_PX) / containerRect.width) * 100;
+            if (pxLeft + halfW > containerRect.width - EDGE_PX) left = ((containerRect.width - halfW - EDGE_PX) / containerRect.width) * 100;
+            if (pxTop - halfH < EDGE_PX) top = ((halfH + EDGE_PX) / containerRect.height) * 100;
+            if (pxTop + halfH > containerRect.height - EDGE_PX) top = ((containerRect.height - halfH - EDGE_PX) / containerRect.height) * 100;
+
+            node.style.left = left + '%';
+            node.style.top = top + '%';
+        });
+    }
+
+    drawLinks() {
+        if (!this.svg) return;
+        this.svg.innerHTML = '';
+        
+        const createDualLink = (n1, n2) => {
+            const cr = this.container.getBoundingClientRect();
+            const r1 = n1.getBoundingClientRect();
+            const r2 = n2.getBoundingClientRect();
+            
+            const sx = r1.left + r1.width/2 - cr.left;
+            const sy = r1.top + r1.height/2 - cr.top;
+            const dx = r2.left + r2.width/2 - cr.left;
+            const dy = r2.top + r2.height/2 - cr.top;
+            
+            const isDark = document.documentElement.classList.contains('dark');
+            const trackColor = isDark ? 'rgba(51, 65, 85, 0.55)' : 'rgba(203, 213, 225, 0.45)';
+            
+            // Base track
+            const track = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            track.setAttribute("x1", sx);
+            track.setAttribute("y1", sy);
+            track.setAttribute("x2", dx);
+            track.setAttribute("y2", dy);
+            track.setAttribute("stroke", trackColor);
+            track.setAttribute("stroke-width", "6");
+            track.setAttribute("stroke-linecap", "round");
+            this.svg.appendChild(track);
+            
+            // Flow overlay
+            const flow = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            flow.setAttribute("x1", sx);
+            flow.setAttribute("y1", sy);
+            flow.setAttribute("x2", dx);
+            flow.setAttribute("y2", dy);
+            flow.setAttribute("stroke", "#0ea5e9");
+            flow.setAttribute("stroke-width", "3");
+            flow.setAttribute("stroke-dasharray", "8 8");
+            flow.style.opacity = "0.5";
+            this.svg.appendChild(flow);
+        };
+
+        createDualLink(this.nodes.pfsense, this.nodes.internet);
+        createDualLink(this.nodes.internet, this.nodes.vyos);
+    }
+
+    animatePacketWalk(fromNode, toNode, label) {
+        if (!this.packet || !this.packetLabel) return;
+        
+        if (this.packetAnim) this.packetAnim.cancel();
+        
+        const cr = this.container.getBoundingClientRect();
+        const sr = fromNode.getBoundingClientRect();
+        const tr = toNode.getBoundingClientRect();
+        const ir = this.nodes.internet.getBoundingClientRect();
+        
+        const sx = sr.left + sr.width/2 - cr.left;
+        const sy = sr.top + sr.height/2 - cr.top;
+        const tx = tr.left + tr.width/2 - cr.left;
+        const ty = tr.top + tr.height/2 - cr.top;
+        const ix = ir.left + ir.width/2 - cr.left;
+        const iy = ir.top + ir.height/2 - cr.top;
+        
+        this.packetLabel.textContent = label;
+        this.packet.classList.remove('hidden');
+        
+        this.packetAnim = this.packet.animate([
+            { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(0.5)`, opacity: 0 },
+            { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(1)`, opacity: 1, offset: 0.1 },
+            { transform: `translate(calc(${ix}px - 50%), calc(${iy}px - 50%)) scale(1.1)`, opacity: 1, offset: 0.5 },
+            { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(1)`, opacity: 1, offset: 0.9 },
+            { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(0.5)`, opacity: 0 }
+        ], {
+            duration: 1500,
+            easing: 'ease-in-out',
+            fill: 'forwards'
+        });
+    }
+
+    triggerTopologyAnimation(stepIdx) {
+        if(!this.nodes) return;
+        const pf = this.nodes.pfsense;
+        const vy = this.nodes.vyos;
+        
+        switch(stepIdx) {
+            case 0: // INIT: pfSense -> VyOS
+                this.animatePacketWalk(pf, vy, 'OSPF Hello');
+                break;
+            case 1: // 2-WAY: VyOS -> pfSense
+                this.animatePacketWalk(vy, pf, 'Hello (Nbr)');
+                break;
+            case 2: // EXSTART: pfSense -> VyOS
+                this.animatePacketWalk(pf, vy, 'DBD (I/M/MS)');
+                break;
+            case 3: // EXCHANGE: pfSense -> VyOS
+                this.animatePacketWalk(pf, vy, 'DBD (Headers)');
+                break;
+            case 4: // LOADING: VyOS -> pfSense
+                this.animatePacketWalk(vy, pf, 'LSU (Full)');
+                break;
+            case 5: // FULL: pfSense -> VyOS
+                this.animatePacketWalk(pf, vy, 'Keepalive');
+                break;
+        }
+    }
+
 
     buildPipelineStages() {
         this.dom.stagesContainer.innerHTML = '';
@@ -717,6 +972,10 @@ class PacketWalkApp {
         // Pro tips
         this.dom.proTipTitle.textContent = d.proTipTitle;
         this.dom.proTipDesc.textContent = d.proTipDesc;
+        
+        if (typeof this.triggerTopologyAnimation === "function") {
+            this.triggerTopologyAnimation(i);
+        }
 
         // Buttons
         if (this.dom.btnPrev) this.dom.btnPrev.disabled = i === 0;
