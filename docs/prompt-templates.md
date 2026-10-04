@@ -295,11 +295,9 @@ Requirements:
 2. Header: same pattern as other project pages (logo, back-link, playback
    controls, theme toggle with localStorage persistence + no-FOUC head script).
 
-3. Pipeline view (the centerpiece — different from the topology view used in
-   other labs): checkpoints laid out left-to-right as a horizontal pipeline
-   (Ingress → Route Lookup → NAT → Policy → IPS/AV → Egress). The current
-   checkpoint is highlighted; the packet is a token that visibly moves along
-   the pipeline as steps advance.
+3. Topology & Pipeline view (the centerpiece): 
+   - Animated Topology Canvas (#topology-container): Placed at the top, displaying 2D nodes (e.g., Client, Internet Cloud, Gateway/Firewall, Server) with dual-layer SVG links, clampNodes(), and dynamic packet movement across nodes via Web Animations API (animatePacketWalk).
+   - Horizontal Pipeline Stepper: Placed directly below the topology, showing checkpoints laid out left-to-right (Ingress → Route Lookup → NAT → Policy → Egress). The current checkpoint is highlighted, and steps advance synchronously with the topology animation.
 
 4. Packet inspector panel: shows `packet_before` vs `packet_after` side by
    side for the current checkpoint. When NAT applies, show the original value
