@@ -106,17 +106,15 @@
             rx: 16;
         }
 
-        /* Node selection glow */
+        /* Node selection & hover styling (firmly anchored, no transform jumps) */
         .node-card {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .node-card:hover {
-            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         }
-        .node-selected {
-            ring-2: ring-blue-500;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
-            transform: translateY(-4px) scale(1.02);
+        .dark .node-card:hover {
+            box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.55);
         }
 
         /* Custom scrollbar */
@@ -826,9 +824,10 @@ Destination        Nexthop       Metric  Flags  Interface
 
                 const card = document.createElement('div');
                 card.id = `node-${n.id}`;
-                card.className = `node-card absolute -translate-x-1/2 -translate-y-1/2 w-40 p-3 rounded-2xl bg-white dark:bg-slate-900 border ${isSelected ? 'border-blue-500 ring-2 ring-blue-500/50 dark:border-blue-400 shadow-xl' : 'border-slate-200 dark:border-slate-800 shadow-md'} cursor-pointer flex flex-col items-center text-center`;
-                card.style.left = `${n.x}%`;
-                card.style.top = `${n.y}%`;
+                card.className = `node-card absolute w-40 p-3 rounded-2xl bg-white dark:bg-slate-900 border ${isSelected ? 'border-blue-500 ring-2 ring-blue-500/50 dark:border-blue-400 shadow-xl' : 'border-slate-200 dark:border-slate-800 shadow-md hover:border-slate-300 dark:hover:border-slate-700'} cursor-pointer flex flex-col items-center text-center select-none`;
+                card.style.left = `calc(${n.x}% - 80px)`;
+                card.style.top = `calc(${n.y}% - 65px)`;
+                card.style.zIndex = '10';
                 card.onclick = () => selectNode(n.id);
 
                 card.innerHTML = `
