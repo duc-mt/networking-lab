@@ -70,6 +70,14 @@
             animation: cableDash 1.2s linear infinite;
             filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.75));
         }
+        .link-flow-indigo {
+            stroke: #6366f1;
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 8 6;
+            animation: cableDash 1.2s linear infinite;
+            filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.75));
+        }
         .link-flow-red {
             stroke: #ef4444;
             stroke-width: 4;
@@ -77,14 +85,6 @@
             stroke-dasharray: 6 6;
             animation: cableDash 0.8s linear infinite;
             filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.75));
-        }
-        .link-flow-amber {
-            stroke: #f59e0b;
-            stroke-width: 4;
-            stroke-linecap: round;
-            stroke-dasharray: 8 6;
-            animation: cableDash 1.2s linear infinite;
-            filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.75));
         }
         .link-flow-static {
             stroke: #94a3b8;
@@ -161,7 +161,7 @@
 
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 font-sans min-h-screen antialiased flex flex-col">
 
-    <!-- Sticky Header Bar -->
+    <!-- Sticky Header Bar (Matching ospf-lsa-propagation.html) -->
     <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
         <div class="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
             
@@ -176,7 +176,7 @@
                         <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
                     </a>
                     <h1 class="text-sm md:text-base font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
-                        OSPF Redistribution & Route-Map Filtering
+                        OSPF Redistribution & Route-Map Filtering (Area 1 to Area 0)
                     </h1>
                 </div>
             </div>
@@ -196,26 +196,26 @@
         
         <!-- Lab Header / Intro Banner -->
         <div class="text-center max-w-3xl mx-auto mb-6">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900 mb-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900 mb-2">
                 <i class="fas fa-network-wired text-[10px]"></i>
-                <span>OSPF ASBR ARCHITECTURE & POLICY FILTERING</span>
+                <span>OSPF MULTI-AREA (AREA 1 & AREA 0) ASBR REDISTRIBUTION</span>
             </div>
             <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">
-                Redistribute Static Routes vào OSPF Domain
+                Redistribute Static Routes qua ASBR & ABR vào OSPF Domain
             </h2>
             <p class="text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Mặc định OSPF chỉ biết các route nội bộ. Muốn quảng bá route tới Palo Alto Firewall (<span class="font-mono text-blue-600 dark:text-blue-400 font-semibold">172.16.248.0/24</span>) ra toàn mạng, Router biên ASBR (VyOS) phải thực hiện <b>Redistribute</b> thành <b>LSA Type-5 (External)</b> kèm <b>Route-Map</b> để tránh rò rỉ Default Route.
+                Firewall (<span class="font-mono text-indigo-600 dark:text-indigo-400 font-semibold">FW-CORE</span>) thuộc phân vùng <b>Area 1</b> nắm subnet đích <span class="font-mono text-indigo-600 dark:text-indigo-400 font-semibold">192.168.100.0/24</span>. Router <span class="font-mono font-bold">R1-ASBR</span> thực hiện <b>Redistribute</b> thành <b>LSA Type-5</b> kèm <b>Route-Map</b> để lọc route, qua biên giới <span class="font-mono font-bold">R2-ABR</span> truyền vào <b>Area 0 (Backbone)</b> tới <span class="font-mono font-bold">R3-CORE</span>.
             </p>
         </div>
 
-        <!-- Interactive Scenario Mode Toggle Bar -->
+        <!-- Interactive Scenario Mode Toggle Bar (Placed at Top) -->
         <div class="flex items-center justify-center mb-4">
             <div class="flex flex-wrap justify-center items-center bg-slate-200/50 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner gap-1.5" id="scenario-selector">
                 <!-- Injected via JavaScript -->
             </div>
         </div>
 
-        <!-- Scenario Context & Active Strategy Banner (Placed above Canvas matching vrrp-ospf-failover.html) -->
+        <!-- Scenario Context & Active Strategy Banner (Placed Above Canvas matching vrrp-ospf-failover.html) -->
         <div class="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 md:p-5 mb-6 shadow-sm">
             <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                 <div class="space-y-1 max-w-2xl">
@@ -228,7 +228,7 @@
                         </h3>
                     </div>
                     <p id="scenario-desc" class="text-xs md:text-sm text-slate-600 dark:text-slate-400">
-                        VyOS áp dụng route-map để lọc chỉ cho phép subnet chỉ định 172.16.248.0/24 được chuyển hóa thành LSA Type-5, ngăn chặn default route 0.0.0.0/0 rò rỉ.
+                        R1-ASBR áp dụng route-map để lọc chỉ cho phép subnet chỉ định 192.168.100.0/24 được chuyển hóa thành LSA Type-5, ngăn chặn default route 0.0.0.0/0 rò rỉ.
                     </p>
                 </div>
 
@@ -236,7 +236,7 @@
                 <div class="flex flex-wrap items-center gap-3 shrink-0">
                     <button onclick="triggerTrafficTest()" id="btn-traffic-test" class="h-9 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer">
                         <i class="fas fa-paper-plane text-[11px]"></i>
-                        <span>Simulate Traffic (VPC → Subnet)</span>
+                        <span>Simulate Traffic (Core → Firewall)</span>
                     </button>
 
                     <!-- Scenario 3 Metric Toggle Sub-Control (Only visible in Scenario 3) -->
@@ -265,21 +265,24 @@
                     <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
                         <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#3b82f6" flood-opacity="0.8" />
                     </filter>
+                    <filter id="glow-indigo" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#6366f1" flood-opacity="0.8" />
+                    </filter>
                     <filter id="glow-red" x="-20%" y="-20%" width="140%" height="140%">
                         <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#ef4444" flood-opacity="0.8" />
                     </filter>
                 </defs>
 
-                <!-- Zone 1: Static Route / Outside Zone -->
-                <rect class="area-box" x="2%" y="5%" width="19%" height="78%" stroke="#64748b" rx="16" opacity="0.3"></rect>
-                <text x="3.5%" y="10%" class="font-mono font-bold text-[11px] uppercase tracking-wider fill-slate-500">
-                    Static / DMZ Zone (PA-FW)
+                <!-- Zone 1: OSPF Area 1 (Standard / DMZ Security Zone - Verified Indigo #6366f1) -->
+                <rect class="area-box" x="2%" y="5%" width="54%" height="78%" stroke="#6366f1" rx="16" opacity="0.3"></rect>
+                <text x="3.5%" y="10%" class="font-mono font-bold text-[11px] uppercase tracking-wider fill-indigo-500">
+                    OSPF AREA 1 (FW-CORE & R1-ASBR)
                 </text>
 
-                <!-- Zone 2: OSPF Area 0 Backbone Domain (Verified color: #3b82f6) -->
-                <rect class="area-box" x="23%" y="5%" width="75%" height="78%" stroke="#3b82f6" rx="16" opacity="0.25"></rect>
-                <text x="24.5%" y="10%" class="font-mono font-bold text-[11px] uppercase tracking-wider fill-blue-500">
-                    OSPF Backbone Domain (Area 0)
+                <!-- Zone 2: OSPF Area 0 Backbone Domain (Verified Blue #3b82f6) -->
+                <rect class="area-box" x="52%" y="5%" width="46%" height="78%" stroke="#3b82f6" rx="16" opacity="0.25"></rect>
+                <text x="53.5%" y="10%" class="font-mono font-bold text-[11px] uppercase tracking-wider fill-blue-500">
+                    OSPF AREA 0 (BACKBONE CORE)
                 </text>
 
                 <!-- Dynamic Cable SVG Paths -->
@@ -290,7 +293,7 @@
             <!-- Dynamic Floating Packet Badge for Web Animations API -->
             <div id="animated-packet" class="absolute z-30 pointer-events-none opacity-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold shadow-xl border">
                 <i class="fas fa-box text-[11px]"></i>
-                <span id="packet-label">172.16.248.100</span>
+                <span id="packet-label">192.168.100.100</span>
             </div>
 
             <!-- Nodes Layer (5-Layer Node Cards, z-10) -->
@@ -309,11 +312,12 @@
                 <span id="canvas-status-text">Domain Flooding: Active Type-5 LSA</span>
             </div>
 
-            <!-- Legend (Embedded Overlay Inside Topology Canvas - Exactly matching ospf-lsa-propagation.html) -->
+            <!-- Legend (Embedded Overlay Inside Topology Canvas - Positioned higher with bottom-5, 1 Single Row) -->
             <div class="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex flex-nowrap items-center justify-center gap-4 md:gap-6 text-[11px] px-5 py-2 rounded-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg whitespace-nowrap max-w-[95%] overflow-x-auto select-none">
                 <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Type-5 LSA Flooding</span></span>
-                <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Leaked Route</span></span>
+                <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Leaked Route (Hazard)</span></span>
                 <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-blue-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Area 0 Intra-Path</span></span>
+                <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-indigo-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Area 1 Intra-Path</span></span>
                 <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-slate-500 opacity-60"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Static Next-Hop</span></span>
             </div>
 
@@ -333,24 +337,24 @@
                     </div>
                     <div class="text-slate-300 text-xs font-mono font-bold tracking-wider flex items-center gap-2">
                         <i class="fas fa-terminal text-slate-500 text-[11px]"></i>
-                        <span id="cli-device-title">NHG-HO-GW (VyOS ASBR)</span>
+                        <span id="cli-device-title">R1-ASBR (Area 1 ASBR)</span>
                     </div>
                     <div class="text-[10px] text-slate-500 font-mono">vt100 · 80x24</div>
                 </div>
 
                 <!-- Router Selector Tabs inside CLI -->
                 <div class="flex items-center bg-[#252526] px-3 pt-2 gap-1 border-b border-white/5 overflow-x-auto select-none">
-                    <button onclick="selectNodeCli('NHG-HO-GW')" id="tab-cli-NHG-HO-GW" class="px-3 py-1.5 text-xs font-mono font-medium rounded-t border-t-2 border-blue-500 bg-[#1e1e1e] text-white flex items-center gap-2 shrink-0">
-                        <i class="fas fa-server text-[10px] text-blue-400"></i> NHG-HO-GW (ASBR)
+                    <button onclick="selectNodeCli('R1-ASBR')" id="tab-cli-R1-ASBR" class="px-3 py-1.5 text-xs font-mono font-medium rounded-t border-t-2 border-blue-500 bg-[#1e1e1e] text-white flex items-center gap-2 shrink-0">
+                        <i class="fas fa-server text-[10px] text-blue-400"></i> R1-ASBR
                     </button>
-                    <button onclick="selectNodeCli('TRANSIT-GW')" id="tab-cli-TRANSIT-GW" class="px-3 py-1.5 text-xs font-mono font-medium rounded-t border-t-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 shrink-0">
-                        <i class="fas fa-route text-[10px] text-emerald-400"></i> TRANSIT-GW
+                    <button onclick="selectNodeCli('R2-ABR')" id="tab-cli-R2-ABR" class="px-3 py-1.5 text-xs font-mono font-medium rounded-t border-t-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 shrink-0">
+                        <i class="fas fa-network-wired text-[10px] text-indigo-400"></i> R2-ABR (Area 1/0)
                     </button>
-                    <button onclick="selectNodeCli('VPC-PROD-GW')" id="tab-cli-VPC-PROD-GW" class="px-3 py-1.5 text-xs font-mono font-medium rounded-t border-t-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 shrink-0">
-                        <i class="fas fa-network-wired text-[10px] text-purple-400"></i> VPC-PROD-GW
+                    <button onclick="selectNodeCli('R3-CORE')" id="tab-cli-R3-CORE" class="px-3 py-1.5 text-xs font-mono font-medium rounded-t border-t-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 shrink-0">
+                        <i class="fas fa-route text-[10px] text-emerald-400"></i> R3-CORE (Area 0)
                     </button>
-                    <button onclick="selectNodeCli('PA-FW')" id="tab-cli-PA-FW" class="px-3 py-1.5 text-xs font-mono font-medium rounded-t border-t-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 shrink-0">
-                        <i class="fas fa-shield-halved text-[10px] text-rose-400"></i> PA-FW
+                    <button onclick="selectNodeCli('FW-CORE')" id="tab-cli-FW-CORE" class="px-3 py-1.5 text-xs font-mono font-medium rounded-t border-t-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 shrink-0">
+                        <i class="fas fa-shield-halved text-[10px] text-rose-400"></i> FW-CORE (Area 1)
                     </button>
                 </div>
 
@@ -398,10 +402,10 @@
                     <i class="fas fa-shuffle"></i>
                 </div>
                 <h4 class="text-sm font-extrabold text-slate-900 dark:text-white">
-                    1. Bản chất của Redistribute
+                    1. Bản chất của ASBR & ABR
                 </h4>
                 <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    OSPF chỉ biết các route được học qua neighbor OSPF. Static route trỏ tới Palo Alto VIP (<span class="font-mono text-blue-600 dark:text-blue-400 font-semibold">172.16.4.4</span>) là cục bộ. ASBR <b>"dịch"</b> route này thành bản tin OSPF Type-5 LSA để phát tán tới mọi router trong toàn domain.
+                    <b>R1-ASBR</b> thuộc Area 1 nhận static route tới Firewall VIP (<span class="font-mono text-indigo-500 font-semibold">10.1.1.254</span>) và "dịch" thành bản tin <b>Type-5 LSA</b>. Khi Type-5 tới <b>R2-ABR</b>, ABR tiếp tục flood Type-5 sang Area 0, đồng thời sinh <b>Type-4 LSA</b> để quảng bá đường tới ASBR cho các router Area 0.
                 </p>
             </div>
 
@@ -414,7 +418,7 @@
                     2. Tại sao bắt buộc dùng Route-Map?
                 </h4>
                 <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Nếu chỉ gõ <code class="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-amber-600">redistribute static</code> mà không có policy filter, VyOS sẽ inject <b>toàn bộ static routes</b> — kể cả default route <code class="font-mono text-[11px] text-red-500">0.0.0.0/0</code>. Điều này làm rối loạn đường truyền Internet / WAN của các VPC khác.
+                    Nếu chỉ cấu hình <code class="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-amber-600">redistribute static</code> mà không có route-map filter, Router sẽ inject <b>toàn bộ static routes</b> — kể cả default route <code class="font-mono text-[11px] text-red-500">0.0.0.0/0</code>, làm đảo lộn hướng đi Internet/WAN của toàn bộ Area 0.
                 </p>
             </div>
 
@@ -427,7 +431,7 @@
                     3. Phân biệt Metric E1 vs E2
                 </h4>
                 <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Mặc định OSPF dùng <b>E2 (External Type 2)</b> với metric cố định <code class="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-blue-500">20</code> tại mọi hop — tối ưu khi chỉ có 1 ASBR. Với mô hình đa ASBR, <b>E1</b> được khuyến nghị vì nó cộng dồn cost nội bộ giúp chọn ASBR gần nhất.
+                    Mặc định OSPF dùng <b>E2 (External Type 2)</b> với metric cố định <code class="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-blue-500">20</code> tại mọi router trong domain. <b>E1</b> được khuyến nghị khi mạng có nhiều ASBR vì nó cộng dồn cost nội bộ qua từng hop (R2-ABR = 30, R3-CORE = 40).
                 </p>
             </div>
 
@@ -437,55 +441,55 @@
 
     <!-- Interactive Script -->
     <script>
-        // Node Definitions with Coordinates (Percentages)
+        // Sanitized Node Definitions with Coordinates (Percentages)
         const NODES_DATA = {
-            'PA-FW': {
-                id: 'PA-FW',
-                name: 'PA-FW',
-                roleBadge: 'FIREWALL VIP',
-                ip: '172.16.4.4',
-                subnet: '172.16.248.0/24',
+            'FW-CORE': {
+                id: 'FW-CORE',
+                name: 'FW-CORE',
+                roleBadge: 'FIREWALL (AREA 1)',
+                ip: '10.1.1.254',
+                subnet: '192.168.100.0/24',
                 icon: 'fa-shield-halved',
-                x: 9,
+                x: 10,
                 y: 46,
                 type: 'firewall',
                 color: '#f43f5e'
             },
-            'NHG-HO-GW': {
-                id: 'NHG-HO-GW',
-                name: 'NHG-HO-GW',
-                roleBadge: 'OSPF ASBR (VyOS)',
-                ip: '10.0.0.1',
-                subnet: '172.16.4.1 | 10.0.12.1',
+            'R1-ASBR': {
+                id: 'R1-ASBR',
+                name: 'R1-ASBR',
+                roleBadge: 'OSPF ASBR (AREA 1)',
+                ip: '10.1.0.1',
+                subnet: '10.1.1.1 | 10.1.12.1',
                 icon: 'fa-server',
-                x: 36,
+                x: 34,
                 y: 46,
                 type: 'asbr',
+                color: '#6366f1'
+            },
+            'R2-ABR': {
+                id: 'R2-ABR',
+                name: 'R2-ABR',
+                roleBadge: 'OSPF ABR (BORDER)',
+                ip: '10.0.0.2',
+                subnet: 'Area 1: 10.1.12.2 | Area 0: 10.0.23.2',
+                icon: 'fa-network-wired',
+                x: 58,
+                y: 46,
+                type: 'abr',
                 color: '#3b82f6'
             },
-            'TRANSIT-GW': {
-                id: 'TRANSIT-GW',
-                name: 'TRANSIT-GW',
+            'R3-CORE': {
+                id: 'R3-CORE',
+                name: 'R3-CORE',
                 roleBadge: 'AREA 0 BACKBONE',
-                ip: '10.0.0.2',
-                subnet: '10.0.12.2 | 10.0.23.2',
+                ip: '10.0.0.3',
+                subnet: '10.0.23.3',
                 icon: 'fa-route',
-                x: 64,
+                x: 88,
                 y: 46,
                 type: 'core',
                 color: '#10b981'
-            },
-            'VPC-PROD-GW': {
-                id: 'VPC-PROD-GW',
-                name: 'VPC-PROD-GW',
-                roleBadge: 'VPC INTERNAL',
-                ip: '10.0.0.3',
-                subnet: 'eth0: 10.0.23.3',
-                icon: 'fa-network-wired',
-                x: 91,
-                y: 46,
-                type: 'spoke',
-                color: '#a855f7'
             }
         };
 
@@ -497,64 +501,48 @@
                 badge: 'BEST PRACTICE',
                 badgeClass: 'bg-emerald-500 text-white',
                 icon: 'fa-shield-halved',
-                desc: 'VyOS cấu hình route-map STATIC-ALLOW permit prefix 172.16.248.0/24. Chỉ duy nhất mạng này được đóng gói thành LSA Type-5. Tuyệt đối an toàn, chặn hoàn toàn rò rỉ Default Route 0.0.0.0/0.',
+                desc: 'R1-ASBR cấu hình route-map STATIC-ALLOW permit prefix 192.168.100.0/24. Chỉ duy nhất mạng này được đóng gói thành LSA Type-5, qua R2-ABR flood tiếp vào Area 0 tới R3-CORE. Tuyệt đối an toàn, chặn hoàn toàn rò rỉ Default Route 0.0.0.0/0.',
                 links: [
-                    { from: 'PA-FW', to: 'NHG-HO-GW', state: 'static', label: 'Static Next-Hop' },
-                    { from: 'NHG-HO-GW', to: 'TRANSIT-GW', state: 'flood', label: 'Type-5 LSA (172.16.248.0/24)' },
-                    { from: 'TRANSIT-GW', to: 'VPC-PROD-GW', state: 'flood', label: 'Type-5 LSA (172.16.248.0/24)' }
+                    { from: 'FW-CORE', to: 'R1-ASBR', state: 'static', label: 'Static Next-Hop (10.1.1.254)' },
+                    { from: 'R1-ASBR', to: 'R2-ABR', state: 'indigo', label: 'Area 1: Type-5 LSA (192.168.100.0/24)' },
+                    { from: 'R2-ABR', to: 'R3-CORE', state: 'flood', label: 'Area 0: Type-5 & Type-4 LSA' }
                 ],
                 nodesState: {
-                    'PA-FW': { statusText: 'ACTIVE VIP', statusColor: 'emerald' },
-                    'NHG-HO-GW': { statusText: 'ASBR: FILTERED', statusColor: 'emerald' },
-                    'TRANSIT-GW': { statusText: 'LSA-5 SYNCED', statusColor: 'emerald' },
-                    'VPC-PROD-GW': { statusText: 'ROUTE LEARNED', statusColor: 'emerald' }
+                    'FW-CORE': { statusText: 'ACTIVE VIP', statusColor: 'emerald' },
+                    'R1-ASBR': { statusText: 'ASBR: FILTERED', statusColor: 'emerald' },
+                    'R2-ABR': { statusText: 'ABR: FORWARD T5', statusColor: 'emerald' },
+                    'R3-CORE': { statusText: 'ROUTE LEARNED', statusColor: 'emerald' }
                 },
-                canvasStatus: 'Route-Map Active: Type-5 LSA (172.16.248.0/24) Flooded clean',
+                canvasStatus: 'Route-Map Active: Type-5 LSA (192.168.100.0/24) Flooded across Area 1 & Area 0',
                 cliData: {
-                    'NHG-HO-GW': `# Cấu hình VyOS ASBR với Route-Map an toàn
-vyos@NHG-HO-GW# show policy route-map STATIC-ALLOW
- rule 10 {
-     action permit
-     match {
-         ip {
-             address {
-                 prefix-list PF-CORP-SUBNET
-             }
-         }
-     }
- }
-[edit]
-vyos@NHG-HO-GW# show policy prefix-list PF-CORP-SUBNET
- rule 10 {
-     action permit
-     prefix 172.16.248.0/24
- }
-[edit]
-vyos@NHG-HO-GW# show protocols ospf
- area 0.0.0.0 {
-     network 10.0.12.0/24
- }
- parameters {
-     router-id 10.0.0.1
- }
- redistribute {
-     static {
-         metric-type 2
-         route-map STATIC-ALLOW
-     }
- }
-[edit]
-vyos@NHG-HO-GW:~$ show ip ospf database external 172.16.248.0
+                    'R1-ASBR': `# Cấu hình R1-ASBR (Area 1) với Route-Map an toàn
+R1-ASBR# show running-config | section ospf
+router ospf 1
+ router-id 10.1.0.1
+ network 10.1.12.0 0.0.0.255 area 1
+ redistribute static metric-type 2 subnets route-map STATIC-ALLOW
 
-            OSPF Router with ID (10.0.0.1)
+R1-ASBR# show route-map STATIC-ALLOW
+route-map STATIC-ALLOW, permit, sequence 10
+  Match clauses:
+    ip address prefix-list PF-CORP-SUBNET
+  Set clauses:
+
+R1-ASBR# show ip prefix-list PF-CORP-SUBNET
+ip prefix-list PF-CORP-SUBNET: 1 entries
+   seq 10 permit 192.168.100.0/24
+
+R1-ASBR# show ip ospf database external 192.168.100.0
+
+            OSPF Router with ID (10.1.0.1) (Process ID 1)
 
                 Type-5 AS External Link States
 
-  LS age: 142
-  Options: *|-|-|-|-|-|E|-
+  LS age: 118
+  Options: (No TOS-capability, DC, Upward)
   LS Type: AS External Link
-  Link State ID: 172.16.248.0 (External Network Number)
-  Advertising Router: 10.0.0.1
+  Link State ID: 192.168.100.0 (External Network Number)
+  Advertising Router: 10.1.0.1
   LS Seq Number: 80000001
   Checksum: 0x8a32
   Length: 36
@@ -565,43 +553,46 @@ vyos@NHG-HO-GW:~$ show ip ospf database external 172.16.248.0
         Forward Address: 0.0.0.0
         External Route Tag: 0`,
 
-                    'TRANSIT-GW': `transit-gw# show ip route ospf
-Codes: K - kernel route, C - connected, S - static, R - RIP,
-       O - OSPF, I - IS-IS, B - BGP, E1 - OSPF external type 1,
+                    'R2-ABR': `R2-ABR# show ip ospf
+ Routing Process "ospf 1" with ID 10.0.0.2
+ It is an Area Border Router (ABR)
+   Area 1: 1 interface, 1 neighbor (R1-ASBR)
+   Area 0 (Backbone): 1 interface, 1 neighbor (R3-CORE)
+
+R2-ABR# show ip ospf database asbr-summary
+
+            OSPF Router with ID (10.0.0.2) (Process ID 1)
+
+                Adv Router Link States (Area 0)
+
+  LS age: 95
+  LS Type: Summary Links(AS Boundary Router)
+  Link State ID: 10.1.0.1 (AS Boundary Router ID)
+  Advertising Router: 10.0.0.2 (R2-ABR)
+  Metric: 10
+! ABR sinh Type-4 LSA vào Area 0 để thông báo đường đến ASBR 10.1.0.1`,
+
+                    'R3-CORE': `R3-CORE# show ip route ospf
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       O - OSPF, IA - OSPF inter area, N1 - OSPF NSSA external type 1,
+       N2 - OSPF NSSA external type 2, E1 - OSPF external type 1,
        E2 - OSPF external type 2
 
-O E2   172.16.248.0/24 [110/20] via 10.0.12.1, eth0, 00:04:12
+O E2   192.168.100.0/24 [110/20] via 10.0.23.2, 00:04:12, GigabitEthernet0/1
 
-transit-gw# show ip ospf database external 172.16.248.0
+R3-CORE# ping 192.168.100.100 source GigabitEthernet0/1
+Type escape sequence to abort.
+Sending 3, 100-byte ICMP Echos to 192.168.100.100, timeout is 2 seconds:
+!!!
+Success rate is 100 percent (3/3), round-trip min/avg/max = 1/1/2 ms`,
 
-                Type-5 AS External Link States
-
-  Link State ID: 172.16.248.0 (External Network Number)
-  Advertising Router: 10.0.0.1
-  Network Mask: /24
-        Metric Type: 2 (E2)
-        Metric: 20
-        Forward Address: 0.0.0.0`,
-
-                    'VPC-PROD-GW': `vpc-prod-gw# show ip route ospf
-O E2   172.16.248.0/24 [110/20] via 10.0.23.2, eth0, 00:03:55
-
-vpc-prod-gw# ping 172.16.248.100 count 3
-PING 172.16.248.100 (172.16.248.100) 56(84) bytes of data.
-64 bytes from 172.16.248.100: icmp_seq=1 ttl=61 time=1.42 ms
-64 bytes from 172.16.248.100: icmp_seq=2 ttl=61 time=1.18 ms
-64 bytes from 172.16.248.100: icmp_seq=3 ttl=61 time=1.21 ms
-
---- 172.16.248.100 ping statistics ---
-3 packets transmitted, 3 received, 0% packet loss, time 2003ms`,
-
-                    'PA-FW': `admin@PA-FW> show routing route
+                    'FW-CORE': `FW-CORE# show routing route
 Destination        Nexthop       Metric  Flags  Interface
-172.16.248.0/24    172.16.4.4    10      A S    ethernet1/1
-0.0.0.0/0          198.51.100.1  10      A S    ethernet1/2 (ISP WAN)
+192.168.100.0/24   10.1.1.254    10      A S    ethernet1/1
+0.0.0.0/0          203.0.113.1   10      A S    ethernet1/2 (ISP WAN)
 
-admin@PA-FW> show interface ethernet1/1
-Interface: ethernet1/1, State: up, IP: 172.16.4.4/24`
+FW-CORE# show interface ethernet1/1
+Interface: ethernet1/1, State: up, IP: 10.1.1.254/24`
                 }
             },
             {
@@ -610,75 +601,69 @@ Interface: ethernet1/1, State: up, IP: 172.16.4.4/24`
                 badge: 'HIGH RISK HAZARD',
                 badgeClass: 'bg-red-500 text-white',
                 icon: 'fa-triangle-exclamation',
-                desc: 'Cảnh báo rủi ro: Lệnh redistribute static không kèm route-map sẽ tự động inject TOÀN BỘ static routes của VyOS vào OSPF domain, bao gồm cả Default Route 0.0.0.0/0 làm chuyển hướng sai lệch toàn bộ lưu lượng Internet của các VPC!',
+                desc: 'Cảnh báo rủi ro: Lệnh redistribute static không kèm route-map sẽ tự động inject TOÀN BỘ static routes của R1-ASBR vào Area 1, rồi qua R2-ABR tràn vào Area 0 — bao gồm cả Default Route 0.0.0.0/0 làm chuyển hướng sai lệch toàn bộ lưu lượng Internet của Area 0!',
                 links: [
-                    { from: 'PA-FW', to: 'NHG-HO-GW', state: 'static', label: 'Static Next-Hop' },
-                    { from: 'NHG-HO-GW', to: 'TRANSIT-GW', state: 'leak', label: 'LEAK: 0.0.0.0/0 + 172.16.248.0/24' },
-                    { from: 'TRANSIT-GW', to: 'VPC-PROD-GW', state: 'leak', label: 'LEAK: 0.0.0.0/0 + 172.16.248.0/24' }
+                    { from: 'FW-CORE', to: 'R1-ASBR', state: 'static', label: 'Static Next-Hop' },
+                    { from: 'R1-ASBR', to: 'R2-ABR', state: 'leak', label: 'LEAK: 0.0.0.0/0 + 192.168.100.0/24' },
+                    { from: 'R2-ABR', to: 'R3-CORE', state: 'leak', label: 'LEAK INTO AREA 0: 0.0.0.0/0' }
                 ],
                 nodesState: {
-                    'PA-FW': { statusText: 'ACTIVE VIP', statusColor: 'emerald' },
-                    'NHG-HO-GW': { statusText: 'LEAKING 0.0.0.0/0', statusColor: 'red' },
-                    'TRANSIT-GW': { statusText: 'DEFAULT ROUTE OVERRIDDEN', statusColor: 'red' },
-                    'VPC-PROD-GW': { statusText: 'INTERNET TRAFFIC HIJACKED', statusColor: 'red' }
+                    'FW-CORE': { statusText: 'ACTIVE VIP', statusColor: 'emerald' },
+                    'R1-ASBR': { statusText: 'LEAKING 0.0.0.0/0', statusColor: 'red' },
+                    'R2-ABR': { statusText: 'FLOODING LEAKED LSA', statusColor: 'red' },
+                    'R3-CORE': { statusText: 'INTERNET HIJACKED', statusColor: 'red' }
                 },
                 canvasStatus: 'CRITICAL: Leaking 0.0.0.0/0 into OSPF Domain via Type-5 LSA',
                 cliData: {
-                    'NHG-HO-GW': `# CẤU HÌNH NGUY HIỂM: Redistribute Static KHÔNG có Route-Map!
-vyos@NHG-HO-GW# show protocols ospf
- parameters {
-     router-id 10.0.0.1
- }
- redistribute {
-     static {
-         metric-type 2
-         ! KHÔNG CÓ ROUTE-MAP -> TẤT CẢ STATIC ROUTE SẼ BỊ BƠM VÀO OSPF!
-     }
- }
-[edit]
-vyos@NHG-HO-GW:~$ show ip ospf database external
+                    'R1-ASBR': `# CẤU HÌNH NGUY HIỂM: Redistribute Static KHÔNG có Route-Map!
+R1-ASBR# show running-config | section ospf
+router ospf 1
+ router-id 10.1.0.1
+ redistribute static metric-type 2 subnets
+ ! KHÔNG CÓ ROUTE-MAP -> TẤT CẢ STATIC ROUTE SẼ BỊ BƠM VÀO OSPF!
+
+R1-ASBR# show ip ospf database external
+
+            OSPF Router with ID (10.1.0.1)
 
                 Type-5 AS External Link States
 
   Link State ID: 0.0.0.0 (External Network Number)
-  Advertising Router: 10.0.0.1
+  Advertising Router: 10.1.0.1
   Network Mask: /0
         Metric Type: 2 (E2)
         Metric: 20
         *** CẢNH BÁO: DEFAULT ROUTE ĐANG BỊ PHÁT TÁN VÀO OSPF ***
 
-  Link State ID: 172.16.248.0 (External Network Number)
-  Advertising Router: 10.0.0.1
+  Link State ID: 192.168.100.0 (External Network Number)
+  Advertising Router: 10.1.0.1
   Network Mask: /24
         Metric Type: 2 (E2)
         Metric: 20`,
 
-                    'TRANSIT-GW': `transit-gw# show ip route ospf
-O E2   0.0.0.0/0 [110/20] via 10.0.12.1, eth0, 00:01:10  <-- [NGUY CƠ BỊ ĐỔ TRAFFIC SANG NHG-HO!]
-O E2   172.16.248.0/24 [110/20] via 10.0.12.1, eth0, 00:01:10
+                    'R2-ABR': `R2-ABR# show ip route ospf
+O E2   0.0.0.0/0 [110/20] via 10.1.12.1, 00:01:10, GigabitEthernet0/0  <-- [BỊ LEAK TỪ R1-ASBR!]
+O E2   192.168.100.0/24 [110/20] via 10.1.12.1, 00:01:10, GigabitEthernet0/0
 
-transit-gw# show ip route 0.0.0.0
-Routing entry for 0.0.0.0/0
-  Known via "ospf", distance 110, metric 20, type extern 2
-  Last update from 10.0.12.1 on eth0
-  * 10.0.12.1, via eth0`,
+! ABR R2 không lọc được LSA Type-5 do đặc tính Type-5 flood toàn domain!
+! Bản tin Type-5 0.0.0.0/0 tiếp tục tràn qua Area 0 Backbone!`,
 
-                    'VPC-PROD-GW': `vpc-prod-gw# show ip route ospf
-O E2   0.0.0.0/0 [110/20] via 10.0.23.2, eth0  <-- [CÁC SERVER NỘI BỘ SẼ ĐẨY TOÀN BỘ WEB/INTERNET QUA PA-FW!]
-O E2   172.16.248.0/24 [110/20] via 10.0.23.2, eth0
+                    'R3-CORE': `R3-CORE# show ip route ospf
+O E2   0.0.0.0/0 [110/20] via 10.0.23.2, GigabitEthernet0/1  <-- [LƯU LƯỢNG INTERNET BỊ HIJACK QUA ASBR!]
+O E2   192.168.100.0/24 [110/20] via 10.0.23.2, GigabitEthernet0/1
 
-vpc-prod-gw# traceroute 8.8.8.8
+R3-CORE# traceroute 8.8.8.8
 traceroute to 8.8.8.8 (8.8.8.8), 30 hops max
- 1  10.0.23.2 (TRANSIT-GW)  0.812 ms
- 2  10.0.12.1 (NHG-HO-GW)   1.214 ms  <-- Bị rò rỉ route, thay vì ra IGW của VPC!
- 3  172.16.4.4 (PA-FW)      2.105 ms`,
+ 1  10.0.23.2 (R2-ABR)   0.812 ms
+ 2  10.1.12.1 (R1-ASBR)  1.214 ms  <-- Bị tràn hướng qua Area 1 thay vì ra WAN của Core!
+ 3  10.1.1.254 (FW-CORE) 2.105 ms`,
 
-                    'PA-FW': `admin@PA-FW> show routing route
+                    'FW-CORE': `FW-CORE# show routing route
 Destination        Nexthop       Metric  Flags  Interface
-172.16.248.0/24    172.16.4.4    10      A S    ethernet1/1
-0.0.0.0/0          198.51.100.1  10      A S    ethernet1/2 (ISP WAN)
+192.168.100.0/24   10.1.1.254    10      A S    ethernet1/1
+0.0.0.0/0          203.0.113.1   10      A S    ethernet1/2 (ISP WAN)
 
-! PA Firewall bị quá tải do bất ngờ nhận lượng truy cập Internet ngoài ý muốn từ các VPC!`
+! Firewall bị quá tải do bất ngờ nhận lượng truy cập Internet ngoài ý muốn từ Area 0!`
                 }
             },
             {
@@ -687,17 +672,17 @@ Destination        Nexthop       Metric  Flags  Interface
                 badge: 'METRIC DYNAMICS',
                 badgeClass: 'bg-indigo-500 text-white',
                 icon: 'fa-scale-balanced',
-                desc: 'Khảo sát cách tính Metric: E2 giữ nguyên metric cố định 20 tại mọi router trong domain (phù hợp khi chỉ có 1 ASBR duy nhất). E1 cộng thêm OSPF path cost nội bộ trên từng chặng (giúp router chọn ASBR tối ưu khi có nhiều ASBR).',
+                desc: 'Khảo sát cách tính Metric: E2 giữ nguyên metric cố định 20 tại mọi router (kể cả qua ABR sang Area 0). E1 cộng thêm OSPF path cost nội bộ trên từng chặng (giúp router Area 0 tính chính xác khoảng cách đến ASBR).',
                 links: [
-                    { from: 'PA-FW', to: 'NHG-HO-GW', state: 'static', label: 'Static Next-Hop' },
-                    { from: 'NHG-HO-GW', to: 'TRANSIT-GW', state: 'blue', label: 'Hop 1 (Link Cost: 10)' },
-                    { from: 'TRANSIT-GW', to: 'VPC-PROD-GW', state: 'blue', label: 'Hop 2 (Link Cost: 10)' }
+                    { from: 'FW-CORE', to: 'R1-ASBR', state: 'static', label: 'Static Next-Hop' },
+                    { from: 'R1-ASBR', to: 'R2-ABR', state: 'indigo', label: 'Hop 1 (Area 1 Cost: 10)' },
+                    { from: 'R2-ABR', to: 'R3-CORE', state: 'blue', label: 'Hop 2 (Area 0 Cost: 10)' }
                 ],
                 nodesState: {
-                    'PA-FW': { statusText: 'NEXT-HOP VIP', statusColor: 'emerald' },
-                    'NHG-HO-GW': { statusText: 'ASBR (Cost: 20)', statusColor: 'blue' },
-                    'TRANSIT-GW': { statusText: 'CALCULATING METRIC', statusColor: 'blue' },
-                    'VPC-PROD-GW': { statusText: 'RIB UPDATED', statusColor: 'blue' }
+                    'FW-CORE': { statusText: 'NEXT-HOP VIP', statusColor: 'emerald' },
+                    'R1-ASBR': { statusText: 'ASBR (Seed: 20)', statusColor: 'blue' },
+                    'R2-ABR': { statusText: 'ABR BORDER', statusColor: 'blue' },
+                    'R3-CORE': { statusText: 'RIB UPDATED', statusColor: 'blue' }
                 },
                 canvasStatus: 'Metric Comparison Mode: Toggle E1 vs E2 to observe cost calculation',
                 cliData: {} // Will be dynamically generated based on currentMetricType
@@ -706,7 +691,7 @@ Destination        Nexthop       Metric  Flags  Interface
 
         // App State
         let activeScenarioId = 'route-map';
-        let activeNodeCli = 'NHG-HO-GW';
+        let activeNodeCli = 'R1-ASBR';
         let currentMetricType = 'E2';
         let activeInspectorTab = 'rib';
 
@@ -767,7 +752,7 @@ Destination        Nexthop       Metric  Flags  Interface
                 metricToggleGroup.classList.remove('flex');
             }
 
-            // Draw Links
+            // Draw Links & Elevated Badges
             renderTopologyLinks(sc);
 
             // Draw Nodes
@@ -812,6 +797,7 @@ Destination        Nexthop       Metric  Flags  Interface
                 if (l.state === 'leak') flowClass = 'link-flow-red';
                 else if (l.state === 'static') flowClass = 'link-flow-static';
                 else if (l.state === 'blue') flowClass = 'link-flow-blue';
+                else if (l.state === 'indigo') flowClass = 'link-flow-indigo';
 
                 flow.setAttribute('class', flowClass);
                 svgLinksFlow.appendChild(flow);
@@ -831,6 +817,9 @@ Destination        Nexthop       Metric  Flags  Interface
                     } else if (l.state === 'flood') {
                         badgeTheme = 'bg-emerald-50/95 dark:bg-emerald-950/95 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 shadow-emerald-500/20';
                         iconHtml = '<i class="fas fa-check-circle text-[10px] text-emerald-500"></i>';
+                    } else if (l.state === 'indigo') {
+                        badgeTheme = 'bg-indigo-50/95 dark:bg-indigo-950/95 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800 shadow-indigo-500/20';
+                        iconHtml = '<i class="fas fa-network-wired text-[10px] text-indigo-500"></i>';
                     } else if (l.state === 'blue') {
                         badgeTheme = 'bg-blue-50/95 dark:bg-blue-950/95 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-800 shadow-blue-500/20';
                         iconHtml = '<i class="fas fa-link text-[10px] text-blue-500"></i>';
@@ -869,7 +858,7 @@ Destination        Nexthop       Metric  Flags  Interface
 
                 card.innerHTML = `
                     <!-- Layer 1: Top Absolute Role Badge -->
-                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider border shadow-sm ${n.type === 'asbr' ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700'} whitespace-nowrap">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider border shadow-sm ${n.type === 'asbr' ? 'bg-indigo-600 text-white border-indigo-400' : (n.type === 'abr' ? 'bg-blue-600 text-white border-blue-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700')} whitespace-nowrap">
                         ${n.roleBadge}
                     </div>
 
@@ -959,7 +948,7 @@ Destination        Nexthop       Metric  Flags  Interface
         // Render Terminal CLI
         function renderCli() {
             // Update device tab styling in CLI
-            ['NHG-HO-GW', 'TRANSIT-GW', 'VPC-PROD-GW', 'PA-FW'].forEach(id => {
+            ['R1-ASBR', 'R2-ABR', 'R3-CORE', 'FW-CORE'].forEach(id => {
                 const btn = document.getElementById(`tab-cli-${id}`);
                 if (btn) {
                     if (id === activeNodeCli) {
@@ -988,55 +977,51 @@ Destination        Nexthop       Metric  Flags  Interface
         // Generate dynamic CLI for Metric Comparison
         function generateMetricCli(nodeId, metricType) {
             if (metricType === 'E2') {
-                if (nodeId === 'NHG-HO-GW') {
-                    return `# VyOS ASBR: Cấu hình Metric-Type 2 (E2) cố định
-vyos@NHG-HO-GW# show protocols ospf redistribute static
- metric-type 2
- metric 20
- route-map STATIC-ALLOW
+                if (nodeId === 'R1-ASBR') {
+                    return `# R1-ASBR: Cấu hình Metric-Type 2 (E2) cố định
+R1-ASBR(config)# router ospf 1
+R1-ASBR(config-router)# redistribute static metric-type 2 metric 20 subnets route-map STATIC-ALLOW
 
-vyos@NHG-HO-GW:~$ show ip ospf database external 172.16.248.0
-  Link State ID: 172.16.248.0
-  Advertising Router: 10.0.0.1
+R1-ASBR# show ip ospf database external 192.168.100.0
+  Link State ID: 192.168.100.0
+  Advertising Router: 10.1.0.1
   Metric Type: 2 (E2)
-  Metric: 20 (Cố định, không cộng dồn chi phí link)`;
-                } else if (nodeId === 'TRANSIT-GW') {
-                    return `transit-gw# show ip route ospf
-O E2   172.16.248.0/24 [110/20] via 10.0.12.1, eth0
-! Metric = 20 (Giữ nguyên từ ASBR, bỏ qua cost eth0=10)`;
-                } else if (nodeId === 'VPC-PROD-GW') {
-                    return `vpc-prod-gw# show ip route ospf
-O E2   172.16.248.0/24 [110/20] via 10.0.23.2, eth0
-! Metric = 20 (Vẫn là 20 dù cách ASBR 2 hops!)`;
+  Metric: 20 (Cố định, không cộng dồn chi phí link qua các Area)`;
+                } else if (nodeId === 'R2-ABR') {
+                    return `R2-ABR# show ip route ospf
+O E2   192.168.100.0/24 [110/20] via 10.1.12.1, GigabitEthernet0/0
+! ABR Metric = 20 (Giữ nguyên seed metric từ R1-ASBR)`;
+                } else if (nodeId === 'R3-CORE') {
+                    return `R3-CORE# show ip route ospf
+O E2   192.168.100.0/24 [110/20] via 10.0.23.2, GigabitEthernet0/1
+! Core Metric = 20 (Vẫn là 20 dù qua ABR và nằm trong Area 0!)`;
                 } else {
-                    return `admin@PA-FW> show routing route
-Destination: 172.16.248.0/24, Next-Hop: 172.16.4.4`;
+                    return `FW-CORE# show routing route
+Destination: 192.168.100.0/24, Next-Hop: 10.1.1.254 (Active)`;
                 }
             } else {
                 // E1 Mode
-                if (nodeId === 'NHG-HO-GW') {
-                    return `# VyOS ASBR: Cấu hình Metric-Type 1 (E1) cộng dồn
-vyos@NHG-HO-GW# show protocols ospf redistribute static
- metric-type 1
- metric 20
- route-map STATIC-ALLOW
+                if (nodeId === 'R1-ASBR') {
+                    return `# R1-ASBR: Cấu hình Metric-Type 1 (E1) cộng dồn
+R1-ASBR(config)# router ospf 1
+R1-ASBR(config-router)# redistribute static metric-type 1 metric 20 subnets route-map STATIC-ALLOW
 
-vyos@NHG-HO-GW:~$ show ip ospf database external 172.16.248.0
-  Link State ID: 172.16.248.0
-  Advertising Router: 10.0.0.1
+R1-ASBR# show ip ospf database external 192.168.100.0
+  Link State ID: 192.168.100.0
+  Advertising Router: 10.1.0.1
   Metric Type: 1 (E1)
-  Metric: 20 (Seed cost = 20, các router sau sẽ cộng dồn cost nội bộ)`;
-                } else if (nodeId === 'TRANSIT-GW') {
-                    return `transit-gw# show ip route ospf
-O E1   172.16.248.0/24 [110/30] via 10.0.12.1, eth0
-! Metric = 20 (Seed) + 10 (OSPF Link Cost eth0) = 30`;
-                } else if (nodeId === 'VPC-PROD-GW') {
-                    return `vpc-prod-gw# show ip route ospf
-O E1   172.16.248.0/24 [110/40] via 10.0.23.2, eth0
-! Metric = 20 (Seed) + 10 (Hop 1) + 10 (Hop 2) = 40 (Cộng dồn chính xác)`;
+  Metric: 20 (Seed cost = 20, các router downstream sẽ cộng dồn cost nội bộ)`;
+                } else if (nodeId === 'R2-ABR') {
+                    return `R2-ABR# show ip route ospf
+O E1   192.168.100.0/24 [110/30] via 10.1.12.1, GigabitEthernet0/0
+! Metric = 20 (Seed) + 10 (Link Cost Area 1 Gi0/0) = 30`;
+                } else if (nodeId === 'R3-CORE') {
+                    return `R3-CORE# show ip route ospf
+O E1   192.168.100.0/24 [110/40] via 10.0.23.2, GigabitEthernet0/1
+! Metric = 20 (Seed) + 10 (Hop 1) + 10 (Hop 2 qua ABR) = 40 (Cộng dồn chính xác)`;
                 } else {
-                    return `admin@PA-FW> show routing route
-Destination: 172.16.248.0/24, Next-Hop: 172.16.4.4`;
+                    return `FW-CORE# show routing route
+Destination: 192.168.100.0/24, Next-Hop: 10.1.1.254 (Active)`;
                 }
             }
         }
@@ -1052,7 +1037,7 @@ Destination: 172.16.248.0/24, Next-Hop: 172.16.4.4`;
 
         // Render Live Routing Table (RIB)
         function renderRibTable() {
-            let metricVal = currentMetricType === 'E1' ? (activeNodeCli === 'TRANSIT-GW' ? '30' : (activeNodeCli === 'VPC-PROD-GW' ? '40' : '20')) : '20';
+            let metricVal = currentMetricType === 'E1' ? (activeNodeCli === 'R2-ABR' ? '30' : (activeNodeCli === 'R3-CORE' ? '40' : '20')) : '20';
             let metricTypeStr = activeScenarioId === 'metric-e1-e2' ? currentMetricType : 'E2';
 
             let rowsHtml = '';
@@ -1065,14 +1050,14 @@ Destination: 172.16.248.0/24, Next-Hop: 172.16.4.4`;
                         </td>
                         <td class="p-2 font-bold">0.0.0.0/0</td>
                         <td class="p-2 text-slate-500 dark:text-slate-400">[110/${metricVal}]</td>
-                        <td class="p-2">${activeNodeCli === 'VPC-PROD-GW' ? '10.0.23.2' : '10.0.12.1'}</td>
+                        <td class="p-2">${activeNodeCli === 'R3-CORE' ? '10.0.23.2' : (activeNodeCli === 'R2-ABR' ? '10.1.12.1' : '10.1.1.254')}</td>
                         <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[9px] bg-red-500 text-white font-bold">LEAK HAZARD</span></td>
                     </tr>
                     <tr class="font-mono text-xs text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                         <td class="p-2 font-bold text-emerald-600 dark:text-emerald-400">O ${metricTypeStr}</td>
-                        <td class="p-2 font-bold">172.16.248.0/24</td>
+                        <td class="p-2 font-bold">192.168.100.0/24</td>
                         <td class="p-2 text-slate-500 dark:text-slate-400">[110/${metricVal}]</td>
-                        <td class="p-2">${activeNodeCli === 'VPC-PROD-GW' ? '10.0.23.2' : '10.0.12.1'}</td>
+                        <td class="p-2">${activeNodeCli === 'R3-CORE' ? '10.0.23.2' : (activeNodeCli === 'R2-ABR' ? '10.1.12.1' : '10.1.1.254')}</td>
                         <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500 text-white font-bold">OK</span></td>
                     </tr>
                 `;
@@ -1080,9 +1065,9 @@ Destination: 172.16.248.0/24, Next-Hop: 172.16.4.4`;
                 rowsHtml = `
                     <tr class="font-mono text-xs text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                         <td class="p-2 font-bold text-emerald-600 dark:text-emerald-400">O ${metricTypeStr}</td>
-                        <td class="p-2 font-bold">172.16.248.0/24</td>
+                        <td class="p-2 font-bold">192.168.100.0/24</td>
                         <td class="p-2 text-slate-500 dark:text-slate-400">[110/${metricVal}]</td>
-                        <td class="p-2">${activeNodeCli === 'VPC-PROD-GW' ? '10.0.23.2' : (activeNodeCli === 'PA-FW' ? '172.16.4.4' : '10.0.12.1')}</td>
+                        <td class="p-2">${activeNodeCli === 'R3-CORE' ? '10.0.23.2' : (activeNodeCli === 'FW-CORE' ? '10.1.1.254' : (activeNodeCli === 'R2-ABR' ? '10.1.12.1' : '10.1.1.254'))}</td>
                         <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500 text-white font-bold">FILTERED OK</span></td>
                     </tr>
                     <tr class="font-mono text-xs text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-slate-800">
@@ -1150,34 +1135,34 @@ Destination: 172.16.248.0/24, Next-Hop: 172.16.4.4`;
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                            <div><span class="text-slate-500">LS Age:</span> 142s</div>
+                            <div><span class="text-slate-500">LS Age:</span> 118s</div>
                             <div><span class="text-slate-500">Options:</span> (E-bit = 1)</div>
                             <div><span class="text-slate-500">LS Type:</span> 5 (AS-External)</div>
-                            <div><span class="text-slate-500">LS ID:</span> <span class="text-amber-400 font-bold">172.16.248.0</span></div>
-                            <div><span class="text-slate-500">Adv Router:</span> <span class="text-blue-400">10.0.0.1 (ASBR)</span></div>
+                            <div><span class="text-slate-500">LS ID:</span> <span class="text-amber-400 font-bold">192.168.100.0</span></div>
+                            <div><span class="text-slate-500">Adv Router:</span> <span class="text-indigo-400 font-bold">10.1.0.1 (R1-ASBR)</span></div>
                             <div><span class="text-slate-500">Netmask:</span> 255.255.255.0 (/24)</div>
                             <div><span class="text-slate-500">Metric-Type:</span> <span class="text-indigo-400 font-bold">${metricTypeNum}</span></div>
                             <div><span class="text-slate-500">Metric:</span> <span class="text-emerald-400 font-bold">${metricVal}</span></div>
-                            <div class="col-span-2"><span class="text-slate-500">Forwarding Address:</span> 0.0.0.0 (Forward directly to ASBR)</div>
-                            <div class="col-span-2"><span class="text-slate-500">External Route Tag:</span> 0</div>
+                            <div class="col-span-2"><span class="text-slate-500">Forwarding Address:</span> 0.0.0.0 (Forward via R2-ABR towards ASBR)</div>
+                            <div class="col-span-2"><span class="text-slate-500">Type-4 Companion:</span> Adv Router 10.0.0.2 (R2-ABR) generates ASBR-Summary LSA</div>
                         </div>
                     </div>
 
                     <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
                         <h5 class="font-bold text-slate-800 dark:text-slate-200 mb-1">
-                            Đặc điểm cốt lõi của Type-5 LSA:
+                            Cơ chế Flooding qua ABR sang Area 0:
                         </h5>
                         <ul class="list-disc list-inside text-slate-600 dark:text-slate-400 space-y-1 text-[11px]">
-                            <li>Do chính <b>ASBR</b> khởi tạo khi redistribute.</li>
-                            <li>Được flood <b>toàn bộ OSPF domain</b> mà không bị chặn bởi ABR.</li>
-                            <li>Nếu Forwarding Address = 0.0.0.0, các router sẽ định tuyến gói tin hướng về router-id của ASBR (10.0.0.1).</li>
+                            <li><b>Type-5 LSA</b> do <b>R1-ASBR</b> sinh ra được flood qua Area 1 và vượt qua ABR (R2) sang toàn bộ Area 0.</li>
+                            <li><b>R2-ABR</b> tạo thêm <b>Type-4 LSA (ASBR-Summary)</b> để thông báo cho các router trong Area 0 vị trí của R1-ASBR.</li>
+                            <li>Nếu có Route-Map, các route nhạy cảm như default route không bị flood ngoài tầm kiểm soát.</li>
                         </ul>
                     </div>
                 </div>
             `;
         }
 
-        // Web Animations API: Dynamic Traffic Simulation (VPC -> PA-FW)
+        // Web Animations API: Dynamic Traffic Simulation (R3-CORE -> R2-ABR -> R1-ASBR -> FW-CORE)
         window.triggerTrafficTest = function() {
             const btn = document.getElementById('btn-traffic-test');
             btn.disabled = true;
@@ -1189,12 +1174,12 @@ Destination: 172.16.248.0/24, Next-Hop: 172.16.4.4`;
             const W = wrap.clientWidth;
             const H = wrap.clientHeight;
 
-            // Traversal path: VPC-PROD-GW -> TRANSIT-GW -> NHG-HO-GW -> PA-FW
-            const hops = ['VPC-PROD-GW', 'TRANSIT-GW', 'NHG-HO-GW', 'PA-FW'];
+            // Traversal path: R3-CORE -> R2-ABR -> R1-ASBR -> FW-CORE
+            const hops = ['R3-CORE', 'R2-ABR', 'R1-ASBR', 'FW-CORE'];
 
             pkt.style.opacity = '1';
             pkt.className = 'absolute z-30 pointer-events-none flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-bold shadow-xl border bg-emerald-500 text-white border-emerald-400';
-            pktLabel.innerText = 'PING: 172.16.248.100';
+            pktLabel.innerText = 'PING: 192.168.100.100';
 
             let hopIndex = 0;
 
