@@ -843,9 +843,14 @@
         // Update stats row dynamically
         const statsRow = document.querySelector('.stats-row');
         if (statsRow) {
-            const liveCount = cardData.length;
-            const soonCount = 0; // Or calculate if you have status 'soon'
+            const liveCount = cardData.filter(c => c.isLive).length;
+            const soonCount = cardData.filter(c => !c.isLive).length;
             const catCount = Object.keys(realTypes).length;
+            
+            const heroBadge = document.querySelector('.hero-badge');
+            if (heroBadge) {
+                heroBadge.textContent = `${liveCount} lab đã live · ${soonCount} đang ấp ủ`;
+            }
             
             statsRow.innerHTML = `
                 <div class="stat-box">
@@ -855,7 +860,7 @@
                 </div>
                 <div class="stat-box">
                     <div class="stat-label">Đang xây</div>
-                    <div class="stat-num">5</div>
+                    <div class="stat-num">${soonCount}</div>
                     <div class="stat-sub">dự án sắp ra</div>
                 </div>
                 <div class="stat-box">

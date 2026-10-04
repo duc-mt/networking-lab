@@ -396,4 +396,196 @@ const PROJECTS = [
         tags: ['OSPF', 'Redistribution', 'Route-Map', 'ASBR', 'Type-5 LSA', 'VyOS', 'Firewall'],
         href: 'projects/diagnostic-playbook/ospf-redistribute-static.html',
     },
+
+    // --- ADVANCED UPCOMING PROJECTS (COMING SOON) ---
+    {
+        title: 'SRv6 User Plane & 5G Network Slicing',
+        description:
+            'Mô phỏng cơ chế đóng gói SRv6 Segment Routing over IPv6 cho 5G Network Slicing và chuyển mạch UPF trong mạng viễn thông Telco.',
+        type: 'protocol',
+        tags: ['SRv6', '5G Core', 'Segment Routing', 'UPF', 'IPv6', 'Slicing'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'BGP EVPN Type-2/Type-5 & VXLAN Binding',
+        description:
+            'Mô phỏng chi tiết FSM và quy trình trao đổi MAC/IP Advertisement (Type-2) và Prefix Advertisement (Type-5) giữa BGP Leaf-Spine trong Data Center.',
+        type: 'protocol',
+        tags: ['EVPN', 'VXLAN', 'Type-2 LSA', 'Type-5 LSA', 'Data Center', 'BGP'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'PIM-SM & Anycast RP with MSDP Sync',
+        description:
+            'Diễn biến FSM PIM Register, hình thành Shared Tree (*,G) và Shortest Path Tree (S,G) giữa các router Multicast Core.',
+        type: 'protocol',
+        tags: ['Multicast', 'PIM-SM', 'MSDP', 'Anycast RP', 'SPT', 'Rendezvous Point'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'BGP Route Flapping & Route Dampening',
+        description:
+            'Chẩn đoán sự cố cáp biển chập chờn gây BGP Flapping liên tục, ngắt kết nối Peering quốc tế và thuật toán Suppress/Penalty.',
+        type: 'troubleshooting',
+        tags: ['BGP', 'Flapping', 'Route Dampening', 'Troubleshooting', 'WAN'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'ECMP Hashing Imbalance & Polarization',
+        description:
+            'Sự cố phân tải không đều trên 8 đường Spine-Leaf do lỗi Hashing Polarization gây nghẽn 1 đường link trong khi 7 đường rảnh.',
+        type: 'troubleshooting',
+        tags: ['ECMP', 'Spine-Leaf', 'Hashing', 'Polarization', 'Data Center'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'Palo Alto / FortiGate SSL Forward Proxy Walk',
+        description:
+            'Truy vết chi tiết gói tin HTTPS qua SSL Inspection Engine: Handshake interception, CA Certificate Re-signing và Egress NAT.',
+        type: 'packet-walk',
+        tags: ['SSL Inspection', 'Palo Alto', 'FortiGate', 'HTTPS', 'Packet Walk', 'Firewall'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'IPsec IKEv2 DPD & Dynamic VTI Walk',
+        description:
+            'Hành trình gói tin qua hầm IPsec VTI trong kịch bản failover kênh thuê riêng sang VPN backup với mã hóa AES-GCM-256.',
+        type: 'packet-walk',
+        tags: ['IPsec', 'IKEv2', 'VTI', 'DPD', 'VPN', 'AES-GCM'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'Core Spine ISSU Zero-Downtime Upgrade MOP',
+        description:
+            'Kịch bản nâng cấp OS hàng loạt cho Data Center Spine Switches không mất gói tin sử dụng Graceful Restart & BGP Maintenance Mode.',
+        type: 'change-mop',
+        tags: ['ISSU', 'Data Center', 'Spine', 'BGP Maintenance', 'Zero Downtime', 'MOP'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'DC Migration: L2 Overlay Stretch Cutover MOP',
+        description:
+            'Quy trình MOP di chuyển Data Center: Pre-check L2 Extension, Migrate Anycast Gateway, Post-check và Decommissioning.',
+        type: 'change-mop',
+        tags: ['DC Migration', 'VXLAN Stretch', 'Anycast GW', 'MOP', 'Cutover'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'CI/CD Batfish Intent & GitOps Deploy',
+        description:
+            'Tự động hóa kiểm thử Network Intent (ACL, Routing, Reachability) bằng Batfish trong GitLab CI trước khi push config qua Ansible.',
+        type: 'automation',
+        tags: ['Batfish', 'GitLab CI', 'Ansible', 'GitOps', 'Network Automation', 'CI/CD'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'PyGNMI / gRPC Telemetry Auto-Remediation',
+        description:
+            'Script Python lắng nghe gRPC Streaming Telemetry từ Cisco Nexus, tự động cô lập Interface khi phát hiện CRC Error tăng đột biến.',
+        type: 'automation',
+        tags: ['gRPC', 'gNMI', 'Telemetry', 'Python', 'Cisco Nexus', 'Auto-Remediation'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'Arista EVPN Multihoming (EVPN-MH) Failover',
+        description:
+            'Diễn biến Failover khi đứt 1 uplink của Server nối dual-home vào 2 Leaf switches không dùng MLAG (ESI-LAG failover < 50ms).',
+        type: 'failover',
+        tags: ['EVPN-MH', 'ESI-LAG', 'Arista', 'Active-Active', 'Failover', 'HA'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'BGP PIC (Prefix Independent Convergence) FRR',
+        description:
+            'Kịch bản đứt Core Transport Link: BGP PIC Edge kích hoạt nhãn Backup Path ngay cấp phần phẳng phần cứng (FIB) trong dưới 10ms.',
+        type: 'failover',
+        tags: ['BGP PIC', 'Fast Reroute', 'MPLS', 'Convergence', 'FIB', 'HA'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'High-Frequency Trading (HFT) Low-Latency Blueprint',
+        description:
+            'Bản đồ kiến trúc mạng chứng khoán siêu thấp độ trễ: Cut-through switching, PTP IEEE 1588v2, Kernel Bypass & Multicast Feed.',
+        type: 'topology-design',
+        tags: ['HFT', 'Low Latency', 'PTP 1588v2', 'Kernel Bypass', 'Topology Design', 'Multicast'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'Multi-Region SD-WAN Mesh & SASE Blueprint',
+        description:
+            'Kiến trúc HLD mạng SD-WAN đa vùng kết nối Trụ sở - Branch - Cloud (AWS/Azure) tích hợp Cloud Security Service Edge (SSE).',
+        type: 'topology-design',
+        tags: ['SD-WAN', 'SASE', 'Multi-Cloud', 'AWS', 'Azure', 'Topology Design'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'MPLS L3VPN & TE Diagnostic Playbook',
+        description:
+            'Danh mục 6 kịch bản sự cố trên mạng đường trục MPLS Core: LDP-IGP Out-of-Sync, Blackhole khi đứt LSP, MTU Mismatch trên P Routers.',
+        type: 'diagnostic-playbook',
+        tags: ['MPLS', 'L3VPN', 'Traffic Engineering', 'LDP-IGP Sync', 'Playbook'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'Kubernetes CNI (Cilium eBPF) Diagnostic Playbook',
+        description:
+            'Sổ tay chẩn đoán sự cố mạng Container: Pod-to-Pod drop, NodePort Service routing loop, eBPF BPF map full và MTU Overhead.',
+        type: 'diagnostic-playbook',
+        tags: ['Kubernetes', 'Cilium', 'eBPF', 'CNI', 'Container Networking', 'Playbook'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'MPLS-TE CSPF (Constrained Shortest Path First)',
+        description:
+            'Đồ thị thuật toán CSPF tự động tính toán đường đi MPLS TE Tunnel thỏa mãn đồng thời ràng buộc Bandwidth, Affinity Color và Max Hop Count.',
+        type: 'algorithm-viz',
+        tags: ['MPLS-TE', 'CSPF', 'Algorithm', 'Path Computation', 'Constrained SPF'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
+    {
+        title: 'BGP 13-Step Best Path Selection Engine',
+        description:
+            'Trực quan hóa tương tác 13 bước chọn đường BGP (Weight -> Local Pref -> Self Originated -> AS-Path -> Origin -> MED -> eBGP/iBGP -> IGP Metric -> Router ID).',
+        type: 'algorithm-viz',
+        tags: ['BGP', 'Best Path', 'Routing Algorithm', 'Local Pref', 'AS-Path', 'MED'],
+        href: '#',
+        status: 'soon',
+        dateAdded: '2026-10-04',
+    },
 ];
