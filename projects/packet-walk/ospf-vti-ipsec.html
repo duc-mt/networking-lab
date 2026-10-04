@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSPF over VTI IPsec Tunnel — Packet Walk Lab</title>
+    <script src="../../assets/js/theme-init.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui','sans-serif'], mono: ['Fira Code','ui-monospace','SFMono-Regular','monospace'] } } }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+    <style>
+        @keyframes flowLight {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+        .pipeline-glow {
+            position: relative;
+            overflow: hidden;
+        }
+        .pipeline-glow::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(244, 63, 94, 0.25), transparent);
+            animation: flowLight 2.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0" title="Về trang chủ Portfolio">
+                <i class="fas fa-shield-halved"></i>
+            </a>
+            <div>
+                <a href="../../index.html" class="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                </a>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">OSPF over VTI IPsec Tunnel</h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+            <button id="btn-prev" onclick="app.prevStep()" disabled class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-rose-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-backward"></i></button>
+            <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-rose-500 text-white hover:bg-rose-600 shadow-md shadow-rose-500/30 transition-all-fast"><i id="icon-play" class="fas fa-play ml-1"></i></button>
+            <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-rose-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-forward"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" aria-label="Đổi giao diện Sáng/Tối"><i id="theme-icon" class="fas fa-sun"></i></button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
+
+    <!-- Scenario Context Banner -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-center justify-center text-rose-600 dark:text-rose-400 text-xl shrink-0 mt-0.5">
+                <i class="fas fa-network-wired"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 font-mono">pfSense & VyOS (Route-Based IPsec)</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-mono">IPsec ESP / AES-GCM</span>
+                </div>
+                <h2 class="text-base md:text-lg font-extrabold text-slate-900 dark:text-white">Truy Vết Gói Tin: OSPF ➔ VTI IPsec (ESP) ➔ WAN</h2>
+                <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Theo dõi sự thay đổi gói tin qua từng giai đoạn của OSPF State Machine được đóng gói trong đường hầm VTI.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 shrink-0 text-xs font-mono bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div><span class="text-slate-400 block text-[10px]">pfSense VTI:</span> <span class="font-bold text-rose-600 dark:text-rose-400">10.254.1.1</span></div>
+            <div class="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+            <div><span class="text-slate-400 block text-[10px]">pfSense WAN:</span> <span class="font-bold text-blue-600 dark:text-blue-400">203.0.113.1 (ESP)</span></div>
+            <div class="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+            <div><span class="text-slate-400 block text-[10px]">VyOS VTI:</span> <span class="font-bold text-emerald-600 dark:text-emerald-400">10.254.1.2</span></div>
+        </div>
+    </div>
+
+    <!-- Horizontal Pipeline Stepper -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
+        <div class="min-w-[700px] relative">
+            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center justify-between">
+                <span>Packet Processing Pipeline (Trình Tự Xử Lý Gói Tin)</span>
+                <span id="pipeline-status-text" class="text-rose-500 font-mono">Stage 1 of 6</span>
+            </div>
+
+            <!-- Pipeline Track -->
+            <div class="relative flex items-center justify-between z-10">
+                <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-200 dark:bg-slate-800 z-0"></div>
+                <div id="pipeline-progress" class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-rose-500 transition-all duration-500 ease-out z-0" style="width: 0%;"></div>
+
+                <div id="pipeline-stages" class="flex justify-between w-full relative z-10 gap-2"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+        <!-- Left Column: Packet Inspector + Wireshark Decode (7 cols) -->
+        <div class="xl:col-span-7 flex flex-col gap-6">
+
+            <!-- Packet Transformation Inspector -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-layer-group text-rose-500"></i>
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm md:text-base">Bộ Soi Gói Tin (Packet Transformation Inspector)</h3>
+                    </div>
+                    <span id="encap-status-badge" class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                        Outer UDP Wrapping
+                    </span>
+                </div>
+
+                <!-- Side by side comparison: Before vs After -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Before Card -->
+                    <div class="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-4 border border-slate-200 dark:border-slate-700/60 flex flex-col gap-2.5">
+                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                            <span>Gói Tin Trước (Before)</span>
+                            <span id="before-badge" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Plaintext L3/L4</span>
+                        </div>
+                        <div id="before-fields" class="font-mono text-xs flex flex-col gap-1.5">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- After Card -->
+                    <div class="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-4 border border-slate-200 dark:border-slate-700/60 flex flex-col gap-2.5">
+                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                            <span>Gói Tin Sau (After)</span>
+                            <span id="after-badge" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300">Outer Encapsulated</span>
+                        </div>
+                        <div id="after-fields" class="font-mono text-xs flex flex-col gap-1.5">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layer Header Visualizer -->
+                <div class="bg-[#1e1e1e] text-slate-200 rounded-xl p-3.5 font-mono text-xs overflow-x-auto flex items-center gap-2 border border-slate-800">
+                    <span class="text-slate-500 text-[10px] uppercase font-bold shrink-0">Frame Encap:</span>
+                    <div id="layer-capsules" class="flex items-center gap-1.5 shrink-0">
+                        <!-- Pills showing L2, L3 Outer, L4 UDP, WG Header, Encrypted Payload, etc. -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Wireshark Dissector Tree View -->
+            <section class="bg-[#1e1e1e] rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+                <div class="bg-[#2d2d2d] px-4 py-2.5 flex items-center justify-between border-b border-black/50 select-none">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <span class="text-xs font-mono text-slate-400 ml-2">Wireshark Packet Dissector — Frame #1</span>
+                    </div>
+                    <span id="wireshark-filter" class="text-[11px] font-mono text-emerald-400 bg-black/40 px-2 py-0.5 rounded border border-emerald-500/30">ospf.msg == 1 || esp</span>
+                </div>
+                <div class="p-4 overflow-y-auto max-h-72 font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed space-y-1" id="wireshark-tree">
+                    <!-- Tree injected dynamically -->
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Right Column: Checkpoint Details & Firewall Engine (5 cols) -->
+        <div class="xl:col-span-5 flex flex-col gap-6">
+
+            <!-- Checkpoint Information Card -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <span id="stage-badge" class="inline-flex self-start items-center px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border border-rose-300 dark:border-rose-700 bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 shrink-0">
+                        1. ENCAPSULATION
+                    </span>
+                    <span id="device-badge" class="text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md self-start sm:self-auto break-all sm:break-normal">Endpoint: Client Laptop</span>
+                </div>
+                <h3 id="stage-title" class="text-xl font-extrabold text-slate-900 dark:text-white leading-snug"></h3>
+                <p id="stage-desc" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300"></p>
+            </section>
+
+            <!-- Firewall & Kernel Inspection Card -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-microchip text-blue-500"></i>
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 text-sm">Quá trình đóng gói / Firewall Engine</h4>
+                    </div>
+                    <span id="verdict-badge" class="px-2.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                        PASS (ACCEPT)
+                    </span>
+                </div>
+
+                <div class="flex flex-col gap-2.5 text-xs font-mono">
+                    <div class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans shrink-0">Subsystem:</span>
+                        <span id="inspector-subsystem" class="font-bold text-slate-800 dark:text-slate-200 text-right">IPsec VTI Kernel</span>
+                    </div>
+                    <div class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans shrink-0">Rule:</span>
+                        <span id="inspector-rule" class="font-bold text-blue-600 dark:text-blue-400 text-right">N/A (Client Local Stack)</span>
+                    </div>
+                    <div class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans shrink-0">Cryptokey/State:</span>
+                        <span id="inspector-cryptokey" class="font-bold text-emerald-600 dark:text-emerald-400 text-right">N/A</span>
+                    </div>
+                    <div class="flex items-start justify-between gap-3 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                        <span class="text-slate-400 font-sans shrink-0">OSPF Session:</span>
+                        <span id="inspector-session" class="font-bold text-indigo-600 dark:text-indigo-400 text-right">ESTABLISHED (Rekey in 94s)</span>
+                    </div>
+                </div>
+
+                <!-- Syslog / Kernel Log Live Output -->
+                <div class="bg-slate-900 text-emerald-400 p-3 rounded-xl font-mono text-[11px] leading-relaxed border border-slate-800 flex flex-col gap-1">
+                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Live Kernel / Syslog Output:</div>
+                    <div id="live-log-output" class="whitespace-pre-wrap"></div>
+                </div>
+            </section>
+
+            <!-- Technical Gotcha / Deep Insight Box -->
+            <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 flex flex-col gap-2">
+                <div class="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
+                    <i class="fas fa-lightbulb"></i>
+                    <span id="pro-tip-title">Góc Nhìn Kỹ Thuật (Architecture Insight)</span>
+                </div>
+                <p id="pro-tip-desc" class="text-xs leading-relaxed text-amber-800 dark:text-amber-300"></p>
+            </div>
+
+        </div>
+    </div>
+
+</main>
+
+<script>
+const TIMELINE = [
+    {
+        step: 1,
+        phase: 'INIT',
+        title: 'DOWN → INIT (Hello Exchange)',
+        description: 'pfSense sends a Hello packet directed to the multicast address <code>224.0.0.5</code> every 10 seconds. The VTI (Virtual Tunnel Interface) kernel converts this and encapsulates it entirely within an ESP payload. It is sent as a unicast ESP packet to the VyOS peer across the VPC.',
+        device: 'pfSense (On-Prem)',
+        encapStatus: 'Encapsulating OSPF in IPsec ESP',
+        beforeBadge: 'Inner OSPF Payload',
+        afterBadge: 'Outer IPsec ESP',
+        beforeFields: [
+            { label: 'Src IP', val: '10.254.1.1 (VTI pfSense)' },
+            { label: 'Dst IP', val: '224.0.0.5 (OSPF-ALL)' },
+            { label: 'Protocol', val: 'OSPF (89)' },
+            { label: 'Type', val: '1 (Hello)' },
+            { label: 'Length', val: '64 Bytes' }
+        ],
+        afterFields: [
+            { label: 'Outer Src', val: '203.0.113.1 (pfSense WAN)' },
+            { label: 'Outer Dst', val: '198.51.100.2 (VyOS WAN)' },
+            { label: 'Protocol', val: 'ESP (50)' },
+            { label: 'SPI', val: '0x8a9b1c' },
+            { label: 'Length', val: '120 Bytes' }
+        ],
+        layerCapsules: [
+            { text: 'Outer IPv4', color: 'bg-slate-700' },
+            { text: 'ESP Hdr', color: 'bg-purple-600' },
+            { text: 'Inner IPv4', color: 'bg-emerald-600' },
+            { text: 'OSPF Hello', color: 'bg-blue-600' }
+        ],
+        wiresharkFilter: 'ospf.msg == 1 || esp',
+        wiresharkTree: `Frame 1: 120 bytes on wire
+Internet Protocol Version 4, Src: 203.0.113.1, Dst: 198.51.100.2
+    Protocol: Encap Security Payload (50)
+Encapsulating Security Payload
+    SPI: 0x8a9b1c
+    Sequence: 1
+    [Decrypted IPv4: Src: 10.254.1.1, Dst: 224.0.0.5, Proto: OSPF (89)]
+        Open Shortest Path First
+            OSPF Header
+                Version: 2
+                Message Type: Hello Packet (1)
+                Source OSPF Router: 192.168.1.1
+            OSPF Hello Packet
+                Hello Interval: 10 seconds
+                Dead Interval: 40 seconds
+                Active Neighbor: (None)
+`,
+        subsystem: 'VTI Kernel Interface (ipsec0)',
+        rule: 'Route: 224.0.0.0/4 dev ipsec0',
+        cryptokey: 'SA: pfSense -> VyOS',
+        session: 'State: DOWN -> INIT',
+        log: `IPsec: Encapsulating packet src 10.254.1.1 dst 224.0.0.5 SPI 0x8a9b1c\nOSPFd: Send Hello to 224.0.0.5 via ipsec0 (VTI)`,
+        verdict: 'PASS',
+        proTipTitle: 'Multicast over IPsec VTI',
+        proTipDesc: 'Unlike Policy-Based IPsec which struggles with multicast, VTI (Virtual Tunnel Interface) represents the VPN as a standard routed interface. Multicast packets like OSPF Hellos simply get routed out the VTI interface and encrypted automatically by the IPsec stack.'
+    },
+    {
+        step: 2,
+        phase: '2-WAY',
+        title: 'INIT → 2-WAY (Bidirectional Visibility)',
+        description: 'VyOS decrypts the initial Hello, reads it, and replies with its own Hello. When pfSense receives VyOS\'s Hello and sees its own router-id (192.168.1.1) in the neighbor list, it confirms the link is bidirectional (2-Way).',
+        device: 'VyOS (VPC)',
+        encapStatus: 'Encapsulating OSPF in IPsec ESP',
+        beforeBadge: 'Inner OSPF Payload',
+        afterBadge: 'Outer IPsec ESP',
+        beforeFields: [
+            { label: 'Src IP', val: '10.254.1.2 (VTI VyOS)' },
+            { label: 'Dst IP', val: '224.0.0.5 (OSPF-ALL)' },
+            { label: 'Protocol', val: 'OSPF (89)' },
+            { label: 'Type', val: '1 (Hello)' },
+            { label: 'Length', val: '68 Bytes' }
+        ],
+        afterFields: [
+            { label: 'Outer Src', val: '198.51.100.2 (VyOS WAN)' },
+            { label: 'Outer Dst', val: '203.0.113.1 (pfSense WAN)' },
+            { label: 'Protocol', val: 'ESP (50)' },
+            { label: 'SPI', val: '0x4f2a1d' },
+            { label: 'Length', val: '124 Bytes' }
+        ],
+        layerCapsules: [
+            { text: 'Outer IPv4', color: 'bg-slate-700' },
+            { text: 'ESP Hdr', color: 'bg-purple-600' },
+            { text: 'Inner IPv4', color: 'bg-emerald-600' },
+            { text: 'OSPF Hello (w/ Nbr)', color: 'bg-blue-600' }
+        ],
+        wiresharkFilter: 'ospf.msg == 1 || esp',
+        wiresharkTree: `Frame 2: 124 bytes on wire
+Internet Protocol Version 4, Src: 198.51.100.2, Dst: 203.0.113.1
+    Protocol: Encap Security Payload (50)
+Encapsulating Security Payload
+    SPI: 0x4f2a1d
+    [Decrypted IPv4: Src: 10.254.1.2, Dst: 224.0.0.5, Proto: OSPF (89)]
+        Open Shortest Path First
+            OSPF Header
+                Version: 2
+                Message Type: Hello Packet (1)
+                Source OSPF Router: 172.16.0.1
+            OSPF Hello Packet
+                Hello Interval: 10 seconds
+                Dead Interval: 40 seconds
+                Active Neighbor: 192.168.1.1 (pfSense)
+`,
+        subsystem: 'VTI Kernel Interface (vti0)',
+        rule: 'OSPF Neighbor Tracking',
+        cryptokey: 'SA: VyOS -> pfSense',
+        session: 'State: INIT -> 2-WAY',
+        log: `IPsec: Decapsulating ESP SPI 0x8a9b1c\nOSPFd: Rcv Hello from 192.168.1.1, state INIT\nOSPFd: Send Hello to 224.0.0.5, adding neighbor 192.168.1.1\nOSPFd: Nbr 192.168.1.1 state 2-WAY`,
+        verdict: 'PASS',
+        proTipTitle: 'Point-to-Point Network Type',
+        proTipDesc: 'On a point-to-point link like VTI, OSPF skips the DR/BDR (Designated Router) election entirely. Once 2-Way is reached, both routers immediately advance to ExStart. You do not need a DR for a tunnel with only two endpoints.'
+    },
+    {
+        step: 3,
+        phase: 'EXSTART',
+        title: 'EXSTART (DBD Master/Slave Election)',
+        description: 'Both sides send empty Database Description (DBD) packets with the Init (I), More (M), and Master/Slave (MS) flags set to 1. The router with the higher Router ID (pfSense: 192.168.1.1 vs VyOS: 172.16.0.1) wins and becomes the Master, controlling the sequence numbers.',
+        device: 'pfSense (On-Prem)',
+        encapStatus: 'Encapsulating OSPF in IPsec ESP',
+        beforeBadge: 'Inner OSPF Payload',
+        afterBadge: 'Outer IPsec ESP',
+        beforeFields: [
+            { label: 'Src IP', val: '10.254.1.1 (VTI pfSense)' },
+            { label: 'Dst IP', val: '10.254.1.2 (Unicast)' },
+            { label: 'Protocol', val: 'OSPF (89)' },
+            { label: 'Type', val: '2 (DBD)' },
+            { label: 'Flags', val: 'I/M/MS' }
+        ],
+        afterFields: [
+            { label: 'Outer Src', val: '203.0.113.1 (pfSense WAN)' },
+            { label: 'Outer Dst', val: '198.51.100.2 (VyOS WAN)' },
+            { label: 'Protocol', val: 'ESP (50)' },
+            { label: 'SPI', val: '0x8a9b1c' },
+            { label: 'Length', val: '108 Bytes' }
+        ],
+        layerCapsules: [
+            { text: 'Outer IPv4', color: 'bg-slate-700' },
+            { text: 'ESP Hdr', color: 'bg-purple-600' },
+            { text: 'Inner IPv4', color: 'bg-emerald-600' },
+            { text: 'OSPF DBD', color: 'bg-blue-600' }
+        ],
+        wiresharkFilter: 'ospf.msg == 2 || esp',
+        wiresharkTree: `Frame 3: 108 bytes on wire
+[Decrypted IPv4: Src: 10.254.1.1, Dst: 10.254.1.2, Proto: OSPF (89)]
+    Open Shortest Path First
+        OSPF Header
+            Version: 2
+            Message Type: DB Description (2)
+            Source OSPF Router: 192.168.1.1
+        OSPF DB Description
+            Interface MTU: 1436
+            Flags: 0x07 (I, M, MS)
+                ...1 = Init: True
+                ..1. = More: True
+                .1.. = Master: True
+            DD Sequence: 1001
+`,
+        subsystem: 'OSPF Process',
+        rule: 'Router ID Comparison',
+        cryptokey: 'ESP Tunnel Encrypt',
+        session: 'State: 2-WAY -> EXSTART',
+        log: `OSPFd: State EXSTART -> Master/Slave Election\nOSPFd: My RID 192.168.1.1 > Peer RID 172.16.0.1\nOSPFd: I am Master, Sequence=1001`,
+        verdict: 'PASS',
+        proTipTitle: 'Unicast in ExStart',
+        proTipDesc: 'Notice that starting from ExStart, the OSPF packets are typically sent to the unicast address of the neighbor (10.254.1.2) rather than multicast 224.0.0.5, ensuring direct end-to-end delivery of the database descriptors.'
+    },
+    {
+        step: 4,
+        phase: 'EXCHANGE',
+        title: 'EXCHANGE (DBD LSA Headers Swap)',
+        description: 'The routers exchange DBD pages. These packets contain only the LSA headers (Type, Link-State ID, Advertising Router, Sequence, Checksum), NOT the full routes. Each side compares this summary against its own LSDB and builds a Link State Request List (what it is missing).',
+        device: 'pfSense & VyOS',
+        encapStatus: 'Encapsulating OSPF in IPsec ESP',
+        beforeBadge: 'Inner OSPF Payload',
+        afterBadge: 'Outer IPsec ESP',
+        beforeFields: [
+            { label: 'Src IP', val: '10.254.1.1' },
+            { label: 'Dst IP', val: '10.254.1.2' },
+            { label: 'Protocol', val: 'OSPF (89)' },
+            { label: 'Type', val: '2 (DBD)' },
+            { label: 'Content', val: 'LSA Headers' }
+        ],
+        afterFields: [
+            { label: 'Outer Src', val: '203.0.113.1' },
+            { label: 'Outer Dst', val: '198.51.100.2' },
+            { label: 'Protocol', val: 'ESP (50)' },
+            { label: 'SPI', val: '0x8a9b1c' },
+            { label: 'Length', val: '236 Bytes' }
+        ],
+        layerCapsules: [
+            { text: 'Outer IPv4', color: 'bg-slate-700' },
+            { text: 'ESP Hdr', color: 'bg-purple-600' },
+            { text: 'Inner IPv4', color: 'bg-emerald-600' },
+            { text: 'OSPF DBD (Headers)', color: 'bg-blue-600' }
+        ],
+        wiresharkFilter: 'ospf.msg == 2 || esp',
+        wiresharkTree: `Frame 4: 236 bytes on wire
+[Decrypted IPv4: Src: 10.254.1.1, Dst: 10.254.1.2, Proto: OSPF (89)]
+    Open Shortest Path First
+        OSPF Header
+            Message Type: DB Description (2)
+        OSPF DB Description
+            Flags: 0x00 (I=0, M=0, MS=1)
+            DD Sequence: 1002
+            LSA-type 1 (Router LSA), id 192.168.1.1, adv 192.168.1.1
+            LSA-type 2 (Network LSA), id 192.168.1.0, adv 192.168.1.1
+            ... (Headers Only)
+`,
+        subsystem: 'OSPF LSDB',
+        rule: 'Header Comparison',
+        cryptokey: 'ESP Tunnel Encrypt',
+        session: 'State: EXSTART -> EXCHANGE',
+        log: `OSPFd: State EXCHANGE\nOSPFd: Rcv DBD seq 1001 (Slave), sending DBD seq 1002\nOSPFd: Received 10 LSA headers, 2 are newer than local copies\nOSPFd: Added 2 LSAs to Link State Request list`,
+        verdict: 'PASS',
+        proTipTitle: 'MTU Considerations over VTI',
+        proTipDesc: 'DBD packets can be large. Because they are encapsulated inside ESP and Outer IP, the VTI interface MTU must be lower than the physical WAN MTU (typically 1436 or 1400 instead of 1500) to prevent OSPF MTU mismatches or fragmentation.'
+    },
+    {
+        step: 5,
+        phase: 'LOADING',
+        title: 'LOADING (LSR / LSU / LSAck)',
+        description: 'Based on the Request list, each side sends LSR (Link State Request) packets for the missing LSAs. The peer responds with LSU (Link State Update) packets containing the full LSA payloads (prefixes, metrics). The receiver acknowledges them with LSAck.',
+        device: 'VyOS (VPC)',
+        encapStatus: 'Encapsulating OSPF in IPsec ESP',
+        beforeBadge: 'Inner OSPF Payload',
+        afterBadge: 'Outer IPsec ESP',
+        beforeFields: [
+            { label: 'Src IP', val: '10.254.1.2' },
+            { label: 'Dst IP', val: '10.254.1.1' },
+            { label: 'Protocol', val: 'OSPF (89)' },
+            { label: 'Type', val: '4 (LSU)' },
+            { label: 'Content', val: 'Full LSA' }
+        ],
+        afterFields: [
+            { label: 'Outer Src', val: '198.51.100.2' },
+            { label: 'Outer Dst', val: '203.0.113.1' },
+            { label: 'Protocol', val: 'ESP (50)' },
+            { label: 'SPI', val: '0x4f2a1d' },
+            { label: 'Length', val: '376 Bytes' }
+        ],
+        layerCapsules: [
+            { text: 'Outer IPv4', color: 'bg-slate-700' },
+            { text: 'ESP Hdr', color: 'bg-purple-600' },
+            { text: 'Inner IPv4', color: 'bg-emerald-600' },
+            { text: 'OSPF LSU', color: 'bg-blue-600' }
+        ],
+        wiresharkFilter: 'ospf.msg == 3 || ospf.msg == 4',
+        wiresharkTree: `Frame 5: 376 bytes on wire
+[Decrypted IPv4: Src: 10.254.1.2, Dst: 10.254.1.1, Proto: OSPF (89)]
+    Open Shortest Path First
+        OSPF Header
+            Message Type: LS Update (4)
+        OSPF LS Update
+            Number of LSAs: 1
+            LSA-type 1 (Router LSA), id 172.16.0.1, adv 172.16.0.1
+                Flags: 0x02 (AS Boundary Router)
+                Number of Links: 1
+                Type: Stub Network
+                Link ID: 172.16.100.0 (VPC LAN)
+                Link Data: 255.255.255.0
+                Metric: 10
+`,
+        subsystem: 'OSPF LSDB',
+        rule: 'Update Processing',
+        cryptokey: 'ESP Tunnel Encrypt',
+        session: 'State: EXCHANGE -> LOADING',
+        log: `OSPFd: State LOADING\nOSPFd: Rcv LSR from 192.168.1.1, sending LSU\nOSPFd: Rcv LSU from 192.168.1.1, adding 192.168.1.0/24 to LSDB\nOSPFd: Send LSAck`,
+        verdict: 'PASS',
+        proTipTitle: 'LSU Contains the Actual Topology',
+        proTipDesc: 'This is the stage where the actual network reachability information is transmitted. The LSU payload reveals the VPC LAN (172.16.100.0/24) to the On-Prem firewall. All of this critical topology data is securely hidden inside the ESP payload across the Internet.'
+    },
+    {
+        step: 6,
+        phase: 'FULL',
+        title: 'FULL & Keepalive (SPF Run)',
+        description: 'Once both LSDBs are identical, OSPF enters the FULL state. It runs the Dijkstra Shortest Path First (SPF) algorithm and installs the routes into the routing table. pfSense now knows how to route to the VPC, and VyOS to the On-Prem LAN. Regular Hellos continue as keepalives.',
+        device: 'pfSense & VyOS',
+        encapStatus: 'Encapsulating OSPF in IPsec ESP',
+        beforeBadge: 'Inner OSPF Payload',
+        afterBadge: 'Outer IPsec ESP',
+        beforeFields: [
+            { label: 'Src IP', val: '10.254.1.1' },
+            { label: 'Dst IP', val: '224.0.0.5' },
+            { label: 'Protocol', val: 'OSPF (89)' },
+            { label: 'Type', val: '1 (Hello)' },
+            { label: 'Content', val: 'Keepalive' }
+        ],
+        afterFields: [
+            { label: 'Outer Src', val: '203.0.113.1' },
+            { label: 'Outer Dst', val: '198.51.100.2' },
+            { label: 'Protocol', val: 'ESP (50)' },
+            { label: 'SPI', val: '0x8a9b1c' },
+            { label: 'Length', val: '120 Bytes' }
+        ],
+        layerCapsules: [
+            { text: 'Outer IPv4', color: 'bg-slate-700' },
+            { text: 'ESP Hdr', color: 'bg-purple-600' },
+            { text: 'Inner IPv4', color: 'bg-emerald-600' },
+            { text: 'OSPF Hello (Keepalive)', color: 'bg-blue-600' }
+        ],
+        wiresharkFilter: 'ospf.msg == 1 || esp',
+        wiresharkTree: `Frame 6: 120 bytes on wire
+[Decrypted IPv4: Src: 10.254.1.1, Dst: 224.0.0.5, Proto: OSPF (89)]
+    Open Shortest Path First
+        OSPF Header
+            Version: 2
+            Message Type: Hello Packet (1)
+        OSPF Hello Packet
+            Active Neighbor: 172.16.0.1
+`,
+        subsystem: 'Routing Table / FIB',
+        rule: 'Install Routes',
+        cryptokey: 'ESP Tunnel Encrypt',
+        session: 'State: LOADING -> FULL',
+        log: `OSPFd: State FULL\nOSPFd: SPF computed in 2ms\nZEBRA: Install route 172.16.100.0/24 via 10.254.1.2 dev ipsec0\nOSPFd: Send periodic Hello (Keepalive)`,
+        verdict: 'PASS',
+        proTipTitle: 'Dead Timer / Convergence',
+        proTipDesc: 'Hellos continue every 10 seconds. If 4 consecutive Hellos are missed (40s Dead Interval), the neighbor is declared dead, routes are withdrawn, and if an alternate path exists (e.g., secondary VPN), OSPF converges to it immediately.'
+    }
+];
+
+
+class PacketWalkApp {
+    constructor() {
+        this.idx = 0;
+        this.playing = false;
+        this.intervalId = null;
+
+        this.dom = {
+            stagesContainer: document.getElementById('pipeline-stages'),
+            progress: document.getElementById('pipeline-progress'),
+            statusText: document.getElementById('pipeline-status-text'),
+            btnPrev: document.getElementById('btn-prev'),
+            btnNext: document.getElementById('btn-next'),
+            btnPlay: document.getElementById('btn-play'),
+            iconPlay: document.getElementById('icon-play'),
+            themeIcon: document.getElementById('theme-icon'),
+            stageBadge: document.getElementById('stage-badge'),
+            deviceBadge: document.getElementById('device-badge'),
+            stageTitle: document.getElementById('stage-title'),
+            stageDesc: document.getElementById('stage-desc'),
+            encapStatusBadge: document.getElementById('encap-status-badge'),
+            beforeBadge: document.getElementById('before-badge'),
+            afterBadge: document.getElementById('after-badge'),
+            beforeFields: document.getElementById('before-fields'),
+            afterFields: document.getElementById('after-fields'),
+            layerCapsules: document.getElementById('layer-capsules'),
+            wiresharkFilter: document.getElementById('wireshark-filter'),
+            wiresharkTree: document.getElementById('wireshark-tree'),
+            subsystem: document.getElementById('inspector-subsystem'),
+            rule: document.getElementById('inspector-rule'),
+            cryptokey: document.getElementById('inspector-cryptokey'),
+            session: document.getElementById('inspector-session'),
+            liveLog: document.getElementById('live-log-output'),
+            verdictBadge: document.getElementById('verdict-badge'),
+            proTipTitle: document.getElementById('pro-tip-title'),
+            proTipDesc: document.getElementById('pro-tip-desc'),
+        };
+
+        this.init();
+    }
+
+    init() {
+        let dark = false;
+        try {
+            const s = localStorage.getItem('portfolio-theme');
+            dark = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        } catch(e){}
+        document.documentElement.classList.toggle('dark', dark);
+        if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+
+        this.buildPipelineStages();
+        this.render(0);
+    }
+
+    buildPipelineStages() {
+        this.dom.stagesContainer.innerHTML = '';
+        TIMELINE.forEach((d, i) => {
+            const btn = document.createElement('button');
+            btn.id = `pipeline-step-${i}`;
+            btn.className = 'relative flex flex-col items-center gap-1.5 focus:outline-none transition-all duration-300';
+            btn.onclick = () => { this.pause(); this.render(i); };
+
+            btn.innerHTML = `
+                <div id="dot-${i}" class="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-bold text-xs md:text-sm border-2 transition-all duration-300 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 shadow-sm">
+                    ${d.step}
+                </div>
+                <span id="label-${i}" class="text-[10px] md:text-xs font-bold font-mono uppercase tracking-wider text-slate-400 whitespace-nowrap">
+                    ${d.phase}
+                </span>
+            `;
+            this.dom.stagesContainer.appendChild(btn);
+        });
+    }
+
+    render(i) {
+        this.idx = i;
+        const d = TIMELINE[i];
+
+        // Update pipeline dots
+        TIMELINE.forEach((_, j) => {
+            const dot = document.getElementById(`dot-${j}`);
+            const label = document.getElementById(`label-${j}`);
+            if (!dot || !label) return;
+
+            if (j < i) {
+                dot.className = 'w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-bold text-xs md:text-sm border-2 transition-all duration-300 bg-rose-500 text-white border-rose-500 shadow';
+                label.className = 'text-[10px] md:text-xs font-bold font-mono uppercase tracking-wider text-rose-500 whitespace-nowrap';
+            } else if (j === i) {
+                dot.className = 'w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-bold text-xs md:text-sm border-2 transition-all duration-300 bg-rose-50 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 border-rose-500 shadow-lg scale-110 pipeline-glow';
+                label.className = 'text-[10px] md:text-xs font-bold font-mono uppercase tracking-wider text-rose-600 dark:text-rose-400 font-extrabold whitespace-nowrap';
+            } else {
+                dot.className = 'w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-bold text-xs md:text-sm border-2 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700 shadow-sm';
+                label.className = 'text-[10px] md:text-xs font-bold font-mono uppercase tracking-wider text-slate-400 whitespace-nowrap';
+            }
+        });
+
+        // Progress bar
+        this.dom.progress.style.width = `${(i / (TIMELINE.length - 1)) * 100}%`;
+        this.dom.statusText.textContent = `Checkpoint ${d.step} of ${TIMELINE.length}: ${d.phase}`;
+
+        // Top info
+        this.dom.stageBadge.textContent = `${d.step}. ${d.phase}`;
+        this.dom.deviceBadge.textContent = `Location: ${d.device}`;
+        this.dom.stageTitle.textContent = d.title;
+        this.dom.stageDesc.innerHTML = d.description;
+
+        // Packet Inspector
+        this.dom.encapStatusBadge.textContent = d.encapStatus;
+        this.dom.beforeBadge.textContent = d.beforeBadge;
+        this.dom.afterBadge.textContent = d.afterBadge;
+
+        this.dom.beforeFields.innerHTML = d.beforeFields.map(f => `
+            <div class="flex items-center justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/30">
+                <span class="text-slate-400">${f.label}:</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">${f.val}</span>
+            </div>
+        `).join('');
+
+        this.dom.afterFields.innerHTML = d.afterFields.map(f => `
+            <div class="flex items-center justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/30">
+                <span class="text-slate-400">${f.label}:</span>
+                <span class="font-bold text-rose-600 dark:text-rose-400">${f.val}</span>
+            </div>
+        `).join('');
+
+        // Layer capsules
+        this.dom.layerCapsules.innerHTML = d.layerCapsules.map(c => `
+            <span class="px-2 py-0.5 rounded text-[10px] text-white shadow-sm ${c.color}">${c.text}</span>
+        `).join('<i class="fas fa-arrow-right text-[9px] text-slate-500 mx-0.5"></i>');
+
+        // Wireshark tree
+        this.dom.wiresharkFilter.textContent = d.wiresharkFilter;
+        this.dom.wiresharkTree.textContent = d.wiresharkTree;
+
+        // Inspection Details
+        this.dom.subsystem.textContent = d.subsystem;
+        this.dom.rule.textContent = d.rule;
+        this.dom.cryptokey.textContent = d.cryptokey;
+        this.dom.session.textContent = d.session;
+        this.dom.liveLog.textContent = d.log;
+
+        // Verdict Badge
+        if (d.verdict === 'PASS') {
+            this.dom.verdictBadge.textContent = 'PASS (ACCEPT)';
+            this.dom.verdictBadge.className = 'px-2.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+        } else {
+            this.dom.verdictBadge.textContent = 'DROP (BLOCK)';
+            this.dom.verdictBadge.className = 'px-2.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
+        }
+
+        // Pro tips
+        this.dom.proTipTitle.textContent = d.proTipTitle;
+        this.dom.proTipDesc.textContent = d.proTipDesc;
+
+        // Buttons
+        if (this.dom.btnPrev) this.dom.btnPrev.disabled = i === 0;
+        if (this.dom.btnNext) this.dom.btnNext.disabled = i === TIMELINE.length - 1;
+        if (i === TIMELINE.length - 1 && this.playing) this.pause();
+    }
+
+    nextStep() { if (this.idx < TIMELINE.length - 1) this.render(this.idx + 1); }
+    prevStep() { if (this.idx > 0) this.render(this.idx - 1); }
+    togglePlay() { this.playing ? this.pause() : this.play(); }
+
+    play() {
+        if (this.idx === TIMELINE.length - 1) this.render(0);
+        this.playing = true;
+        if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-pause';
+        if (this.dom.btnPlay) {
+            this.dom.btnPlay.classList.replace('bg-rose-500', 'bg-blue-600');
+            this.dom.btnPlay.classList.replace('hover:bg-rose-600', 'hover:bg-blue-700');
+        }
+        this.intervalId = setInterval(() => {
+            if (this.idx < TIMELINE.length - 1) this.nextStep();
+            else this.pause();
+        }, 5500);
+    }
+
+    pause() {
+        this.playing = false;
+        clearInterval(this.intervalId);
+        if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-play ml-1';
+        if (this.dom.btnPlay) {
+            this.dom.btnPlay.classList.replace('bg-blue-600', 'bg-rose-500');
+            this.dom.btnPlay.classList.replace('hover:bg-blue-700', 'hover:bg-rose-600');
+        }
+    }
+
+    reset() { this.pause(); this.render(0); }
+
+    toggleTheme() {
+        const dark = !document.documentElement.classList.contains('dark');
+        document.documentElement.classList.toggle('dark', dark);
+        if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+        try { localStorage.setItem('portfolio-theme', dark ? 'dark' : 'light'); } catch(e){}
+    }
+}
+
+let app;
+window.addEventListener('DOMContentLoaded', () => { app = new PacketWalkApp(); });
+</script>
+
+<!-- Fullscreen Topology Script -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container') || document.getElementById('topo-container');
+    if (topo) {
+        const fsBtn = document.createElement('button');
+        fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        fsBtn.className = 'absolute top-4 right-4 z-[9999] w-8 h-8 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-md text-slate-600 dark:text-slate-300 shadow-sm hover:bg-white dark:hover:bg-slate-700 transition-colors cursor-pointer';
+        fsBtn.title = 'Toggle Fullscreen';
+        
+        let isFakeFullscreen = false;
+        function toggleFakeFullscreen() {
+            isFakeFullscreen = !isFakeFullscreen;
+            if (isFakeFullscreen) {
+                topo.classList.add('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!rounded-none', '!max-w-none');
+                fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                topo.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
+                document.body.style.overflow = 'hidden';
+            } else {
+                topo.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!rounded-none', '!max-w-none');
+                fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                topo.style.backgroundColor = '';
+                document.body.style.overflow = '';
+            }
+        }
+
+        fsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (topo.requestFullscreen) {
+                if (!document.fullscreenElement) {
+                    topo.requestFullscreen().catch(err => {
+                        console.warn("Native fullscreen failed, using fallback.");
+                        toggleFakeFullscreen();
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            } else if (topo.webkitRequestFullscreen) {
+                if (!document.webkitFullscreenElement) {
+                    topo.webkitRequestFullscreen();
+                } else {
+                    document.webkitExitFullscreen();
+                }
+            } else {
+                toggleFakeFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement === topo) {
+                fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                topo.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
+                document.body.style.overflow = 'hidden';
+            } else {
+                fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                topo.style.backgroundColor = '';
+                document.body.style.overflow = ''; 
+            }
+        });
+
+        topo.appendChild(fsBtn);
+    }
+});
+</script>
+
+</body>
+</html>
