@@ -1,6 +1,6 @@
 ---
 name: seo
-description: Optimize for search engine visibility and ranking. Use when asked to "improve SEO", "optimize for search", "fix meta tags", "add structured data", "sitemap optimization", or "search engine optimization".
+description: Optimize web pages for search engine visibility and ranking. Use when asked to improve SEO, fix meta tags, add structured data, or optimize sitemaps. Do NOT use for general performance optimization unrelated to search engines.
 license: MIT
 metadata:
     author: web-quality-skills
@@ -530,3 +530,7 @@ body {
 - [Schema.org](https://schema.org/)
 - [Core Web Vitals](../core-web-vitals/SKILL.md)
 - [Web Quality Audit](../web-quality-audit/SKILL.md)
+
+## Expected Output Format
+
+Provide the validated code or text adhering to the skill's specific guidelines, along with a confirmation of the checks performed.

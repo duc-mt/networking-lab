@@ -295,7 +295,7 @@ Requirements:
 2. Header: same pattern as other project pages (logo, back-link, playback
    controls, theme toggle with localStorage persistence + no-FOUC head script).
 
-3. Topology & Pipeline view (the centerpiece): 
+3. Topology & Pipeline view (the centerpiece):
    - Animated Topology Canvas (#topology-container): Placed at the top, displaying 2D nodes (e.g., Client, Internet Cloud, Gateway/Firewall, Server) with dual-layer SVG links, clampNodes(), and dynamic packet movement across nodes via Web Animations API (animatePacketWalk).
    - Horizontal Pipeline Stepper: Placed directly below the topology, showing checkpoints laid out left-to-right (Ingress → Route Lookup → NAT → Policy → Egress). The current checkpoint is highlighted, and steps advance synchronously with the topology animation.
 

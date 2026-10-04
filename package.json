@@ -1,5 +1,5 @@
 {
-    "name": "network-portfolio",
+    "name": "networking-lab",
     "version": "1.0.0",
     "private": true,
     "type": "module",
@@ -13,5 +13,8 @@
         "eslint": "^9.13.0",
         "globals": "^15.11.0",
         "prettier": "^3.3.3"
+    },
+    "dependencies": {
+        "jsdom": "^30.1.2"
     }
 }

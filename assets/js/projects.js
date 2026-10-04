@@ -397,7 +397,6 @@ const PROJECTS = [
         href: 'projects/diagnostic-playbook/ospf-redistribute-static.html',
     },
 
-    
     {
         id: 'ospf-vti-ipsec',
         title: 'OSPF over VTI IPsec Tunnel',
@@ -405,7 +404,8 @@ const PROJECTS = [
         type: 'packet-walk',
         status: 'live',
         dateAdded: '2026-10-04',
-        description: 'Trực quan hóa quá trình thành lập OSPF (State Machine) và đóng gói gói tin OSPF vào trong đường hầm VTI IPsec giữa pfSense và VyOS.',
+        description:
+            'Trực quan hóa quá trình thành lập OSPF (State Machine) và đóng gói gói tin OSPF vào trong đường hầm VTI IPsec giữa pfSense và VyOS.',
         tags: ['OSPF', 'IPsec', 'VTI', 'ESP', 'pfSense', 'VyOS'],
         href: 'projects/packet-walk/ospf-vti-ipsec.html',
     },

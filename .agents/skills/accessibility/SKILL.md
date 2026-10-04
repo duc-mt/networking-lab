@@ -1,6 +1,6 @@
 ---
 name: accessibility
-description: Audit and improve web accessibility following WCAG 2.2 guidelines. Use when asked to "improve accessibility", "a11y audit", "WCAG compliance", "screen reader support", "keyboard navigation", or "make accessible".
+description: Audit and improve web accessibility for WCAG 2.2 compliance. Use when asked to improve accessibility, perform an a11y audit, or add screen reader support. Do NOT use for general UI styling without an accessibility focus.
 license: MIT
 metadata:
     author: web-quality-skills
@@ -467,3 +467,7 @@ See the [screen reader commands reference](references/A11Y-PATTERNS.md#screen-re
 - [Web Quality Audit](../web-quality-audit/SKILL.md)
 - [WCAG criteria reference](references/WCAG.md)
 - [Accessibility code patterns](references/A11Y-PATTERNS.md)
+
+## Expected Output Format
+
+Provide the validated code or text adhering to the skill's specific guidelines, along with a confirmation of the checks performed.
