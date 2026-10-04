@@ -181,19 +181,11 @@
                 </div>
             </div>
 
-            <!-- Right: Traffic Test Action & Theme Toggle -->
-            <div class="flex items-center gap-3 shrink-0">
-                <button onclick="triggerTrafficTest()" id="btn-traffic-test" class="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                    <i class="fas fa-paper-plane text-[11px]"></i>
-                    <span class="hidden sm:inline">Simulate Ping (VPC → Subnet)</span>
-                    <span class="sm:hidden">Ping</span>
+            <!-- Right: Theme Toggle (Matching ospf-lsa-propagation.html) -->
+            <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+                <button onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" title="Đổi giao diện Sáng/Tối" aria-label="Đổi giao diện Sáng/Tối">
+                    <i id="theme-icon" class="fas fa-sun text-sm"></i>
                 </button>
-
-                <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner">
-                    <button onclick="toggleTheme()" class="w-8 h-8 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" title="Đổi giao diện Sáng/Tối" aria-label="Đổi giao diện Sáng/Tối">
-                        <i id="theme-icon" class="fas fa-sun text-xs"></i>
-                    </button>
-                </div>
             </div>
 
         </div>
@@ -279,32 +271,20 @@
                 <span id="canvas-status-text">Domain Flooding: Active Type-5 LSA</span>
             </div>
 
-            <!-- Embedded Bottom Legend (Positioned cleanly below Area boxes at bottom-3.5) -->
-            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-3 md:gap-5 text-[11px] px-5 py-1.5 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-lg">
-                <span class="flex items-center gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    <span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Type-5 LSA Flooding</span>
-                </span>
-                <span class="flex items-center gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-                    <span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Leaked Route / Warning</span>
-                </span>
-                <span class="flex items-center gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                    <span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Area 0 Intra-Path</span>
-                </span>
-                <span class="flex items-center gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-sm bg-slate-400 dark:bg-slate-600"></span>
-                    <span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Static Next-Hop</span>
-                </span>
+            <!-- Legend (Embedded Overlay Inside Topology Canvas - Exactly matching ospf-lsa-propagation.html) -->
+            <div class="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex flex-nowrap items-center justify-center gap-3 md:gap-5 text-[11px] px-4 py-2 rounded-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg whitespace-nowrap max-w-[95%] overflow-x-auto select-none">
+                <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Type-5 LSA Flooding</span></span>
+                <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Leaked Route</span></span>
+                <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-blue-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Area 0 Intra-Path</span></span>
+                <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-slate-500 opacity-60"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Static Next-Hop</span></span>
             </div>
 
         </div>
 
         <!-- Scenario Context & Active Strategy Banner -->
         <div class="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 mb-6 shadow-sm">
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div class="space-y-1">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div class="space-y-1 max-w-2xl">
                     <div class="flex items-center gap-2">
                         <span id="scenario-badge" class="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wider bg-emerald-500 text-white">
                             BEST PRACTICE
@@ -318,15 +298,23 @@
                     </p>
                 </div>
 
-                <!-- Scenario 3 Metric Toggle Sub-Control (Only visible in Scenario 3) -->
-                <div id="metric-toggle-group" class="hidden items-center gap-2 bg-slate-200/80 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-300 dark:border-slate-700 shrink-0">
-                    <span class="text-[11px] font-mono font-bold text-slate-500 px-2 uppercase">Metric Type:</span>
-                    <button onclick="setMetricType('E2')" id="btn-metric-e2" class="px-3 py-1 rounded-lg text-xs font-bold font-mono transition-all bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow">
-                        E2 (Fixed 20)
+                <!-- Right Action Cluster: Simulate Button (Matching vrrp-ospf-failover.html) & Metric Toggle -->
+                <div class="flex flex-wrap items-center gap-3 shrink-0">
+                    <button onclick="triggerTrafficTest()" id="btn-traffic-test" class="h-9 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer">
+                        <i class="fas fa-paper-plane text-[11px]"></i>
+                        <span>Simulate Traffic (VPC → Subnet)</span>
                     </button>
-                    <button onclick="setMetricType('E1')" id="btn-metric-e1" class="px-3 py-1 rounded-lg text-xs font-bold font-mono transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-                        E1 (Cumulative: 20+Cost)
-                    </button>
+
+                    <!-- Scenario 3 Metric Toggle Sub-Control (Only visible in Scenario 3) -->
+                    <div id="metric-toggle-group" class="hidden items-center gap-1.5 bg-slate-200/80 dark:bg-slate-800 p-1 rounded-xl border border-slate-300 dark:border-slate-700">
+                        <span class="text-[10px] font-mono font-bold text-slate-500 px-2 uppercase">Metric:</span>
+                        <button onclick="setMetricType('E2')" id="btn-metric-e2" class="px-3 py-1 rounded-lg text-xs font-bold font-mono transition-all bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow">
+                            E2 (Fixed 20)
+                        </button>
+                        <button onclick="setMetricType('E1')" id="btn-metric-e1" class="px-3 py-1 rounded-lg text-xs font-bold font-mono transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                            E1 (20+Cost)
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
