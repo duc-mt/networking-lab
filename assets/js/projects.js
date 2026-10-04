@@ -384,4 +384,16 @@ const PROJECTS = [
         tags: ['OSPF', 'LSDB', 'Multi-Area', 'LSA', 'Convergence', 'Simulation'],
         href: 'projects/protocol/ospf-lsdb-formation.html',
     },
+    {
+        id: 'ospf-redistribute-static',
+        title: 'OSPF Static Route Redistribution & Filtering',
+        category: 'diagnostic-playbook',
+        type: 'diagnostic-playbook',
+        status: 'live',
+        dateAdded: '2026-10-04',
+        description:
+            'Khảo sát cơ chế ASBR redistribute static routes vào OSPF domain thành Type-5 LSA, so sánh rủi ro khi không có Route-Map và động học Metric E1 vs E2.',
+        tags: ['OSPF', 'Redistribution', 'Route-Map', 'ASBR', 'Type-5 LSA', 'VyOS', 'Firewall'],
+        href: 'projects/diagnostic-playbook/ospf-redistribute-static.html',
+    },
 ];
