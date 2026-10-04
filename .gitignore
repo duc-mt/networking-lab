@@ -19,3 +19,6 @@ npm-debug.log*
 # Temporary scripts
 *.py
 temp_*.js
+
+# Local Netlify folder
+.netlify

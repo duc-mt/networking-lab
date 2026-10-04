@@ -78,11 +78,11 @@ const PROJECT_TYPES = {
         description: 'Bản đồ topology tĩnh, bảng định tuyến và tra cứu đường đi.',
     },
     'diagnostic-playbook': {
-        label: 'Sổ Tay Chẩn Đoán',
-        short: 'Sổ Tay',
+        label: 'Playbook Chẩn Đoán',
+        short: 'Playbook',
         icon: 'fa-book-medical',
         accent: 'from-lime-500 to-green-600',
-        description: 'Danh mục các kịch bản lỗi trên cùng một topology — dưới dạng tab tĩnh.',
+        description: 'Danh mục các kịch bản lỗi trên cùng một topology — dưới dạng tab tra cứu tương tác.',
     },
     'algorithm-viz': {
         label: 'Trực Quan Hóa Thuật Toán',
