@@ -1441,3 +1441,48 @@ This is an optimization recommendation, not a mandatory rule.
 - Diagnostic Playbook / Topology Design / Change-MOP: global functions or simple objects (static tabs/states), class not mandatory.
 - `clampNodes()` is only needed for canvases with nodes absolutely positioned by `%` (data-driven). Flexbox card labs or topology-less labs do not need it.
 - Labs that already have separate explanation panels ("Risks & Notes", Root Cause) do not need an additional Teaching Note box.
+
+### 7. Fullscreen Topology Canvas Toggle Standard
+
+All interactive network topologies MUST include an absolute floating fullscreen toggle button in the top-right corner (`absolute top-4 right-4 z-[9999]`).
+
+```html
+<!-- Fullscreen Topology Script -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container') || document.getElementById('topo-container');
+    if (topo) {
+        const fsBtn = document.createElement('button');
+        fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        fsBtn.className = 'absolute top-4 right-4 z-[9999] w-8 h-8 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-md text-slate-600 dark:text-slate-300 shadow-sm hover:bg-white dark:hover:bg-slate-700 transition-colors cursor-pointer';
+        fsBtn.title = 'Toggle Fullscreen';
+        
+        fsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!document.fullscreenElement) {
+                topo.requestFullscreen().catch(err => console.error(err));
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement === topo) {
+                fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                topo.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
+            } else {
+                fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                topo.style.backgroundColor = ''; 
+            }
+        });
+
+        topo.appendChild(fsBtn);
+    }
+});
+</script>
+```
+
+Rules:
+- Element targeting: Automatically hooks to `#topology-canvas`, `#topology-container`, or `#topo-container`.
+- Position: Fixed at `top-4 right-4`.
+- Overlap Prevention: Floating banners or status indicators MUST be anchored to `top-4 left-4` to prevent visual collision.
