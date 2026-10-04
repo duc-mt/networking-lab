@@ -26,6 +26,8 @@ jobs:
 
             - name: Setup Pages
               uses: actions/configure-pages@v5
+              with:
+                  enablement: true
 
             # No build step — this is a plain static site (see README "Run locally").
             # Uploads the repo root as-is; dev-only files (package.json, eslint
