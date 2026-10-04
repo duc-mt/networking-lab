@@ -63,6 +63,20 @@ Case:
 
 ---
 
+
+### Example 2: TLS/Proxy Developer Network Incident
+
+```
+Case:
+- Symptom reported: CI/CD pipeline fails to npm install packages with `ERR_CERT_HAS_EXPIRED` and `ECONNRESET` after recent firewall changes.
+- Topology / devices involved: Dev Client (10.0.1.10) → Corp Proxy (10.0.1.254) → DNS Resolver (10.0.0.53) → NPM Registry Edge.
+- Root cause: Expired intermediate CA certificate at the SSL inspection proxy.
+- Fix applied: Updated the trust bundle on the corporate proxy (simulated safe remediation without bypassing TLS).
+- Number of diagnostic steps: 6 (Triage, DNS Check with `dig`, L4 Proxy check with `curl telnet://`, TLS inspect with `openssl s_client`, Root Cause, Verify).
+```
+
+---
+
 ## 3. Security Packet Walk
 
 ### Placeholder
