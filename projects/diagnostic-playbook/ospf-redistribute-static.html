@@ -866,17 +866,8 @@ Destination        Nexthop       Metric  Flags  Interface
 
                 // Render Elevated HTML Connector Badge (Guaranteed Zero Overlap with Nodes)
                 if (linkLabelsLayer) {
-                    const dx = dst.x - src.x;
-                    const dy = dst.y - src.y;
-                    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-
-                    // Perpendicular vector pointing UPWARD away from link line
-                    const nx = -dy / len;
-                    const ny = -Math.abs(dx) / len;
-
-                    const offset = 4.2; // Percentage offset above link track
-                    const midX = (src.x + dst.x) / 2 + nx * offset;
-                    const midY = (src.y + dst.y) / 2 + ny * offset;
+                    const midX = (src.x + dst.x) / 2;
+                    const midY = (src.y + dst.y) / 2;
 
                     let badgeTheme = 'bg-white/95 dark:bg-slate-800/95 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 shadow-sm';
                     let iconHtml = '<i class="fas fa-arrow-right text-[9px] text-slate-400"></i>';
