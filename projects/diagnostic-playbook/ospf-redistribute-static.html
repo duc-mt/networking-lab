@@ -277,20 +277,20 @@
                 </defs>
 
                 <!-- Zone 1: OSPF Area 1 (Verified color: #6366f1) -->
-                <rect class="area-box" x="2%" y="7%" width="31.5%" height="76%" stroke="#6366f1" rx="16" opacity="0.25"></rect>
+                <rect class="area-box" x="2%" y="7%" width="30%" height="76%" stroke="#6366f1" rx="16" opacity="0.25"></rect>
                 <text x="3.5%" y="11.5%" class="font-mono font-bold text-[11px] uppercase tracking-wider fill-indigo-500">
                     OSPF Area 1 (DMZ / FW-CORE)
                 </text>
 
                 <!-- Zone 2: OSPF Area 0 Backbone Domain (Verified color: #3b82f6) -->
-                <rect class="area-box" x="33.5%" y="7%" width="33%" height="76%" stroke="#3b82f6" rx="16" opacity="0.25"></rect>
-                <text x="35%" y="11.5%" class="font-mono font-bold text-[11px] uppercase tracking-wider fill-blue-500">
+                <rect class="area-box" x="35%" y="7%" width="30%" height="76%" stroke="#3b82f6" rx="16" opacity="0.25"></rect>
+                <text x="36.5%" y="11.5%" class="font-mono font-bold text-[11px] uppercase tracking-wider fill-blue-500">
                     OSPF Backbone Domain (Area 0)
                 </text>
 
                 <!-- Zone 3: OSPF Area 2 (Verified color: #0ea5e9) -->
-                <rect class="area-box" x="66.5%" y="7%" width="31.5%" height="76%" stroke="#0ea5e9" rx="16" opacity="0.25"></rect>
-                <text x="68%" y="11.5%" class="font-mono font-bold text-[11px] uppercase tracking-wider fill-sky-500">
+                <rect class="area-box" x="68%" y="7%" width="30%" height="76%" stroke="#0ea5e9" rx="16" opacity="0.25"></rect>
+                <text x="69.5%" y="11.5%" class="font-mono font-bold text-[11px] uppercase tracking-wider fill-sky-500">
                     OSPF Area 2 (VPC Workloads)
                 </text>
 
@@ -461,8 +461,8 @@
                 ip: '10.1.4.4',
                 subnet: '192.168.100.0/24',
                 icon: 'fa-shield-halved',
-                x: 15,
-                y: 52,
+                x: 10,
+                y: 62,
                 type: 'firewall',
                 color: '#f43f5e'
             },
@@ -474,7 +474,7 @@
                 subnet: 'Area 1 / Area 0',
                 icon: 'fa-server',
                 x: 33.5,
-                y: 40,
+                y: 48,
                 type: 'asbr',
                 color: '#6366f1'
             },
@@ -486,7 +486,7 @@
                 subnet: 'Transit Core RID',
                 icon: 'fa-route',
                 x: 50,
-                y: 28,
+                y: 34,
                 type: 'core',
                 color: '#3b82f6'
             },
@@ -498,7 +498,7 @@
                 subnet: 'Area 0 / Area 2',
                 icon: 'fa-network-wired',
                 x: 66.5,
-                y: 40,
+                y: 48,
                 type: 'abr',
                 color: '#0ea5e9'
             },
@@ -509,8 +509,8 @@
                 ip: '10.2.10.50',
                 subnet: 'Workload Subnet',
                 icon: 'fa-desktop',
-                x: 85,
-                y: 52,
+                x: 90,
+                y: 62,
                 type: 'spoke',
                 color: '#a855f7'
             }
