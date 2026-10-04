@@ -840,5 +840,40 @@ class StpConvergenceSimulator {
 let app;
 window.addEventListener('DOMContentLoaded', () => { app = new StpConvergenceSimulator(); });
 </script>
+
+<!-- Fullscreen Topology Script -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container');
+    if (topo) {
+        const fsBtn = document.createElement('button');
+        fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        fsBtn.className = 'absolute top-4 right-4 z-[9999] w-8 h-8 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-md text-slate-600 dark:text-slate-300 shadow-sm hover:bg-white dark:hover:bg-slate-700 transition-colors cursor-pointer';
+        fsBtn.title = 'Toggle Fullscreen';
+        
+        fsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!document.fullscreenElement) {
+                topo.requestFullscreen().catch(err => console.error(err));
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement === topo) {
+                fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                topo.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
+            } else {
+                fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                topo.style.backgroundColor = ''; 
+            }
+        });
+
+        topo.appendChild(fsBtn);
+    }
+});
+</script>
+
 </body>
 </html>
