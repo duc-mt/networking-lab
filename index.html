@@ -746,34 +746,87 @@
 
 
 
+<script src="assets/js/projects.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const cardData = [
-            { category: 'playbook', class: 'cat-playbook', icon: '<i class="far fa-file-alt"></i>', badge: 'Sổ tay', title: 'OSPF Static Route Redistribution & Filtering', desc: 'Khảo sát cơ chế ASBR redistribute static vào OSPF với route-map filtering', time: '~20 phút', src: 'labs/ospf-redistribution/index.html' },
-            { category: 'ha', class: 'cat-ha', icon: '<i class="fas fa-chart-line"></i>', badge: 'Dự phòng / HA', title: 'VRRP + OSPF Failover Visualization', desc: 'Mô phỏng chuỗi failover khi router VyOS mất kết nối WAN', time: '~15 phút', src: 'labs/vrrp-failover/index.html' },
-            { category: 'playbook', class: 'cat-playbook', icon: '<i class="fas fa-link"></i>', badge: 'Sổ tay', title: 'OSPF LSA Propagation Simulator', desc: 'Trực quan hóa cơ chế tạo và lan truyền LSA Type 1, 2, 3, 5, 7', time: '~25 phút', src: 'labs/lsa-propagation/index.html' }
-        ];
         
-        // Mock data
-        for (let i = 4; i <= 25; i++) {
-            const types = ['protocol', 'troubleshoot', 'mop', 'auto', 'algo'];
-            const classes = ['cat-protocol', 'cat-ha', 'cat-playbook'];
-            const type = types[i % types.length];
-            const cls = classes[i % classes.length];
-            cardData.push({
-                category: type,
-                class: cls,
-                icon: '<i class="fas fa-network-wired"></i>',
-                badge: `Danh mục ${i}`,
-                title: `Bài lab nâng cao ${i}`,
-                desc: `Phân tích chuyên sâu về công nghệ mạng. Kịch bản thực tế và kinh nghiệm troubleshoot.`,
-                time: `~10 phút`,
-                src: 'about:blank'
-            });
+        const categoryColors = {
+            'diagnostic-playbook': { bg: 'var(--cat-playbook-bg, #DCFCE7)', text: 'var(--cat-playbook-text, #16A34A)' },
+            'failover': { bg: 'var(--cat-ha-bg, #DBEAFE)', text: 'var(--cat-ha-text, #2563EB)' },
+            'protocol': { bg: 'var(--cat-protocol-bg, #EDE9FE)', text: 'var(--cat-protocol-text, #7C3AED)' },
+            'troubleshooting': { bg: 'rgba(245, 158, 11, 0.15)', text: '#D97706' },
+            'packet-walk': { bg: 'rgba(225, 29, 72, 0.15)', text: '#E11D48' },
+            'change-mop': { bg: 'rgba(5, 150, 105, 0.15)', text: '#059669' },
+            'automation': { bg: 'rgba(147, 51, 234, 0.15)', text: '#9333EA' },
+            'topology-design': { bg: 'rgba(13, 148, 136, 0.15)', text: '#0D9488' },
+            'algorithm-viz': { bg: 'rgba(79, 70, 229, 0.15)', text: '#4F46E5' }
+        };
+
+        // Ensure PROJECTS is available, fallback if not
+        const realProjects = typeof PROJECTS !== 'undefined' ? PROJECTS : [];
+        const realTypes = typeof PROJECT_TYPES !== 'undefined' ? PROJECT_TYPES : {};
+
+        const cardData = realProjects.map(p => {
+            const typeInfo = realTypes[p.type] || { label: p.type, short: p.type, icon: 'fa-globe' };
+            const colors = categoryColors[p.type] || { bg: '#F3F4F6', text: '#4B5563' };
+            return {
+                category: p.type,
+                icon: `<i class="${typeInfo.icon.includes(' ') ? typeInfo.icon : 'fas ' + typeInfo.icon}"></i>`,
+                badge: typeInfo.short,
+                title: p.title,
+                desc: p.description,
+                time: p.status === 'live' ? 'Live' : 'Coming Soon',
+                src: p.href || 'about:blank',
+                href: p.href || '#',
+                bg: colors.bg,
+                text: colors.text
+            };
+        });
+
+        // Setup filter buttons dynamically
+        const filterContainer = document.getElementById('filterContainer');
+        if (filterContainer) {
+            // Count categories
+            const counts = { 'all': cardData.length };
+            cardData.forEach(c => { counts[c.category] = (counts[c.category] || 0) + 1; });
+            
+            let filterHTML = `<button class="filter-btn active" data-filter="all">Tất cả ${counts.all}</button>`;
+            for (const [type, info] of Object.entries(realTypes)) {
+                if (counts[type]) {
+                    filterHTML += `<button class="filter-btn" data-filter="${type}">${info.short} ${counts[type]}</button>`;
+                }
+            }
+            filterContainer.innerHTML = filterHTML;
+        }
+
+        // Update stats row dynamically
+        const statsRow = document.querySelector('.stats-row');
+        if (statsRow) {
+            const liveCount = cardData.length;
+            const soonCount = 0; // Or calculate if you have status 'soon'
+            const catCount = Object.keys(realTypes).length;
+            
+            statsRow.innerHTML = `
+                <div class="stat-box">
+                    <div class="stat-label">Hoàn thành</div>
+                    <div class="stat-num">${liveCount}</div>
+                    <div class="stat-sub">bài lab đã live</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Đang xây</div>
+                    <div class="stat-num">5</div>
+                    <div class="stat-sub">dự án sắp ra</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Phân loại</div>
+                    <div class="stat-num">${catCount}</div>
+                    <div class="stat-sub">thể loại bài lab</div>
+                </div>
+            `;
         }
 
         const searchInput = document.getElementById('searchInput');
-        const filterBtns = document.querySelectorAll('.filter-btn');
+        // Filter buttons will be handled by event delegation or re-querying
         const cardGrid = document.getElementById('cardGrid');
         const paginationContainer = document.getElementById('pagination');
         const backToTopBtn = document.getElementById('backToTop');
@@ -814,8 +867,8 @@
 
             pageCards.forEach(card => {
                 const cardEl = document.createElement('a');
-                cardEl.href = '#';
-                cardEl.className = `card ${card.class}`;
+                cardEl.href = card.href;
+                cardEl.className = 'card';
                 
                 cardEl.innerHTML = `
                     <div class="card-thumb">
@@ -824,8 +877,8 @@
                         <iframe class="thumb-iframe" data-src="${card.src}" scrolling="no" sandbox="allow-scripts allow-same-origin" loading="lazy" tabindex="-1"></iframe>
                     </div>
                     <div class="card-header">
-                        <div class="card-icon">${card.icon}</div>
-                        <div class="card-badge">${card.badge}</div>
+                        <div class="card-icon" style="background-color: ${card.bg}; color: ${card.text};">${card.icon}</div>
+                        <div class="card-badge" style="background-color: ${card.bg}; color: ${card.text};">${card.badge}</div>
                     </div>
                     <h3 class="card-title">${card.title}</h3>
                     <p class="card-desc">${card.desc}</p>
@@ -905,13 +958,13 @@
             applyFilters();
         });
 
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                filterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentFilter = btn.getAttribute('data-filter');
+        filterContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.getAttribute('data-filter');
                 applyFilters();
-            });
+            }
         });
 
         backToTopBtn.addEventListener('click', (e) => {
