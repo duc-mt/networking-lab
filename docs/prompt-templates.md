@@ -1301,7 +1301,7 @@ When `render()` changes a node's class (e.g., `border-red-500`), the browser has
 ### 1. Canvas and Layout Widths (Responsive Auto-Scale Support)
 
 - **Main Container**: The outermost `<main>` tag must use `class="flex-1 w-full max-w-[1600px] mx-auto ..."` (DO NOT use `max-w-7xl`).
-- **Topology Canvas**: The diagram container `<div id="topology-container">` uses `class="relative w-full max-w-[1400px] mx-auto overflow-hidden ..."` with a minimum height (e.g., `min-h-[500px]` or `min-h-[600px]`). Remove static horizontal scrolling (`overflow-x-auto`), the diagram must automatically scale (responsive) to fill the width.
+- **Topology Canvas**: The diagram container `<div id="topology-container">` uses `class="relative w-full max-w-[1400px] mx-auto overflow-hidden ..."` with a minimum height (e.g., `min-h-[500px]` or `min-h-[600px]`). MUST wrap the diagram in a `<div class="w-full overflow-x-auto">` wrapper and assign a minimum width (e.g., `min-w-[900px]`) to the canvas container to allow smooth horizontal scrolling on mobile devices without overlapping fixed-width nodes.
 - **Algorithm Visualizer exception:** Layout uses `flex-row` to split the screen (topology left + fixed 400px panel right), height = `calc(100vh - header - controlbar)`. The topology canvas occupies the entire remaining space on the left.
 
 ### 2. Node Positioning & Symmetry (Relative Coordinates)

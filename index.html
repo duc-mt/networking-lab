@@ -565,6 +565,98 @@
             color: var(--text-secondary);
         }
 
+        
+        /* --- SERVICES SECTION --- */
+        .services-section {
+            margin: 3rem 0 2rem;
+        }
+
+        .services-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .services-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .services-heading {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            margin-top: 0;
+        }
+
+        .services-subtext {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .service-card {
+            border-radius: 12px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-light);
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .service-icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            background-color: var(--bg-badge-pill);
+            color: var(--text-badge-pill);
+            font-family: monospace;
+            font-weight: 600;
+        }
+
+        .service-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--text-primary);
+        }
+
+        .service-desc {
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0 0 24px 0;
+            flex-grow: 1;
+            color: var(--text-secondary);
+        }
+
+        .service-cta {
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+            color: var(--primary);
+        }
+
+        .service-cta:hover {
+            color: var(--primary-hover);
+        }
+        
         /* --- CONTACT SECTION --- */
         .contact-card {
             background-color: var(--bg-card);
@@ -593,6 +685,7 @@
             gap: 12px;
         }
 
+        
         .icon-btn {
             width: 40px;
             height: 40px;
@@ -603,13 +696,59 @@
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
             font-size: 18px;
+            border: none;
+            cursor: pointer;
         }
 
         .icon-btn:hover {
-            background-color: var(--bg-icon-btn-hover);
+            transform: translateY(-2px);
         }
+
+        /* Brand Colors & Vibe */
+        .icon-btn.github-btn {
+            color: #24292e;
+        }
+        html.dark .icon-btn.github-btn {
+            color: #f0f6fc;
+        }
+        .icon-btn.github-btn:hover {
+            background-color: #24292e;
+            color: #ffffff;
+        }
+        html.dark .icon-btn.github-btn:hover {
+            background-color: #30363d;
+            color: #ffffff;
+        }
+
+        .icon-btn.linkedin-btn {
+            color: #0A66C2;
+        }
+        .icon-btn.linkedin-btn:hover {
+            background-color: #0A66C2;
+            color: #ffffff;
+        }
+
+        .icon-btn.email-btn {
+            color: #EA4335;
+        }
+        .icon-btn.email-btn:hover {
+            background-color: #EA4335;
+            color: #ffffff;
+        }
+
+        .icon-btn.zalo-btn {
+            color: #0068FF;
+            font-weight: 700;
+            font-size: 16px;
+            font-family: sans-serif;
+        }
+        .icon-btn.zalo-btn:hover {
+            background-color: #0068FF;
+            color: #ffffff;
+        }
+
 
         /* --- FOOTER --- */
         .footer {
@@ -639,7 +778,112 @@
             }
         }
 
+        
+        
+        /* --- ZALO POPUP --- */
+        .zalo-btn {
+            font-weight: 700;
+            font-size: 16px;
+            font-family: sans-serif;
+            border: none;
+            cursor: pointer;
+            color: #0068FF;
+        }
+
+        .zalo-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 999;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 200ms ease, visibility 200ms;
+        }
+
+        .zalo-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            z-index: 1000;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 240px;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 200ms ease, transform 200ms ease, visibility 200ms;
+        }
+
+        .zalo-overlay.active,
+        .zalo-popup.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .zalo-popup.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .zalo-header {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0068FF;
+            margin: 0 0 4px 0;
+        }
+
+        .zalo-subtext {
+            font-size: 13px;
+            color: #6B7280;
+            margin: 0 0 16px 0;
+        }
+
+        .zalo-qr-img {
+            width: 180px;
+            height: 180px;
+            border-radius: 8px;
+            object-fit: contain;
+            margin: 0 auto;
+        }
+
+        .zalo-close {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-size: 24px;
+            color: #9CA3AF;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .zalo-close:hover {
+            color: #111827;
+        }
+
+        /* Dark mode overrides */
+        html.dark .zalo-popup {
+            background: #1F2937;
+        }
+        html.dark .zalo-header {
+            color: #60A5FF;
+        }
+        html.dark .zalo-subtext {
+            color: #9CA3AF;
+        }
+        html.dark .zalo-close:hover {
+            color: #F9FAFB;
+        }
+        
         @media (max-width: 768px) {
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
             .grid {
                 grid-template-columns: 1fr;
             }
@@ -684,7 +928,7 @@
 
 <nav class="navbar">
     <a href="https://ducmt.netlify.app" class="nav-brand">
-        <i class="fab fa-github" style="font-size: 18px;"></i>
+        <i class="fas fa-globe" style="font-size: 18px;"></i>
         <span class="nav-name">Mai Tấn Đức (duc-mt)</span>
     </a>
     <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark Mode">
@@ -706,11 +950,11 @@
         <div class="hero-features">
             <div class="feature-item"><span class="check">✓</span> Chạy trực tiếp trên trình duyệt</div>
             <div class="feature-item"><span class="check">✓</span> Tình huống từ thực tế</div>
-            <div class="feature-item"><span class="check">✓</span> Miễn phí hoàn toàn</div>
         </div>
 
         <div class="hero-actions">
             <a href="#labs" class="btn btn-primary"><i class="fas fa-play" style="font-size: 10px; margin-right: 8px;"></i> Xem các bài lab</a>
+            <a href="#services" class="btn btn-ghost">Dịch vụ</a>
             <a href="#contact" class="btn btn-ghost">Liên hệ với tôi</a>
         </div>
     </header>
@@ -761,6 +1005,36 @@
         </div>
     </section>
 
+    
+    <!-- SERVICES SECTION -->
+    <section class="services-section" id="services">
+        <div class="services-header">
+            <div class="services-label">DỊCH VỤ</div>
+            <h2 class="services-heading">Bạn cần hỗ trợ về mạng?</h2>
+            <p class="services-subtext">Từ troubleshooting đến automation — liên hệ để trao đổi.</p>
+        </div>
+
+        <div class="services-grid">
+            <!-- Card 1 -->
+            <div class="service-card">
+                <div class="service-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><line x1="22" y1="8.5" x2="12" y2="15.5"/><line x1="2" y1="8.5" x2="12" y2="15.5"/></svg>
+                </div>
+                <h3 class="service-title">Tư vấn & xử lý sự cố mạng</h3>
+                <p class="service-desc">Troubleshoot OSPF, BGP, MPLS. Review thiết kế topology, HA/failover. Phân tích log và tìm root cause cho các sự cố phức tạp.</p>
+                <a class="service-cta" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Liên hệ tư vấn &darr;</a>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="service-card">
+                <div class="service-icon-box">&lt;/&gt;</div>
+                <h3 class="service-title">Xây dựng công cụ tự động hoá</h3>
+                <p class="service-desc">Script backup config, monitoring thiết bị, tự động hoá provisioning. Tool quản trị mạng theo yêu cầu thực tế của hệ thống bạn.</p>
+                <a class="service-cta" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Liên hệ đặt tool &darr;</a>
+            </div>
+        </div>
+    </section>
+
     <!-- CONTACT SECTION -->
     <section class="contact-card" id="contact">
         <div class="contact-info">
@@ -768,9 +1042,10 @@
             <p>Một câu hỏi hay, một ý tưởng lab mới — reach me at <a href="mailto:ducmai.network@gmail.com" style="color: #2563EB; text-decoration: none;">ducmai.network@gmail.com</a></p>
         </div>
         <div class="contact-actions">
-            <a href="https://github.com/duc-mt" target="_blank" class="icon-btn" aria-label="GitHub"><i class="fab fa-github"></i></a>
-            <a href="https://www.linkedin.com/in/duc-mt/" target="_blank" class="icon-btn" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-            <a href="mailto:ducmai.network@gmail.com" class="icon-btn" aria-label="Email"><i class="fas fa-envelope"></i></a>
+            <a href="https://github.com/duc-mt" target="_blank" class="icon-btn github-btn" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://www.linkedin.com/in/duc-mt/" target="_blank" class="icon-btn linkedin-btn" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="mailto:ducmai.network@gmail.com" class="icon-btn email-btn" aria-label="Email"><i class="fas fa-envelope"></i></a>
+            <button class="icon-btn zalo-btn" id="zaloBtn" aria-label="Zalo">Z</button>
         </div>
     </section>
 
@@ -780,13 +1055,43 @@
         <a href="#top" class="back-to-top" id="backToTop">Lên đầu trang &uarr;</a>
     </footer>
 
-</div>
 
+    <!-- ZALO POPUP -->
+    <div id="zaloOverlay" class="zalo-overlay"></div>
+    <div id="zaloPopup" class="zalo-popup">
+        <button class="zalo-close" id="zaloClose">&times;</button>
+        <h3 class="zalo-header">Zalo</h3>
+        <p class="zalo-subtext">Quét mã để nhắn tin</p>
+        <img src="assets/images/zalo-qr.png" alt="Zalo QR" class="zalo-qr-img">
+    </div>
+
+</div>
 
 
 <script src="assets/js/projects.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+
+        // Zalo Popup Logic
+        const zaloBtn = document.getElementById('zaloBtn');
+        const zaloPopup = document.getElementById('zaloPopup');
+        const zaloOverlay = document.getElementById('zaloOverlay');
+        const zaloClose = document.getElementById('zaloClose');
+
+        function openZalo() {
+            zaloOverlay.classList.add('active');
+            zaloPopup.classList.add('active');
+        }
+
+        function closeZalo() {
+            zaloOverlay.classList.remove('active');
+            zaloPopup.classList.remove('active');
+        }
+
+        if (zaloBtn) zaloBtn.addEventListener('click', openZalo);
+        if (zaloClose) zaloClose.addEventListener('click', closeZalo);
+        if (zaloOverlay) zaloOverlay.addEventListener('click', closeZalo);
+
         
         const categoryColors = {
             'diagnostic-playbook': { bg: 'var(--cat-playbook-bg, #DCFCE7)', text: 'var(--cat-playbook-text, #16A34A)' },

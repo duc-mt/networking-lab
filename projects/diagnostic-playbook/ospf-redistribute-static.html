@@ -254,7 +254,8 @@
         </div>
 
         <!-- Topology Canvas (Relative Container) -->
-        <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm mb-6 overflow-hidden h-[590px] select-none" id="topo-container">
+        <div class="w-full overflow-x-auto">
+        <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm mb-6 overflow-hidden h-[590px] select-none" style="min-width: 900px;" id="topo-container">
             
             <!-- SVG Topology Canvas (Areas, Links, Glows) -->
             <svg class="absolute inset-0 w-full h-full pointer-events-none" id="svg-topology">
@@ -328,6 +329,8 @@
                 <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-blue-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Area 0 Intra-Path</span></span>
                 <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm bg-slate-500 opacity-60"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Static Next-Hop</span></span>
             </div>
+
+        </div>
 
         </div>
 
@@ -1360,12 +1363,41 @@ document.addEventListener('DOMContentLoaded', () => {
         fsBtn.className = 'absolute top-4 right-4 z-[9999] w-8 h-8 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-md text-slate-600 dark:text-slate-300 shadow-sm hover:bg-white dark:hover:bg-slate-700 transition-colors cursor-pointer';
         fsBtn.title = 'Toggle Fullscreen';
         
+        let isFakeFullscreen = false;
+        function toggleFakeFullscreen() {
+            isFakeFullscreen = !isFakeFullscreen;
+            if (isFakeFullscreen) {
+                topo.classList.add('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!rounded-none', '!max-w-none');
+                fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                topo.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
+                document.body.style.overflow = 'hidden';
+            } else {
+                topo.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!rounded-none', '!max-w-none');
+                fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                topo.style.backgroundColor = '';
+                document.body.style.overflow = '';
+            }
+        }
+
         fsBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (!document.fullscreenElement) {
-                topo.requestFullscreen().catch(err => console.error(err));
+            if (topo.requestFullscreen) {
+                if (!document.fullscreenElement) {
+                    topo.requestFullscreen().catch(err => {
+                        console.warn("Native fullscreen failed, using fallback.");
+                        toggleFakeFullscreen();
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            } else if (topo.webkitRequestFullscreen) {
+                if (!document.webkitFullscreenElement) {
+                    topo.webkitRequestFullscreen();
+                } else {
+                    document.webkitExitFullscreen();
+                }
             } else {
-                document.exitFullscreen();
+                toggleFakeFullscreen();
             }
         });
 
@@ -1373,9 +1405,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.fullscreenElement === topo) {
                 fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
                 topo.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
+                document.body.style.overflow = 'hidden';
             } else {
                 fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
-                topo.style.backgroundColor = ''; 
+                topo.style.backgroundColor = '';
+                document.body.style.overflow = ''; 
             }
         });
 
