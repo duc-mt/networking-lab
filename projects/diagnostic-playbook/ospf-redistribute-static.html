@@ -1239,6 +1239,23 @@ Destination: 172.16.248.0/24, Next-Hop: 172.16.4.4`;
             animateHop();
         };
 
+        // Theme Toggle Implementation
+        function applyTheme(isDark) {
+            document.documentElement.classList.toggle('dark', isDark);
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.className = isDark ? 'fas fa-sun text-sm text-amber-400' : 'fas fa-moon text-sm text-indigo-500';
+            }
+        }
+
+        window.toggleTheme = function() {
+            const isDark = !document.documentElement.classList.contains('dark');
+            applyTheme(isDark);
+            try {
+                localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        };
+
         // Window resize re-anchor
         window.addEventListener('resize', () => {
             renderTopologyLinks(SCENARIOS.find(s => s.id === activeScenarioId));
@@ -1246,6 +1263,8 @@ Destination: 172.16.248.0/24, Next-Hop: 172.16.4.4`;
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            applyTheme(isDark);
             initScenarioTabs();
             renderActiveScenario();
         });
