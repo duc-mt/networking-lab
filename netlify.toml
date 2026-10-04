@@ -1,0 +1,6 @@
+[build]
+  publish = "."
+
+# Configuration for Netlify site
+[site]
+  name = "maitanduc"
