@@ -725,7 +725,7 @@ window.addEventListener('DOMContentLoaded', () => { app = new ClusterSimulator()
 <!-- Fullscreen Topology Script -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container');
+    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container') || document.getElementById('topo-container');
     if (topo) {
         const fsBtn = document.createElement('button');
         fsBtn.innerHTML = '<i class="fas fa-expand"></i>';

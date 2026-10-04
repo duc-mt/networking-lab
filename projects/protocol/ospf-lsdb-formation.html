@@ -1072,7 +1072,7 @@ O E2     172.16.50.0/24 [110/20] via 10.0.1.3, 00:00:10, GigabitEthernet0/0`;
 <!-- Fullscreen Topology Script -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container');
+    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container') || document.getElementById('topo-container');
     if (topo) {
         const fsBtn = document.createElement('button');
         fsBtn.innerHTML = '<i class="fas fa-expand"></i>';

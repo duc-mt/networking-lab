@@ -316,7 +316,7 @@
             </div>
 
             <!-- Topology Status Badges / In-canvas Floating Indicators -->
-            <div id="canvas-status-banner" class="absolute top-4 right-16 z-20 hidden md:flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-900/90 text-white backdrop-blur border border-slate-700 text-xs font-mono shadow-md">
+            <div id="canvas-status-banner" class="absolute top-4 left-4 z-20 hidden md:flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-900/90 text-white backdrop-blur border border-slate-700 text-xs font-mono shadow-md">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span id="canvas-status-text">Domain Flooding: Active Type-5 LSA</span>
             </div>
@@ -1353,7 +1353,7 @@ Destination: 192.168.100.0/24, Next-Hop: 10.1.4.4`;
 <!-- Fullscreen Topology Script -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container');
+    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container') || document.getElementById('topo-container');
     if (topo) {
         const fsBtn = document.createElement('button');
         fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
