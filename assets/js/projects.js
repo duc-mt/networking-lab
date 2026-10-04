@@ -137,7 +137,7 @@ const PROJECTS = [
 
     {
         id: 'wireguard-pfsense-walk',
-        title: 'WireGuard Packet Walk on pfSense',
+        title: 'WireGuard VPN Client-to-Site',
         category: 'packet-walk',
         type: 'packet-walk',
         status: 'live',

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WireGuard VPN Packet Walk on pfSense — Packet Walk Lab</title>
+    <title>WireGuard VPN Client-to-Site — Packet Walk Lab</title>
     <script src="../../assets/js/theme-init.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -74,7 +74,7 @@
                     <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 font-mono">pfSense 2.7+ (FreeBSD if_wg)</span>
                     <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-mono">Noise_IK / ChaCha20-Poly1305</span>
                 </div>
-                <h2 class="text-base md:text-lg font-extrabold text-slate-900 dark:text-white">Truy Vết Gói Tin: Client VPN ➔ Firewall pfSense ➔ Server Nội Bộ</h2>
+                <h2 class="text-base md:text-lg font-extrabold text-slate-900 dark:text-white">WireGuard VPN Client-to-Site: Truy Vết Gói Tin</h2>
                 <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Theo dõi chi tiết sự biến đổi gói tin từ outer UDP 51820 qua luật WAN, giải mã kernel, kiểm tra AllowedIPs đến interface LAN.</p>
             </div>
         </div>
@@ -85,6 +85,77 @@
             <div class="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
             <div><span class="text-slate-400 block text-[10px]">Internal Server:</span> <span class="font-bold text-emerald-600 dark:text-emerald-400">192.168.1.50:80</span></div>
         </div>
+    </div>
+
+    
+    <!-- Topology Canvas -->
+    <div class="w-full overflow-x-auto mb-6">
+        <section id="topology-container" class="relative bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden w-full mx-auto h-[400px]" style="min-width: 900px;">
+            <!-- Zones Layer -->
+            <div id="zones-layer" class="absolute inset-0 pointer-events-none z-0">
+                <!-- Public Zone -->
+                <div class="absolute top-[5%] bottom-[15%] left-0 w-[50%] bg-blue-50/50 dark:bg-blue-900/10 border-r border-blue-200/50 dark:border-blue-800/30">
+                    <div class="absolute bottom-4 left-4 text-xs font-bold text-blue-400 uppercase tracking-widest">Public Internet</div>
+                </div>
+                <!-- LAN Zone -->
+                <div class="absolute top-[5%] bottom-[15%] right-0 w-[50%] bg-indigo-50/50 dark:bg-indigo-900/10 border-l border-indigo-200/50 dark:border-indigo-800/30">
+                    <div class="absolute bottom-4 right-4 text-xs font-bold text-indigo-400 uppercase tracking-widest">Corporate LAN</div>
+                </div>
+            </div>
+
+            <!-- Links Layer -->
+            <svg id="links-layer" class="absolute inset-0 w-full h-full pointer-events-none z-[5]"></svg>
+
+            <!-- Nodes Layer -->
+            <div id="nodes-layer" class="absolute inset-0 z-10">
+                <!-- Node 1: Client -->
+                <div id="node-client" class="absolute w-32 bg-white dark:bg-slate-800 rounded-xl shadow-lg border-2 border-emerald-500 flex flex-col items-center p-3 transition-transform duration-300 hover:-translate-y-1 z-10" style="left: 15%; top: 50%; transform: translate(-50%, -50%);">
+                    <span class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-bold rounded border border-slate-200 dark:border-slate-600 whitespace-nowrap shadow-sm">Remote Worker</span>
+                    <div class="w-12 h-12 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner mb-2">
+                        <i class="fas fa-laptop text-slate-700 dark:text-slate-300 text-xl"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white mb-1">Laptop</h3>
+                    <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">10.10.10.2</span>
+                </div>
+
+                <!-- Node 2: Internet -->
+                <div id="node-internet" class="absolute w-28 flex flex-col items-center transition-transform duration-300 hover:-translate-y-1 z-10" style="left: 35%; top: 50%; transform: translate(-50%, -50%);">
+                    <i class="fas fa-cloud text-slate-300 dark:text-slate-700 text-6xl drop-shadow-md"></i>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-2">Internet</h3>
+                </div>
+
+                <!-- Node 3: pfSense -->
+                <div id="node-pfsense" class="absolute w-32 bg-white dark:bg-slate-800 rounded-xl shadow-lg border-2 border-emerald-500 flex flex-col items-center p-3 transition-transform duration-300 hover:-translate-y-1 z-10" style="left: 65%; top: 50%; transform: translate(-50%, -50%);">
+                    <span class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-bold rounded border border-slate-200 dark:border-slate-600 whitespace-nowrap shadow-sm">Gateway</span>
+                    <div class="w-12 h-12 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner mb-2">
+                        <i class="fas fa-shield-alt text-slate-700 dark:text-slate-300 text-xl"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white mb-1">pfSense</h3>
+                    <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">203.0.113.1</span>
+                </div>
+
+                <!-- Node 4: Internal Server -->
+                <div id="node-server" class="absolute w-32 bg-white dark:bg-slate-800 rounded-xl shadow-lg border-2 border-emerald-500 flex flex-col items-center p-3 transition-transform duration-300 hover:-translate-y-1 z-10" style="left: 85%; top: 50%; transform: translate(-50%, -50%);">
+                    <span class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-bold rounded border border-slate-200 dark:border-slate-600 whitespace-nowrap shadow-sm">Web App</span>
+                    <div class="w-12 h-12 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner mb-2">
+                        <i class="fas fa-server text-slate-700 dark:text-slate-300 text-xl"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white mb-1">Server</h3>
+                    <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">192.168.1.50</span>
+                </div>
+            </div>
+
+            <!-- Animated Packet Container -->
+            <div id="animated-packet" class="absolute z-50 hidden flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold text-white whitespace-nowrap shadow-lg pointer-events-none bg-indigo-500 border border-indigo-400" style="left:0; top:0; transform:translate(-50%,-50%);">
+                <i id="packet-icon" class="fas fa-lock"></i>
+                <span id="packet-label">WG UDP</span>
+            </div>
+            
+            <!-- Fullscreen Toggle -->
+            <button id="btn-fullscreen" class="absolute top-4 right-4 z-[99] w-8 h-8 flex items-center justify-center rounded-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors shadow-sm" title="Bật/Tắt Toàn Màn Hình">
+                <i class="fas fa-expand"></i>
+            </button>
+        </section>
     </div>
 
     <!-- Horizontal Pipeline Stepper -->
@@ -578,8 +649,210 @@ class PacketWalkApp {
         if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
 
         this.buildPipelineStages();
+        this.initTopology();
         this.render(0);
     }
+
+
+    initTopology() {
+        this.nodes = {
+            client: document.getElementById('node-client'),
+            internet: document.getElementById('node-internet'),
+            pfsense: document.getElementById('node-pfsense'),
+            server: document.getElementById('node-server')
+        };
+        this.container = document.getElementById('topology-container');
+        this.svg = document.getElementById('links-layer');
+        this.packet = document.getElementById('animated-packet');
+        this.packetLabel = document.getElementById('packet-label');
+        this.packetIcon = document.getElementById('packet-icon');
+        
+        window.addEventListener('resize', () => {
+            clearTimeout(this.resizeTimer);
+            this.resizeTimer = setTimeout(() => {
+                this.clampNodes();
+                this.drawLinks();
+            }, 100);
+        });
+
+        const btnFs = document.getElementById('btn-fullscreen');
+        if(btnFs) {
+            btnFs.onclick = () => {
+                if (!document.fullscreenElement) {
+                    if (this.container.requestFullscreen) {
+                        this.container.requestFullscreen();
+                    } else if (this.container.webkitRequestFullscreen) {
+                        this.container.webkitRequestFullscreen();
+                    } else {
+                        this.container.classList.toggle('!fixed');
+                        this.container.classList.toggle('!inset-0');
+                        this.container.classList.toggle('!z-[9999]');
+                        this.container.classList.toggle('!w-screen');
+                        this.container.classList.toggle('!h-screen');
+                        this.container.classList.toggle('!m-0');
+                        this.container.classList.toggle('!rounded-none');
+                        this.container.classList.toggle('!max-w-none');
+                    }
+                    btnFs.innerHTML = '<i class="fas fa-compress"></i>';
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                    btnFs.innerHTML = '<i class="fas fa-expand"></i>';
+                }
+                setTimeout(() => { this.clampNodes(); this.drawLinks(); }, 200);
+            };
+        }
+        
+        setTimeout(() => {
+            this.clampNodes();
+            this.drawLinks();
+        }, 100);
+    }
+
+    clampNodes() {
+        if (!this.container) return;
+        const containerRect = this.container.getBoundingClientRect();
+        const EDGE_PX = 12;
+
+        Object.values(this.nodes).forEach(node => {
+            if (!node) return;
+            if (!node.dataset.rawTop) {
+                node.dataset.rawTop = parseFloat(node.style.top) || 50;
+                node.dataset.rawLeft = parseFloat(node.style.left) || 50;
+            }
+
+            let top = parseFloat(node.dataset.rawTop);
+            let left = parseFloat(node.dataset.rawLeft);
+
+            const pxLeft = (left / 100) * containerRect.width;
+            const pxTop = (top / 100) * containerRect.height;
+            const halfW = node.offsetWidth / 2;
+            const halfH = node.offsetHeight / 2;
+
+            if (pxLeft - halfW < EDGE_PX) left = ((halfW + EDGE_PX) / containerRect.width) * 100;
+            if (pxLeft + halfW > containerRect.width - EDGE_PX) left = ((containerRect.width - halfW - EDGE_PX) / containerRect.width) * 100;
+            if (pxTop - halfH < EDGE_PX) top = ((halfH + EDGE_PX) / containerRect.height) * 100;
+            if (pxTop + halfH > containerRect.height - EDGE_PX) top = ((containerRect.height - halfH - EDGE_PX) / containerRect.height) * 100;
+
+            node.style.left = left + '%';
+            node.style.top = top + '%';
+        });
+    }
+
+    drawLinks() {
+        if (!this.svg) return;
+        this.svg.innerHTML = '';
+        
+        const createDualLink = (n1, n2, style) => {
+            const cr = this.container.getBoundingClientRect();
+            const r1 = n1.getBoundingClientRect();
+            const r2 = n2.getBoundingClientRect();
+            
+            const sx = r1.left + r1.width/2 - cr.left;
+            const sy = r1.top + r1.height/2 - cr.top;
+            const dx = r2.left + r2.width/2 - cr.left;
+            const dy = r2.top + r2.height/2 - cr.top;
+            
+            const isDark = document.documentElement.classList.contains('dark');
+            const trackColor = isDark ? 'rgba(51, 65, 85, 0.55)' : 'rgba(203, 213, 225, 0.45)';
+            
+            const track = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            track.setAttribute("x1", sx);
+            track.setAttribute("y1", sy);
+            track.setAttribute("x2", dx);
+            track.setAttribute("y2", dy);
+            track.setAttribute("stroke", trackColor);
+            track.setAttribute("stroke-width", "6");
+            track.setAttribute("stroke-linecap", "round");
+            this.svg.appendChild(track);
+            
+            const flow = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            flow.setAttribute("x1", sx);
+            flow.setAttribute("y1", sy);
+            flow.setAttribute("x2", dx);
+            flow.setAttribute("y2", dy);
+            
+            if (style === 'vpn') {
+                flow.setAttribute("stroke", "#818cf8");
+                flow.setAttribute("stroke-width", "4");
+                flow.setAttribute("stroke-dasharray", "8 8");
+            } else {
+                flow.setAttribute("stroke", "#10b981");
+                flow.setAttribute("stroke-width", "3");
+                flow.setAttribute("stroke-dasharray", "8 8");
+            }
+            flow.style.opacity = "0.6";
+            this.svg.appendChild(flow);
+        };
+
+        createDualLink(this.nodes.client, this.nodes.internet, 'vpn');
+        createDualLink(this.nodes.internet, this.nodes.pfsense, 'vpn');
+        createDualLink(this.nodes.pfsense, this.nodes.server, 'lan');
+    }
+
+    animatePacketWalk(fromNode, toNode, label, isEncrypted) {
+        if (!this.packet || !this.packetLabel) return;
+        if (this.packetAnim) this.packetAnim.cancel();
+        
+        const cr = this.container.getBoundingClientRect();
+        const sr = fromNode.getBoundingClientRect();
+        const tr = toNode.getBoundingClientRect();
+        
+        const sx = sr.left + sr.width/2 - cr.left;
+        const sy = sr.top + sr.height/2 - cr.top;
+        const tx = tr.left + tr.width/2 - cr.left;
+        const ty = tr.top + tr.height/2 - cr.top;
+        
+        this.packetLabel.textContent = label;
+        if (isEncrypted) {
+            this.packet.className = "absolute z-50 flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold text-white whitespace-nowrap shadow-lg pointer-events-none bg-indigo-500 border border-indigo-400";
+            this.packetIcon.className = "fas fa-lock";
+        } else {
+            this.packet.className = "absolute z-50 flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold text-white whitespace-nowrap shadow-lg pointer-events-none bg-emerald-500 border border-emerald-400";
+            this.packetIcon.className = "fas fa-envelope-open";
+        }
+        
+        this.packet.classList.remove('hidden');
+        
+        this.packetAnim = this.packet.animate([
+            { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(0.5)`, opacity: 0 },
+            { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(1)`, opacity: 1, offset: 0.1 },
+            { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(1)`, opacity: 1, offset: 0.9 },
+            { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(0.5)`, opacity: 0 }
+        ], {
+            duration: 1000,
+            easing: 'ease-in-out',
+            fill: 'forwards'
+        });
+    }
+
+    triggerTopologyAnimation(stepIdx) {
+        if(!this.nodes) return;
+        const cl = this.nodes.client;
+        const net = this.nodes.internet;
+        const pf = this.nodes.pfsense;
+        const svr = this.nodes.server;
+        
+        switch(stepIdx) {
+            case 0: // ENCAP
+                this.animatePacketWalk(cl, net, 'WG UDP', true);
+                break;
+            case 1: // WAN RULE
+                this.animatePacketWalk(net, pf, 'UDP 51820', true);
+                break;
+            case 2: // DECRYPT
+            case 3: // CRYPTOKEY
+            case 4: // FILTER
+                // Animate bounce on pfSense
+                this.animatePacketWalk(pf, pf, 'Internal Eval', true);
+                break;
+            case 5: // DELIVERY
+                this.animatePacketWalk(pf, svr, 'HTTP GET', false);
+                break;
+        }
+    }
+
 
     buildPipelineStages() {
         this.dom.stagesContainer.innerHTML = '';
@@ -680,6 +953,9 @@ class PacketWalkApp {
         // Pro tips
         this.dom.proTipTitle.textContent = d.proTipTitle;
         this.dom.proTipDesc.textContent = d.proTipDesc;
+        if (typeof this.triggerTopologyAnimation === "function") {
+            this.triggerTopologyAnimation(i);
+        }
 
         // Buttons
         if (this.dom.btnPrev) this.dom.btnPrev.disabled = i === 0;
