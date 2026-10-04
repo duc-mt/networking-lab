@@ -184,7 +184,7 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 1440px;
+            width: 2048px;
             height: 800px;
             transform: translate(-50%, -50%) scale(0.25);
             border: none;
@@ -407,7 +407,7 @@
         /* --- CARD GRID --- */
                 .grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             margin-bottom: 32px;
             align-items: stretch;
@@ -672,7 +672,7 @@
 
         <div class="hero-actions">
             <a href="#labs" class="btn btn-primary"><i class="fas fa-play" style="font-size: 10px; margin-right: 8px;"></i> Xem các bài lab</a>
-            <a href="mailto:ducmai.network@gmail.com" class="btn btn-ghost">Liên hệ với tôi</a>
+            <a href="#contact" class="btn btn-ghost">Liên hệ với tôi</a>
         </div>
     </header>
 
@@ -723,7 +723,7 @@
     </section>
 
     <!-- CONTACT SECTION -->
-    <section class="contact-card">
+    <section class="contact-card" id="contact">
         <div class="contact-info">
             <h2>Hãy kết nối với tôi.</h2>
             <p>Một câu hỏi hay, một ý tưởng lab mới — reach me at <a href="mailto:ducmai.network@gmail.com" style="color: #2563EB; text-decoration: none;">ducmai.network@gmail.com</a></p>
@@ -833,7 +833,7 @@
         let currentFilter = 'all';
         let currentSearch = '';
         let currentPage = 1;
-        const cardsPerPage = 9;
+        const cardsPerPage = 6;
 
         // 1. Generate DOM for ALL cards exactly ONCE
         cardData.forEach(card => {
