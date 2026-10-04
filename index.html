@@ -446,7 +446,7 @@
         /* --- CARD GRID --- */
         .grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 16px;
             margin-bottom: 32px;
             align-items: stretch;
@@ -807,11 +807,12 @@
             transform: translate(-50%, -50%) scale(0.9);
             z-index: 1000;
             background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            border-radius: 24px;
+            padding: 36px 40px 40px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.25);
             text-align: center;
-            width: 240px;
+            width: 420px;
+            max-width: 90vw;
             visibility: hidden;
             opacity: 0;
             transition: opacity 200ms ease, transform 200ms ease, visibility 200ms;
@@ -828,31 +829,32 @@
         }
 
         .zalo-header {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 22px;
+            font-weight: 700;
             color: #0068FF;
-            margin: 0 0 4px 0;
+            margin: 0 0 6px 0;
         }
 
         .zalo-subtext {
-            font-size: 13px;
+            font-size: 15px;
             color: #6B7280;
-            margin: 0 0 16px 0;
+            margin: 0 0 24px 0;
         }
 
         .zalo-qr-img {
-            width: 180px;
-            height: 180px;
-            border-radius: 8px;
+            width: 340px;
+            height: 340px;
+            border-radius: 16px;
             object-fit: contain;
             margin: 0 auto;
+            display: block;
         }
 
         .zalo-close {
             position: absolute;
-            top: 12px;
-            right: 16px;
-            font-size: 24px;
+            top: 18px;
+            right: 22px;
+            font-size: 32px;
             color: #9CA3AF;
             cursor: pointer;
             background: none;
@@ -1022,7 +1024,7 @@
                 </div>
                 <h3 class="service-title">Tư vấn & xử lý sự cố mạng</h3>
                 <p class="service-desc">Troubleshoot OSPF, BGP, MPLS. Review thiết kế topology, HA/failover. Phân tích log và tìm root cause cho các sự cố phức tạp.</p>
-                <a class="service-cta" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Liên hệ tư vấn &darr;</a>
+                <a class="service-cta service-zalo-trigger">Liên hệ tư vấn &rarr;</a>
             </div>
 
             <!-- Card 2 -->
@@ -1030,7 +1032,7 @@
                 <div class="service-icon-box">&lt;/&gt;</div>
                 <h3 class="service-title">Xây dựng công cụ tự động hoá</h3>
                 <p class="service-desc">Script backup config, monitoring thiết bị, tự động hoá provisioning. Tool quản trị mạng theo yêu cầu thực tế của hệ thống bạn.</p>
-                <a class="service-cta" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Liên hệ đặt tool &darr;</a>
+                <a class="service-cta service-zalo-trigger">Liên hệ đặt tool &rarr;</a>
             </div>
         </div>
     </section>
@@ -1089,8 +1091,17 @@
         }
 
         if (zaloBtn) zaloBtn.addEventListener('click', openZalo);
+        document.querySelectorAll('.service-zalo-trigger').forEach(btn => {
+            btn.addEventListener('click', openZalo);
+        });
         if (zaloClose) zaloClose.addEventListener('click', closeZalo);
         if (zaloOverlay) zaloOverlay.addEventListener('click', closeZalo);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && zaloPopup && zaloPopup.classList.contains('active')) {
+                closeZalo();
+            }
+        });
 
         
         const categoryColors = {

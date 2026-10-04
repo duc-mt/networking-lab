@@ -462,68 +462,153 @@ ADV Router      Age         Seq#       Checksum Tag
         });
     </script>
 
-<!-- Fullscreen Topology Script -->
+<!-- Fullscreen & Pan Topology Script -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container') || document.getElementById('topo-container');
-    if (topo) {
-        const fsBtn = document.createElement('button');
-        fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
-        fsBtn.className = 'absolute top-4 right-4 z-[9999] w-8 h-8 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-md text-slate-600 dark:text-slate-300 shadow-sm hover:bg-white dark:hover:bg-slate-700 transition-colors cursor-pointer';
-        fsBtn.title = 'Toggle Fullscreen';
-        
-        let isFakeFullscreen = false;
-        function toggleFakeFullscreen() {
-            isFakeFullscreen = !isFakeFullscreen;
-            if (isFakeFullscreen) {
-                topo.classList.add('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!rounded-none', '!max-w-none');
-                fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
-                topo.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
-                document.body.style.overflow = 'hidden';
-            } else {
-                topo.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!rounded-none', '!max-w-none');
-                fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
-                topo.style.backgroundColor = '';
-                document.body.style.overflow = '';
-            }
-        }
+    if (!topo) return;
 
-        fsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (topo.requestFullscreen) {
-                if (!document.fullscreenElement) {
-                    topo.requestFullscreen().catch(err => {
-                        console.warn("Native fullscreen failed, using fallback.");
-                        toggleFakeFullscreen();
-                    });
-                } else {
-                    document.exitFullscreen();
-                }
-            } else if (topo.webkitRequestFullscreen) {
-                if (!document.webkitFullscreenElement) {
-                    topo.webkitRequestFullscreen();
-                } else {
-                    document.webkitExitFullscreen();
-                }
+    const wrapper = topo.closest('.overflow-x-auto') || topo.parentElement;
+    if (!wrapper) return;
+
+    const fsBtn = document.createElement('button');
+    fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+    fsBtn.className = 'absolute top-4 right-4 z-30 w-8 h-8 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-md text-slate-600 dark:text-slate-300 shadow-sm hover:bg-white dark:hover:bg-slate-700 transition-colors cursor-pointer';
+    fsBtn.title = 'Toggle Fullscreen';
+    topo.appendChild(fsBtn);
+
+    let isFakeFullscreen = false;
+
+    function toggleFakeFullscreen() {
+        isFakeFullscreen = !isFakeFullscreen;
+        if (isFakeFullscreen) {
+            wrapper.classList.add('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!p-0', '!rounded-none', '!max-w-none', 'overflow-auto');
+            wrapper.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
+            wrapper.style.touchAction = 'pan-x pan-y';
+            wrapper.style.webkitOverflowScrolling = 'touch';
+
+            topo.classList.add('!min-h-full', '!h-full', '!rounded-none', '!border-0');
+
+            fsBtn.classList.remove('absolute');
+            fsBtn.classList.add('fixed');
+            fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            document.body.style.overflow = 'hidden';
+
+            setTimeout(() => {
+                const centerOffset = (topo.scrollWidth - wrapper.clientWidth) / 2;
+                if (centerOffset > 0) wrapper.scrollLeft = centerOffset;
+                window.dispatchEvent(new Event('resize'));
+            }, 60);
+        } else {
+            wrapper.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!p-0', '!rounded-none', '!max-w-none', 'overflow-auto');
+            wrapper.style.backgroundColor = '';
+            wrapper.style.touchAction = '';
+            wrapper.style.webkitOverflowScrolling = '';
+
+            topo.classList.remove('!min-h-full', '!h-full', '!rounded-none', '!border-0');
+
+            fsBtn.classList.remove('fixed');
+            fsBtn.classList.add('absolute');
+            fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            document.body.style.overflow = '';
+
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 60);
+        }
+    }
+
+    fsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (document.fullscreenElement || document.webkitFullscreenElement || isFakeFullscreen) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+            if (isFakeFullscreen) toggleFakeFullscreen();
+        } else {
+            const target = wrapper;
+            if (target.requestFullscreen) {
+                target.requestFullscreen().catch(() => {
+                    toggleFakeFullscreen();
+                });
+            } else if (target.webkitRequestFullscreen) {
+                target.webkitRequestFullscreen();
             } else {
                 toggleFakeFullscreen();
             }
-        });
+        }
+    });
 
-        document.addEventListener('fullscreenchange', () => {
-            if (document.fullscreenElement === topo) {
-                fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
-                topo.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
-                document.body.style.overflow = 'hidden';
-            } else {
-                fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
-                topo.style.backgroundColor = '';
-                document.body.style.overflow = ''; 
-            }
-        });
+    const handleFsChange = () => {
+        const isFs = document.fullscreenElement === wrapper || document.webkitFullscreenElement === wrapper;
+        if (isFs) {
+            wrapper.classList.add('overflow-auto');
+            wrapper.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
+            wrapper.style.touchAction = 'pan-x pan-y';
+            wrapper.style.webkitOverflowScrolling = 'touch';
+            topo.classList.add('!min-h-full', '!h-full', '!rounded-none', '!border-0');
+            fsBtn.classList.remove('absolute');
+            fsBtn.classList.add('fixed');
+            fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            document.body.style.overflow = 'hidden';
 
-        topo.appendChild(fsBtn);
-    }
+            setTimeout(() => {
+                const centerOffset = (topo.scrollWidth - wrapper.clientWidth) / 2;
+                if (centerOffset > 0) wrapper.scrollLeft = centerOffset;
+                window.dispatchEvent(new Event('resize'));
+            }, 60);
+        } else if (!isFakeFullscreen) {
+            wrapper.classList.remove('overflow-auto');
+            wrapper.style.backgroundColor = '';
+            wrapper.style.touchAction = '';
+            wrapper.style.webkitOverflowScrolling = '';
+            topo.classList.remove('!min-h-full', '!h-full', '!rounded-none', '!border-0');
+            fsBtn.classList.remove('fixed');
+            fsBtn.classList.add('absolute');
+            fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            document.body.style.overflow = '';
+
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 60);
+        }
+    };
+
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isFakeFullscreen) {
+            toggleFakeFullscreen();
+        }
+    });
+
+    // Touch & Pointer Drag-to-Pan engine (allows move around on mobile & desktop)
+    let isPanning = false;
+    let startX = 0, startY = 0;
+    let scrollStartLeft = 0, scrollStartTop = 0;
+
+    topo.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('button, a, input, select, textarea, .mode-btn, [id^="case-btn"], [id^="node-"]')) return;
+        isPanning = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        scrollStartLeft = wrapper.scrollLeft;
+        scrollStartTop = wrapper.scrollTop;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+        if (!isPanning) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        wrapper.scrollLeft = scrollStartLeft - dx;
+        wrapper.scrollTop = scrollStartTop - dy;
+    });
+
+    const stopPan = () => { isPanning = false; };
+    window.addEventListener('pointerup', stopPan);
+    window.addEventListener('pointercancel', stopPan);
 });
 </script>
 
