@@ -834,68 +834,80 @@
         let currentSearch = '';
         let currentPage = 1;
         const cardsPerPage = 9;
-        let filteredCards = [...cardData];
-        let observer = null;
 
-        function initObserver() {
-            if (observer) {
-                observer.disconnect();
-            }
+        // 1. Generate DOM for ALL cards exactly ONCE
+        cardData.forEach(card => {
+            const cardEl = document.createElement('a');
+            cardEl.href = card.href;
+            cardEl.className = 'card';
             
-            observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const iframe = entry.target.querySelector('.thumb-iframe');
-                        if (iframe && !iframe.getAttribute('src')) {
-                            iframe.setAttribute('src', iframe.getAttribute('data-src'));
-                            iframe.onload = () => iframe.classList.add('loaded');
-                        }
+            cardEl.innerHTML = `
+                <div class="card-thumb">
+                    <div class="thumb-overlay"></div>
+                    <div class="thumb-placeholder">Loading preview...</div>
+                    <iframe class="thumb-iframe" data-src="${card.src}" scrolling="no" sandbox="allow-scripts allow-same-origin" loading="lazy" tabindex="-1"></iframe>
+                </div>
+                <div class="card-header">
+                    <div class="card-icon" style="background-color: ${card.bg}; color: ${card.text};">${card.icon}</div>
+                    <div class="card-badge" style="background-color: ${card.bg}; color: ${card.text};">${card.badge}</div>
+                </div>
+                <h3 class="card-title">${card.title}</h3>
+                <p class="card-desc">${card.desc}</p>
+                <div class="card-footer">
+                    <i class="far fa-clock"></i> ${card.time}
+                </div>
+            `;
+            
+            cardGrid.appendChild(cardEl);
+            card.element = cardEl; // Store DOM reference
+        });
+
+        // 2. Setup Persistent Observer
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const iframe = entry.target.querySelector('.thumb-iframe');
+                    if (iframe && !iframe.getAttribute('src')) {
+                        iframe.setAttribute('src', iframe.getAttribute('data-src'));
+                        iframe.onload = () => iframe.classList.add('loaded');
                     }
-                });
-            }, { threshold: 0.1 });
-        }
+                }
+            });
+        }, { threshold: 0.1 });
 
-        function renderCards() {
-            cardGrid.innerHTML = '';
-            
-            const start = (currentPage - 1) * cardsPerPage;
-            const end = start + cardsPerPage;
-            const pageCards = filteredCards.slice(start, end);
+        // Start observing all cards
+        cardData.forEach(card => observer.observe(card.element));
 
-            initObserver();
-
-            pageCards.forEach(card => {
-                const cardEl = document.createElement('a');
-                cardEl.href = card.href;
-                cardEl.className = 'card';
-                
-                cardEl.innerHTML = `
-                    <div class="card-thumb">
-                        <div class="thumb-overlay"></div>
-                        <div class="thumb-placeholder">Loading preview...</div>
-                        <iframe class="thumb-iframe" data-src="${card.src}" scrolling="no" sandbox="allow-scripts allow-same-origin" loading="lazy" tabindex="-1"></iframe>
-                    </div>
-                    <div class="card-header">
-                        <div class="card-icon" style="background-color: ${card.bg}; color: ${card.text};">${card.icon}</div>
-                        <div class="card-badge" style="background-color: ${card.bg}; color: ${card.text};">${card.badge}</div>
-                    </div>
-                    <h3 class="card-title">${card.title}</h3>
-                    <p class="card-desc">${card.desc}</p>
-                    <div class="card-footer">
-                        <i class="far fa-clock"></i> ${card.time}
-                    </div>
-                `;
-                
-                cardGrid.appendChild(cardEl);
-                observer.observe(cardEl);
+        // 3. Fast Display Update Function (Toggles visibility, NEVER deletes DOM)
+        function updateDisplay() {
+            // Filter logic
+            const searchStr = currentSearch.toLowerCase();
+            const filtered = cardData.filter(card => {
+                const textMatch = `${card.title} ${card.desc}`.toLowerCase().includes(searchStr);
+                const catMatch = currentFilter === 'all' || card.category === currentFilter;
+                return textMatch && catMatch;
             });
 
-            renderPagination();
+            // Pagination bounds
+            const start = (currentPage - 1) * cardsPerPage;
+            const end = start + cardsPerPage;
+            const pageCards = filtered.slice(start, end);
+
+            // Toggle DOM display state
+            cardData.forEach(card => {
+                if (pageCards.includes(card)) {
+                    card.element.style.display = 'flex';
+                } else {
+                    card.element.style.display = 'none';
+                }
+            });
+
+            renderPagination(filtered.length);
         }
 
-        function renderPagination() {
+        function renderPagination(totalItems) {
             paginationContainer.innerHTML = '';
-            const totalPages = Math.ceil(filteredCards.length / cardsPerPage);
+            const totalPages = Math.ceil(totalItems / cardsPerPage);
             
             if (totalPages <= 1) return;
 
@@ -906,7 +918,7 @@
             prevBtn.onclick = () => {
                 if (currentPage > 1) {
                     currentPage--;
-                    updatePage();
+                    changePageAndScroll();
                 }
             };
             paginationContainer.appendChild(prevBtn);
@@ -917,7 +929,7 @@
                 btn.innerText = i;
                 btn.onclick = () => {
                     currentPage = i;
-                    updatePage();
+                    changePageAndScroll();
                 };
                 paginationContainer.appendChild(btn);
             }
@@ -929,32 +941,22 @@
             nextBtn.onclick = () => {
                 if (currentPage < totalPages) {
                     currentPage++;
-                    updatePage();
+                    changePageAndScroll();
                 }
             };
             paginationContainer.appendChild(nextBtn);
         }
 
-        function updatePage() {
-            renderCards();
+        function changePageAndScroll() {
+            updateDisplay();
             const gridTop = document.getElementById('labs').getBoundingClientRect().top + window.scrollY - 80;
             window.scrollTo({ top: gridTop, behavior: 'smooth' });
         }
 
-        function applyFilters() {
-            filteredCards = cardData.filter(card => {
-                const searchStr = `${card.title} ${card.desc}`.toLowerCase();
-                const matchesFilter = currentFilter === 'all' || card.category === currentFilter;
-                const matchesSearch = searchStr.includes(currentSearch);
-                return matchesFilter && matchesSearch;
-            });
-            currentPage = 1;
-            renderCards();
-        }
-
         searchInput.addEventListener('input', (e) => {
-            currentSearch = e.target.value.toLowerCase().trim();
-            applyFilters();
+            currentSearch = e.target.value.trim();
+            currentPage = 1;
+            updateDisplay();
         });
 
         filterContainer.addEventListener('click', (e) => {
@@ -962,10 +964,12 @@
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 currentFilter = e.target.getAttribute('data-filter');
-                applyFilters();
+                currentPage = 1;
+                updateDisplay();
             }
         });
 
+        updateDisplay();
         backToTopBtn.addEventListener('click', (e) => {
             e.preventDefault();
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -991,7 +995,7 @@
 
         // Init
 
-        renderCards();
+        
     });
 </script>
 </body>
