@@ -241,15 +241,14 @@ believable sequence of ruled-out hypotheses before landing on the real cause.
 
 ---
 
-
 ### Domain Knowledge: Developer Network Failures
 
 When generating Troubleshooting Labs or Diagnostic Playbooks involving developer connectivity (`npm`, `pip`, `curl`, DNS, TLS, proxies), use the following diagnostic framework (adapted from the project's network-troubleshooting skill):
 
 - **ENOTFOUND / DNS Failure:** Always diagnose with `nslookup` or `dig`. Emphasize checking local resolvers, `resolv.conf`, or proxy bypass lists before suspecting the upstream server.
-- **ECONNREFUSED / Port Down:** Diagnose with layer-4 probes like `curl -v telnet://<ip>:<port>`. Root cause is typically the target service being down or listening on the wrong interface (`localhost` instead of `0.0.0.0`), *not* a firewall drop.
+- **ECONNREFUSED / Port Down:** Diagnose with layer-4 probes like `curl -v telnet://<ip>:<port>`. Root cause is typically the target service being down or listening on the wrong interface (`localhost` instead of `0.0.0.0`), _not_ a firewall drop.
 - **ETIMEDOUT / Firewall Drop:** Diagnose with ping or L4 probes. Root cause is typically a network firewall, security group, or routing issue silently dropping the packet.
-- **UNABLE_TO_VERIFY_LEAF_SIGNATURE / TLS Errors:** Diagnose with `openssl s_client -showcerts`. Root cause is usually an expired intermediate CA, untrusted self-signed cert, or corporate SSL inspection proxy. *Crucial:* Emphasize fixing the trust store rather than using dangerous bypass flags (`--insecure` / `-k`).
+- **UNABLE_TO_VERIFY_LEAF_SIGNATURE / TLS Errors:** Diagnose with `openssl s_client -showcerts`. Root cause is usually an expired intermediate CA, untrusted self-signed cert, or corporate SSL inspection proxy. _Crucial:_ Emphasize fixing the trust store rather than using dangerous bypass flags (`--insecure` / `-k`).
 - **HTTP 407 / Proxy Auth:** Tunnel creation rejected by the proxy. Emphasize diagnosing proxy credentials and HTTP tunnel configuration rather than the destination service.
 - **Guiding Principle:** In troubleshooting labs, always ensure the simulated engineer performs safe, read-only, target-scoped diagnostic checks before applying the fix.
 

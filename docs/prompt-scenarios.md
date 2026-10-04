@@ -63,7 +63,6 @@ Case:
 
 ---
 
-
 ### Example 2: TLS/Proxy Developer Network Incident
 
 ```
