@@ -12,6 +12,7 @@ Whenever generating or editing HTML/CSS or interface components in this project,
 
 - **No Pure White/Black:** Never use `#ffffff` or `#000000`. You must use the Tailwind `Slate` neutral color scale.
 - **Backgrounds:** Light mode must always use `bg-slate-50`. Dark mode must always use `bg-slate-950`.
+- **Default Blueprint Grid Background:** Every page (main portfolio + every lab) links `assets/css/theme.css` which renders the default global 40px blueprint grid (`rgba(99, 102, 241, 0.06)` light / `0.09` dark, `background-attachment: fixed`). All labs MUST preserve this subtle background on `body` to maintain the unified engineering aesthetic across the entire portfolio.
 - **Cards/Surfaces:** In Dark mode, cards must use `bg-slate-900` combined with a thin `border-slate-800` to create depth.
 - **Accents:** Instead of harsh flat colors, use subtle gradients (e.g., `bg-gradient-to-br from-blue-500 to-indigo-600`) for logos, icons, or primary buttons.
 
