@@ -72,7 +72,6 @@
                 --bg-icon-btn-hover: #4B5563;
                 --hero-grid-opacity: 0.1;
             }
-        }
 
         * {
             box-sizing: border-box;
@@ -163,6 +162,8 @@
             background: #0F172A;
             overflow: hidden;
             position: relative;
+            isolation: isolate;
+            transform: translateZ(0);
         }
         .thumb-overlay {
             position: absolute;
@@ -417,7 +418,7 @@
             color: inherit;
             display: flex;
             flex-direction: column;
-            height: 100%;
+            overflow: hidden;
         }
 
         .card:hover {
