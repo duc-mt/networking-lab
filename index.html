@@ -184,7 +184,7 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 2048px;
+            width: 1440px;
             height: 800px;
             transform: translate(-50%, -50%) scale(0.25);
             border: none;
@@ -407,7 +407,7 @@
         /* --- CARD GRID --- */
                 .grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 16px;
             margin-bottom: 32px;
             align-items: stretch;
@@ -775,6 +775,7 @@
                 title: p.title,
                 desc: p.description,
                 time: p.status === 'live' ? 'Live' : 'Coming Soon',
+                isLive: p.status === 'live',
                 src: p.href || 'about:blank',
                 href: p.href || '#',
                 bg: colors.bg,
@@ -833,7 +834,7 @@
         let currentFilter = 'all';
         let currentSearch = '';
         let currentPage = 1;
-        const cardsPerPage = 6;
+        const cardsPerPage = 12;
 
         // 1. Generate DOM for ALL cards exactly ONCE
         cardData.forEach(card => {
@@ -841,11 +842,22 @@
             cardEl.href = card.href;
             cardEl.className = 'card';
             
-            cardEl.innerHTML = `
-                <div class="card-thumb">
+            let thumbHTML = '';
+            if (card.isLive) {
+                thumbHTML = `
                     <div class="thumb-overlay"></div>
                     <div class="thumb-placeholder">Loading preview...</div>
                     <iframe class="thumb-iframe" data-src="${card.src}" scrolling="no" sandbox="allow-scripts allow-same-origin" loading="lazy" tabindex="-1"></iframe>
+                `;
+            } else {
+                thumbHTML = `
+                    <div class="thumb-placeholder" style="color: #9CA3AF; font-size: 13px; font-weight: 500;">Coming soon...</div>
+                `;
+            }
+
+            cardEl.innerHTML = `
+                <div class="card-thumb">
+                    ${thumbHTML}
                 </div>
                 <div class="card-header">
                     <div class="card-icon" style="background-color: ${card.bg}; color: ${card.text};">${card.icon}</div>
