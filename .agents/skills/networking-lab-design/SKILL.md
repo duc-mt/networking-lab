@@ -3,7 +3,6 @@ name: networking-lab-design
 description: Enforce networking-lab UI/UX design system and layout geometry. Use when building or editing HTML, CSS, or interface components in the networking-lab project. Do NOT use for generic frontend tasks outside this repository.
 ---
 
-
 # Mandatory Design System (UI/UX)
 
 Whenever generating or editing HTML/CSS or interface components in this project, the AI MUST strictly adhere to the following rules to maintain a modern, refined, and consistent aesthetic across the entire project:
@@ -109,27 +108,28 @@ Whenever building or editing a lab interface, the AI MUST strictly follow these 
 
 - **Fullscreen & Pan Topology Canvas Toggle:** All topology containers (`#topology-canvas`, `#topology-container`, or `#topo-container`) MUST include a floating fullscreen toggle button (`absolute top-4 right-4 z-30`, dynamically switching to `fixed top-4 right-4` in fullscreen) targeting the parent responsive wrapper (`.overflow-x-auto`) using native `wrapper.requestFullscreen()` with a CSS fallback (`!fixed !inset-0 !z-[9999] overflow-auto`) for iOS devices. The wrapper MUST support multi-directional touch and pointer drag-to-pan (`touch-action: pan-x pan-y`), horizontal auto-centering on enter, dynamic icon swap (`fa-expand` / `fa-compress`), Esc key exit, and `resize` event dispatching on state change so mobile users can smoothly pan and navigate around the canvas.
 
-
 ---
 
 ## 9. EVPN Topology Migration Standard
+
 **Trigger:** Whenever the user asks to "migrate lab X to the EVPN topology standard" or similar.
 
 When instructed to migrate an older lab to the EVPN topology standard, you MUST strictly apply these transformations without altering academic content or lab logic:
+
 1. **Layout & HTML Structure:**
-   - `<main>` must use `flex-col` layout (e.g. `flex-1 w-full max-w-7xl mx-auto flex flex-col`).
-   - The Topology canvas must be a **full-width block** at the top (`w-full overflow-x-auto` wrapper). Never split the topology into columns.
-   - All other panels (Context, Stepper, CLI, Hypotheses, Tables) must be moved **below** the topology into a 2-column grid (`grid-cols-1 lg:grid-cols-2`).
+    - `<main>` must use `flex-col` layout (e.g. `flex-1 w-full max-w-7xl mx-auto flex flex-col`).
+    - The Topology canvas must be a **full-width block** at the top (`w-full overflow-x-auto` wrapper). Never split the topology into columns.
+    - All other panels (Context, Stepper, CLI, Hypotheses, Tables) must be moved **below** the topology into a 2-column grid (`grid-cols-1 lg:grid-cols-2`).
 2. **Data-driven Topology Engine (JS):**
-   - Define `REF_W = 1180` and `REF_H = 500`.
-   - Maintain state in a central `topoData` object: `{ zones: [], nodes: [], links: [] }`.
-   - Nodes must use absolute percentage positioning `(x / REF_W * 100)%` and `transform: translate(-50%, -50%)`.
-   - Implement `renderTopology()`, `clampNodes()`, and `drawLinks()` to render the 5-layer cards and dual-layer cables dynamically.
+    - Define `REF_W = 1180` and `REF_H = 500`.
+    - Maintain state in a central `topoData` object: `{ zones: [], nodes: [], links: [] }`.
+    - Nodes must use absolute percentage positioning `(x / REF_W * 100)%` and `transform: translate(-50%, -50%)`.
+    - Implement `renderTopology()`, `clampNodes()`, and `drawLinks()` to render the 5-layer cards and dual-layer cables dynamically.
 3. **Integration with Existing Logic:**
-   - Rewrite the simulator's `renderStep(index)` function to read the timeline data, update `topoData` attributes (role, status, health/color), and invoke `renderTopology()`.
+    - Rewrite the simulator's `renderStep(index)` function to read the timeline data, update `topoData` attributes (role, status, health/color), and invoke `renderTopology()`.
 4. **Packet Animations:**
-   - Replace CSS `@keyframes` with the Web Animations API (`element.animate(...)`).
-   - Dynamically calculate source/destination coordinates using `getBoundingClientRect()` relative to the canvas so animations remain accurate on window resize.
+    - Replace CSS `@keyframes` with the Web Animations API (`element.animate(...)`).
+    - Dynamically calculate source/destination coordinates using `getBoundingClientRect()` relative to the canvas so animations remain accurate on window resize.
 
 ## Expected Output Format
 
