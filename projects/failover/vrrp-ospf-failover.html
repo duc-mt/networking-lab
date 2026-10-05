@@ -113,7 +113,7 @@
                 <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
 
                 <!-- VIP Label -->
-                <div id="vip-label" class="absolute z-20 bg-indigo-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 transition-all duration-500" style="left:50%;top:38%;transform:translate(-50%,-50%)">
+                <div id="vip-label" class="absolute z-20 bg-indigo-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 transition-all duration-500 whitespace-nowrap" style="left:25%;top:32%;transform:translate(-50%,-50%)">
                     <i class="fas fa-circle-dot text-indigo-200"></i>
                     <span id="vip-text">VIP: 10.10.10.1 — Active on R1</span>
                 </div>
@@ -131,7 +131,7 @@
                 <div id="node-R1" class="absolute w-32 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10 transition-all duration-500" style="left:25%;top:50%;transform:translate(-50%,-50%)">
                     <div id="role-R1" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-200 dark:border-blue-700">VyOS-1</div>
                     <div class="w-12 h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-router text-xl text-slate-700 dark:text-slate-300"></i>
+                        <i class="fas fa-route text-xl text-slate-700 dark:text-slate-300"></i>
                     </div>
                     <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">VyOS Primary</h3>
                     <div class="text-[10px] font-mono text-slate-500 mt-0.5">Pri: <span id="pri-R1">150</span></div>
@@ -142,7 +142,7 @@
                 <div id="node-R2" class="absolute w-32 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10 transition-all duration-500" style="left:75%;top:50%;transform:translate(-50%,-50%)">
                     <div id="role-R2" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-200 dark:border-blue-700">VyOS-2</div>
                     <div class="w-12 h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-router text-xl text-slate-700 dark:text-slate-300"></i>
+                        <i class="fas fa-route text-xl text-slate-700 dark:text-slate-300"></i>
                     </div>
                     <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">VyOS Secondary</h3>
                     <div class="text-[10px] font-mono text-slate-500 mt-0.5">Pri: <span id="pri-R2">100</span></div>
@@ -544,9 +544,9 @@ Routing entry for 0.0.0.0/0
             const vip = document.getElementById('vip-label');
             document.getElementById('vip-text').innerText = `VIP: 10.10.10.1 — Active on ${data.vip}`;
             if(data.vip === 'R1') {
-                vip.style.left = '32%'; vip.style.top = '38%';
+                vip.style.left = '25%'; vip.style.top = '32%';
             } else {
-                vip.style.left = '68%'; vip.style.top = '38%';
+                vip.style.left = '75%'; vip.style.top = '32%';
             }
 
             // Links

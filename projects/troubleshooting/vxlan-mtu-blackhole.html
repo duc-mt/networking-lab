@@ -63,39 +63,64 @@
         
         /* Smooth state transitions for badges */
         .badge-transition { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+    
+        /* Ensure body grid is visible */
+        body {
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.06) 1px, transparent 1px) !important;
+            background-size: 40px 40px !important;
+        }
+        .dark body, html.dark body {
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.09) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.09) 1px, transparent 1px) !important;
+        }
+
+        /* Draggable Wrapper */
+        .drag-wrapper { touch-action: pan-x pan-y; cursor: grab; }
+        .drag-wrapper:active { cursor: grabbing; }
+        
+        .fullscreen-fallback {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 9999 !important;
+            background: inherit;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 flex flex-col min-h-screen transition-colors duration-300">
 
 <!-- Header -->
-<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
-    <div class="max-w-[1600px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <a href="../../index.html" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors">
-                <i class="fas fa-arrow-left"></i>
+<header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3 md:gap-4 overflow-hidden">
+            <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-rose-500 to-orange-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0" title="Về trang chủ Portfolio">
+                <i class="fas fa-stethoscope"></i>
             </a>
-            <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-            <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded bg-gradient-to-br from-rose-500 to-orange-600 flex items-center justify-center text-white shadow-sm">
-                    <i class="fas fa-stethoscope text-sm"></i>
-                </div>
-                <h1 class="font-bold text-sm md:text-base hidden sm:block">EVPN-VXLAN MTU Blackhole</h1>
+            <div class="h-6 w-px bg-slate-300 dark:bg-slate-700 hidden md:block shrink-0"></div>
+            <div class="flex flex-col min-w-0">
+                <a href="../../index.html" class="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-amber-500 uppercase tracking-wider mb-0.5 truncate transition-colors flex items-center gap-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                </a>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight truncate">EVPN-VXLAN MTU Blackhole</h1>
             </div>
         </div>
         
-        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner">
+        <!-- Unified Control Cluster -->
+        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner shrink-0">
             <button onclick="app.prevStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i class="fas fa-backward-step"></i></button>
             <div id="play-pause-btn" onclick="app.togglePlay()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast cursor-pointer"><i class="fas fa-play"></i></div>
             <button onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i class="fas fa-forward-step"></i></button>
             <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
             <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
             <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
-            <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" aria-label="Đổi giao diện Sáng/Tối"><i id="theme-icon" class="fas fa-sun"></i></button>
+            <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" aria-label="Đổi giao diện"><i id="theme-icon" class="fas fa-sun"></i></button>
         </div>
     </div>
 </header>
 
-<main class="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
 
     <!-- Symptom Banner -->
     <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl px-6 py-4 flex items-start gap-4">
@@ -120,135 +145,118 @@
             </div></div></div>
 </section>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-        <!-- Left: Topology Canvas + CLI -->
-        <div class="xl:col-span-2 flex flex-col gap-6">
-            <!-- Golden Standard Wrapper -->
-            <div class="w-full overflow-x-auto">
-                <section id="topology-canvas" style="min-width: 900px;" class="relative bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-h-[500px] md:min-h-[580px]">
-                
-                <!-- Zones -->
-                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-blue-500 bg-blue-500/5" style="left: 4%; top: 4%; width: 22%; height: 92%;">
-                    <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-blue-500">ON-PREMISES</div>
-                </div>
-                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-indigo-500 bg-indigo-500/5" style="left: 28%; top: 4%; width: 44%; height: 92%;">
-                    <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-indigo-500">MPLS TRANSIT (WAN)</div>
-                </div>
-                <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-sky-500 bg-sky-500/5" style="left: 74%; top: 4%; width: 22%; height: 92%;">
-                    <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-sky-500">CLOUD REGION</div>
-                </div>
-
-                <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
-
-                <!-- Dynamic Labels Layer -->
-                <div id="labels-layer"></div>
-
-                <!-- Nodes -->
-                <!-- Host A -->
-                <div id="node-host-a" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:15%;top:80%;transform:translate(-50%,-50%)">
-                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">Compute</div>
-                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-server text-base text-slate-700 dark:text-slate-300"></i>
-                    </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Host-A</h3>
-                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">10.1.100.10/24</div>
-                    <span id="state-host-a" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
-                </div>
-
-                <!-- VTEP On-Prem -->
-                <div id="node-vtep-onprem" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:15%;top:30%;transform:translate(-50%,-50%)">
-                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">VTEP / L2 GW</div>
-                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-network-wired text-base text-slate-700 dark:text-slate-300"></i>
-                    </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">VTEP-OnPrem</h3>
-                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">Lo0: 10.255.0.1</div>
-                    <span id="state-vtep-onprem" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">BGP UP</span>
-                </div>
-
-                <!-- PE On-Prem -->
-                <div id="node-pe-onprem" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:37%;top:50%;transform:translate(-50%,-50%)">
-                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">PE Router</div>
-                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-route text-base text-slate-700 dark:text-slate-300"></i>
-                    </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">PE-OnPrem</h3>
-                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">VRF: CORP</div>
-                    <span id="state-pe-onprem" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
-                </div>
-
-                <!-- PE Cloud -->
-                <div id="node-pe-cloud" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:63%;top:50%;transform:translate(-50%,-50%)">
-                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">PE Router</div>
-                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-route text-base text-slate-700 dark:text-slate-300"></i>
-                    </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">PE-Cloud</h3>
-                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">VRF: CORP</div>
-                    <span id="state-pe-cloud" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
-                </div>
-
-                <!-- VTEP Cloud -->
-                <div id="node-vtep-cloud" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:85%;top:30%;transform:translate(-50%,-50%)">
-                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">VTEP / L2 GW</div>
-                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-network-wired text-base text-slate-700 dark:text-slate-300"></i>
-                    </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">VTEP-Cloud</h3>
-                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">Lo0: 10.255.0.2</div>
-                    <span id="state-vtep-cloud" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">BGP UP</span>
-                </div>
-
-                <!-- Host B -->
-                <div id="node-host-b" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:85%;top:80%;transform:translate(-50%,-50%)">
-                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">Compute</div>
-                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                        <i class="fas fa-server text-base text-slate-700 dark:text-slate-300"></i>
-                    </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Host-B</h3>
-                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">10.1.100.20/24</div>
-                    <span id="state-host-b" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
-                </div>
-
-                <!-- Animated Dropped Packet -->
-                <div id="animated-packet" class="absolute w-6 h-6 -ml-3 -mt-3 flex items-center justify-center z-30 transition-all duration-700 ease-in-out opacity-0" style="left:0; top:0;">
-                    <i id="packet-icon" class="fas fa-envelope text-red-500 text-lg filter drop-shadow-md"></i>
-                    <div id="packet-label" class="absolute -bottom-5 whitespace-nowrap text-[8px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/60 px-1 rounded border border-red-200 dark:border-red-700 hidden">DF set, length 1500</div></div>
-
+    <!-- Topology Section (Full Width Top) -->
+    <div id="topo-wrapper" class="w-full overflow-x-auto drag-wrapper">
+        <button id="fs-toggle-btn" class="absolute top-4 right-4 z-30 w-9 h-9 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors backdrop-blur">
+            <i class="fas fa-expand"></i>
+        </button>
+        
+        <section id="topology-canvas" class="relative w-full h-[540px] md:h-[600px] overflow-hidden min-w-[1180px] bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
             
+            <!-- Zones -->
+            <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-blue-500 bg-blue-500/5" style="left: 4%; top: 4%; width: 22%; height: 89%;">
+                <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-blue-500">ON-PREMISES</div>
+            </div>
+            <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-indigo-500 bg-indigo-500/5" style="left: 28%; top: 4%; width: 44%; height: 89%;">
+                <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-indigo-500">MPLS TRANSIT (WAN)</div>
+            </div>
+            <div class="absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-sky-500 bg-sky-500/5" style="left: 74%; top: 4%; width: 22%; height: 89%;">
+                <div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-sky-500">CLOUD REGION</div>
+            </div>
+
+            <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
+
+            <!-- Dynamic Labels Layer -->
+            <div id="labels-layer"></div>
+
+            <!-- Nodes -->
+            <!-- Host A -->
+            <div id="node-host-a" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:15%;top:80%;transform:translate(-50%,-50%)">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">Compute</div>
+                <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                    <i class="fas fa-server text-base text-slate-700 dark:text-slate-300"></i>
+                </div>
+                <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Host-A</h3>
+                <div class="text-[8px] font-mono text-slate-500 mt-0.5">10.1.100.10/24</div>
+                <span id="state-host-a" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
+            </div>
+
+            <!-- VTEP On-Prem -->
+            <div id="node-vtep-onprem" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:15%;top:30%;transform:translate(-50%,-50%)">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">VTEP / L2 GW</div>
+                <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                    <i class="fas fa-network-wired text-base text-slate-700 dark:text-slate-300"></i>
+                </div>
+                <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">VTEP-OnPrem</h3>
+                <div class="text-[8px] font-mono text-slate-500 mt-0.5">Lo0: 10.255.0.1</div>
+                <span id="state-vtep-onprem" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">BGP UP</span>
+            </div>
+
+            <!-- PE On-Prem -->
+            <div id="node-pe-onprem" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:37%;top:50%;transform:translate(-50%,-50%)">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">PE Router</div>
+                <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                    <i class="fas fa-route text-base text-slate-700 dark:text-slate-300"></i>
+                </div>
+                <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">PE-OnPrem</h3>
+                <div class="text-[8px] font-mono text-slate-500 mt-0.5">VRF: CORP</div>
+                <span id="state-pe-onprem" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
+            </div>
+
+            <!-- PE Cloud -->
+            <div id="node-pe-cloud" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:63%;top:50%;transform:translate(-50%,-50%)">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">PE Router</div>
+                <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                    <i class="fas fa-route text-base text-slate-700 dark:text-slate-300"></i>
+                </div>
+                <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">PE-Cloud</h3>
+                <div class="text-[8px] font-mono text-slate-500 mt-0.5">VRF: CORP</div>
+                <span id="state-pe-cloud" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
+            </div>
+
+            <!-- VTEP Cloud -->
+            <div id="node-vtep-cloud" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:85%;top:30%;transform:translate(-50%,-50%)">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">VTEP / L2 GW</div>
+                <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                    <i class="fas fa-network-wired text-base text-slate-700 dark:text-slate-300"></i>
+                </div>
+                <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">VTEP-Cloud</h3>
+                <div class="text-[8px] font-mono text-slate-500 mt-0.5">Lo0: 10.255.0.2</div>
+                <span id="state-vtep-cloud" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">BGP UP</span>
+            </div>
+
+            <!-- Host B -->
+            <div id="node-host-b" class="topology-node absolute w-28 md:w-36 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10" style="left:85%;top:80%;transform:translate(-50%,-50%)">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">Compute</div>
+                <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                    <i class="fas fa-server text-base text-slate-700 dark:text-slate-300"></i>
+                </div>
+                <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Host-B</h3>
+                <div class="text-[8px] font-mono text-slate-500 mt-0.5">10.1.100.20/24</div>
+                <span id="state-host-b" class="badge-transition text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">ONLINE</span>
+            </div>
+
+            <!-- Animated Dropped Packet -->
+            <div id="animated-packet" class="absolute w-6 h-6 -ml-3 -mt-3 flex items-center justify-center z-30 transition-all duration-700 ease-in-out opacity-0" style="left:0; top:0;">
+                <i id="packet-icon" class="fas fa-envelope text-red-500 text-lg filter drop-shadow-md"></i>
+                <div id="packet-label" class="absolute -bottom-5 whitespace-nowrap text-[8px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/60 px-1 rounded border border-red-200 dark:border-red-700 hidden">DF set, length 1500</div>
+            </div>
 
             <!-- Embedded Topology Legend Overlay -->
-            <div id="topo-legend" class="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-4 text-[11px] px-4 py-2 rounded-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg pointer-events-auto">
+            <div id="topo-legend" class="absolute bottom-1 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-4 text-[11px] px-4 py-1.5 rounded-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg pointer-events-auto">
                 <span class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-emerald-500 border-t-2 border-dashed border-emerald-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Trunk (L2)</span></span>
                 <span class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-slate-400 dark:bg-slate-500 rounded-full"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">L3 Link</span></span>
                 <span class="flex items-center gap-1.5"><span class="w-4 h-0.5 border-t-2 border-dashed border-indigo-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">MPLS Path</span></span>
                 <span class="flex items-center gap-1.5"><span class="w-4 h-0.5 border-t-2 border-dashed border-violet-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">VXLAN Tunnel</span></span>
                 <span class="flex items-center gap-1.5"><span class="w-4 border-b-2 border-red-500 border-dashed"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Lỗi / Drop</span></span>
             </div>
-</section>
-            </div>
+        </section>
+    </div>
 
-            <!-- Console Terminal -->
-            <section class="bg-[#1e1e1e] rounded-2xl overflow-hidden border border-slate-700 shadow-xl flex flex-col font-mono text-sm h-[320px]">
-                <div class="bg-[#2d2d2d] px-4 py-2 flex justify-between items-center border-b border-black/50">
-                    <div class="flex space-x-2">
-                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                    </div>
-                    <div id="terminal-title" class="text-slate-400 text-xs font-bold tracking-wider">Host-A > cmd.exe</div>
-                    <div class="flex space-x-2">
-                        <i class="fas fa-terminal text-slate-500"></i>
-                    </div>
-                </div>
-                <div class="p-4 overflow-y-auto flex-1 text-green-400" id="terminal-content">
-                    <!-- Logs injected by JS --></div>
-            </section>
-        </div>
-
-        <!-- Right: Diagnostic Panels -->
+    <!-- Bottom Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Left Column: Context, Hypotheses, Fix -->
         <div class="flex flex-col gap-6">
             <!-- Action / Explanation Card -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 md:p-6 transition-colors">
@@ -292,6 +300,26 @@
                 <div id="rollback-text" class="text-xs bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700 p-3 rounded-lg text-emerald-800 dark:text-emerald-300 font-mono">
                 </div>
             </div>
+        </div>
+
+        <!-- Right Column: Console Output -->
+        <div class="flex flex-col gap-6">
+            <section class="bg-[#1e1e1e] rounded-2xl overflow-hidden border border-slate-700 shadow-xl flex flex-col font-mono text-sm h-[600px] sticky top-24">
+                <div class="bg-[#2d2d2d] px-4 py-2 flex justify-between items-center border-b border-black/50">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <div id="terminal-title" class="text-slate-400 text-xs font-bold tracking-wider">Host-A > cmd.exe</div>
+                    <div class="flex space-x-2">
+                        <i class="fas fa-terminal text-slate-500"></i>
+                    </div>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1 text-green-400" id="terminal-content">
+                    <!-- Logs injected by JS -->
+                </div>
+            </section>
         </div>
     </div>
 </main>
@@ -497,7 +525,9 @@ Ping statistics for 10.1.100.20:
                 packet: document.getElementById('animated-packet'),
                 packetIcon: document.getElementById('packet-icon'),
                 packetLabel: document.getElementById('packet-label'),
-                themeIcon: document.getElementById('theme-icon')
+                themeIcon: document.getElementById('theme-icon'),
+                topoWrapper: document.getElementById('topo-wrapper'),
+                fsToggleBtn: document.getElementById('fs-toggle-btn')
             };
 
             window.addEventListener('resize', () => {
@@ -505,7 +535,82 @@ Ping statistics for 10.1.100.20:
                 this.drawLinks(TIMELINE[this.idx].links);
             });
 
+            this.setupFullscreen();
+            this.setupDraggable();
             this.init();
+        }
+
+        setupFullscreen() {
+            if (!this.dom.fsToggleBtn || !this.dom.topoWrapper) return;
+            this.dom.fsToggleBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    if (this.dom.topoWrapper.requestFullscreen) {
+                        this.dom.topoWrapper.requestFullscreen().catch(() => {
+                            this.dom.topoWrapper.classList.toggle('fullscreen-fallback');
+                        });
+                    } else {
+                        this.dom.topoWrapper.classList.toggle('fullscreen-fallback');
+                    }
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+            
+            const handleFsChange = () => {
+                const isFs = document.fullscreenElement != null || this.dom.topoWrapper.classList.contains('fullscreen-fallback');
+                this.dom.fsToggleBtn.innerHTML = isFs ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+                this.dom.fsToggleBtn.className = isFs ? 
+                    'fixed top-4 right-4 z-[99999] w-9 h-9 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors backdrop-blur' : 
+                    'absolute top-4 right-4 z-30 w-9 h-9 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors backdrop-blur';
+                setTimeout(() => {
+                    this.clampNodes();
+                    this.drawLinks(TIMELINE[this.idx].links);
+                }, 100);
+            };
+            
+            document.addEventListener('fullscreenchange', handleFsChange);
+            document.addEventListener('webkitfullscreenchange', handleFsChange);
+        }
+        
+        setupDraggable() {
+            if (!this.dom.topoWrapper) return;
+            let isDown = false;
+            let startX, startY, scrollLeft, scrollTop;
+            
+            const startDrag = (e) => {
+                if (e.target.closest('button, a, input, select, textarea, .mode-btn, [id^="case-btn"], [id^="node-"]')) return;
+                isDown = true;
+                this.dom.topoWrapper.style.cursor = 'grabbing';
+                startX = (e.pageX || (e.touches && e.touches[0].pageX)) - this.dom.topoWrapper.offsetLeft;
+                startY = (e.pageY || (e.touches && e.touches[0].pageY)) - this.dom.topoWrapper.offsetTop;
+                scrollLeft = this.dom.topoWrapper.scrollLeft;
+                scrollTop = this.dom.topoWrapper.scrollTop;
+            };
+            
+            const stopDrag = () => {
+                isDown = false;
+                this.dom.topoWrapper.style.cursor = 'grab';
+            };
+            
+            const moveDrag = (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = (e.pageX || (e.touches && e.touches[0].pageX)) - this.dom.topoWrapper.offsetLeft;
+                const y = (e.pageY || (e.touches && e.touches[0].pageY)) - this.dom.topoWrapper.offsetTop;
+                const walkX = (x - startX) * 1.5;
+                const walkY = (y - startY) * 1.5;
+                this.dom.topoWrapper.scrollLeft = scrollLeft - walkX;
+                this.dom.topoWrapper.scrollTop = scrollTop - walkY;
+            };
+            
+            this.dom.topoWrapper.addEventListener('mousedown', startDrag);
+            this.dom.topoWrapper.addEventListener('mouseleave', stopDrag);
+            this.dom.topoWrapper.addEventListener('mouseup', stopDrag);
+            this.dom.topoWrapper.addEventListener('mousemove', moveDrag);
+            
+            this.dom.topoWrapper.addEventListener('touchstart', startDrag, { passive: true });
+            this.dom.topoWrapper.addEventListener('touchend', stopDrag);
+            this.dom.topoWrapper.addEventListener('touchmove', moveDrag, { passive: false });
         }
 
         init() {
@@ -911,156 +1016,6 @@ Ping statistics for 10.1.100.20:
     }
 
     const app = new App();
-</script>
-
-<!-- Fullscreen & Pan Topology Script -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container') || document.getElementById('topo-container');
-    if (!topo) return;
-
-    const wrapper = topo.closest('.overflow-x-auto') || topo.parentElement;
-    if (!wrapper) return;
-
-    const fsBtn = document.createElement('button');
-    fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
-    fsBtn.className = 'absolute top-4 right-4 z-30 w-8 h-8 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-md text-slate-600 dark:text-slate-300 shadow-sm hover:bg-white dark:hover:bg-slate-700 transition-colors cursor-pointer';
-    fsBtn.title = 'Toggle Fullscreen';
-    topo.appendChild(fsBtn);
-
-    let isFakeFullscreen = false;
-
-    function toggleFakeFullscreen() {
-        isFakeFullscreen = !isFakeFullscreen;
-        if (isFakeFullscreen) {
-            wrapper.classList.add('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!p-0', '!rounded-none', '!max-w-none', 'overflow-auto');
-            wrapper.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
-            wrapper.style.touchAction = 'pan-x pan-y';
-            wrapper.style.webkitOverflowScrolling = 'touch';
-
-            topo.classList.add('!min-h-full', '!h-full', '!rounded-none', '!border-0');
-
-            fsBtn.classList.remove('absolute');
-            fsBtn.classList.add('fixed');
-            fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
-            document.body.style.overflow = 'hidden';
-
-            setTimeout(() => {
-                const centerOffset = (topo.scrollWidth - wrapper.clientWidth) / 2;
-                if (centerOffset > 0) wrapper.scrollLeft = centerOffset;
-                window.dispatchEvent(new Event('resize'));
-            }, 60);
-        } else {
-            wrapper.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!p-0', '!rounded-none', '!max-w-none', 'overflow-auto');
-            wrapper.style.backgroundColor = '';
-            wrapper.style.touchAction = '';
-            wrapper.style.webkitOverflowScrolling = '';
-
-            topo.classList.remove('!min-h-full', '!h-full', '!rounded-none', '!border-0');
-
-            fsBtn.classList.remove('fixed');
-            fsBtn.classList.add('absolute');
-            fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            document.body.style.overflow = '';
-
-            setTimeout(() => {
-                window.dispatchEvent(new Event('resize'));
-            }, 60);
-        }
-    }
-
-    fsBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (document.fullscreenElement || document.webkitFullscreenElement || isFakeFullscreen) {
-            if (document.exitFullscreen) {
-                document.exitFullscreen().catch(() => {});
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            }
-            if (isFakeFullscreen) toggleFakeFullscreen();
-        } else {
-            const target = wrapper;
-            if (target.requestFullscreen) {
-                target.requestFullscreen().catch(() => {
-                    toggleFakeFullscreen();
-                });
-            } else if (target.webkitRequestFullscreen) {
-                target.webkitRequestFullscreen();
-            } else {
-                toggleFakeFullscreen();
-            }
-        }
-    });
-
-    const handleFsChange = () => {
-        const isFs = document.fullscreenElement === wrapper || document.webkitFullscreenElement === wrapper;
-        if (isFs) {
-            wrapper.classList.add('overflow-auto');
-            wrapper.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
-            wrapper.style.touchAction = 'pan-x pan-y';
-            wrapper.style.webkitOverflowScrolling = 'touch';
-            topo.classList.add('!min-h-full', '!h-full', '!rounded-none', '!border-0');
-            fsBtn.classList.remove('absolute');
-            fsBtn.classList.add('fixed');
-            fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
-            document.body.style.overflow = 'hidden';
-
-            setTimeout(() => {
-                const centerOffset = (topo.scrollWidth - wrapper.clientWidth) / 2;
-                if (centerOffset > 0) wrapper.scrollLeft = centerOffset;
-                window.dispatchEvent(new Event('resize'));
-            }, 60);
-        } else if (!isFakeFullscreen) {
-            wrapper.classList.remove('overflow-auto');
-            wrapper.style.backgroundColor = '';
-            wrapper.style.touchAction = '';
-            wrapper.style.webkitOverflowScrolling = '';
-            topo.classList.remove('!min-h-full', '!h-full', '!rounded-none', '!border-0');
-            fsBtn.classList.remove('fixed');
-            fsBtn.classList.add('absolute');
-            fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            document.body.style.overflow = '';
-
-            setTimeout(() => {
-                window.dispatchEvent(new Event('resize'));
-            }, 60);
-        }
-    };
-
-    document.addEventListener('fullscreenchange', handleFsChange);
-    document.addEventListener('webkitfullscreenchange', handleFsChange);
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isFakeFullscreen) {
-            toggleFakeFullscreen();
-        }
-    });
-
-    // Touch & Pointer Drag-to-Pan engine (allows move around on mobile & desktop)
-    let isPanning = false;
-    let startX = 0, startY = 0;
-    let scrollStartLeft = 0, scrollStartTop = 0;
-
-    topo.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('button, a, input, select, textarea, .mode-btn, [id^="case-btn"], [id^="node-"]')) return;
-        isPanning = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        scrollStartLeft = wrapper.scrollLeft;
-        scrollStartTop = wrapper.scrollTop;
-    });
-
-    window.addEventListener('pointermove', (e) => {
-        if (!isPanning) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        wrapper.scrollLeft = scrollStartLeft - dx;
-        wrapper.scrollTop = scrollStartTop - dy;
-    });
-
-    const stopPan = () => { isPanning = false; };
-    window.addEventListener('pointerup', stopPan);
-    window.addEventListener('pointercancel', stopPan);
-});
 </script>
 
 </body>

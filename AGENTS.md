@@ -80,10 +80,15 @@ _(Translator note: If the user explicitly asks for an all-English lab, Vietnames
 
 ## 8. Strict UI Component Pre-Flight & Layout Geometry Rules
 
-Whenever building or editing a lab interface, the AI MUST strictly follow these verified UI patterns to guarantee visual consistency across the portfolio:
-
-- **Header Bar Alignment & Unified Control Cluster (matching `vxlan-mtu-blackhole.html`):** Must use standard sticky header (`sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800`), containing a type icon gradient badge (`w-10 h-10 rounded-lg`), `Portfolio` link back to `../../index.html`, and page H1.
-    - **Playback Controls Placement:** For timeline or interactive visualizer labs, all playback controls (`prev`, `play/pause`, `next`, `reset`) MUST be grouped with the theme toggle in the **top-right header** inside a unified rounded-full pill container (`flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner`).
+- **Header Bar Standard & Unified Control Cluster (Portfolio Master Standard):**
+  Must use standard sticky header (`sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors`) with container `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4`:
+    - **Identity Cluster (Left):**
+      - Type icon gradient badge: `w-10 h-10 rounded-lg bg-gradient-to-br ... flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0` linked back to `../../index.html`.
+      - Vertical divider: `h-6 w-px bg-slate-300 dark:bg-slate-700 hidden md:block shrink-0`.
+      - Text column (`flex flex-col min-w-0`):
+        - Portfolio breadcrumb link: `<a href="../../index.html" class="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-amber-500 uppercase tracking-wider mb-0.5 truncate transition-colors flex items-center gap-1"><i class="fas fa-arrow-left text-[10px]"></i> Portfolio</a>`.
+        - Lab title: `<h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight truncate">Lab Title</h1>`.
+    - **Playback Controls Placement (Right):** For timeline or interactive visualizer labs, all playback controls (`prev`, `play/pause`, `next`, `reset`) MUST be grouped with the theme toggle in the **top-right header** inside a unified rounded-full pill container (`flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner shrink-0`).
     - **STRICT PROHIBITION:** Never invent custom isolated bottom footer bars for step navigation/playback controls. All controls belong in the top-right header cluster to preserve maximum vertical canvas height and consistency.
 - **Dual-Layer Cable Connector Standard:**
   All SVG topology links MUST use the verified dual-layer cable architecture:
@@ -116,17 +121,33 @@ Whenever building or editing a lab interface, the AI MUST strictly follow these 
 **Trigger:** Whenever the user asks to "migrate lab X to the EVPN topology standard" or similar.
 
 When instructed to migrate an older lab to the EVPN topology standard, you MUST strictly apply these transformations without altering academic content or lab logic:
-1. **Layout & HTML Structure:**
-   - `<main>` must use `flex-col` layout (e.g. `flex-1 w-full max-w-7xl mx-auto flex flex-col`).
-   - The Topology canvas must be a **full-width block** at the top (`w-full overflow-x-auto` wrapper). Never split the topology into columns.
-   - All other panels (Context, Stepper, CLI, Hypotheses, Tables) must be moved **below** the topology into a 2-column grid (`grid-cols-1 lg:grid-cols-2`).
-2. **Data-driven Topology Engine (JS):**
+
+1. **Header Alignment:**
+   - Migrate Header to the Master Standard (Rule 8): sticky header, gradient icon badge `w-10 h-10`, divider, uppercase `Portfolio` link, and `text-xl font-bold` H1 title.
+
+2. **Layout & HTML Hierarchy (`<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">`):**
+   - **Order 1: Symptom / Ticket Banner (Troubleshooting labs):** Placed at the very top of `<main>` before the Stepper (`bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl px-6 py-4 flex items-start gap-4`).
+   - **Order 2: Timeline Stepper:** Placed directly above the topology canvas (`bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto`).
+   - **Order 3: Full-width Topology Canvas:** Positioned directly below the Stepper as a full-width block (`#topo-wrapper` with `w-full overflow-x-auto drag-wrapper`).
+     - Includes `#fs-toggle-btn` floating fullscreen button (`absolute top-4 right-4 z-30`).
+     - `#topology-canvas` with solid background (`bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner`), height `h-[480px] md:h-[500px]`, `min-w-[1180px]`.
+     - Embedded bottom Legend Overlay (`#topo-legend`).
+   - **Order 4: Bottom 2-Column Content Grid (`grid grid-cols-1 lg:grid-cols-2 gap-6`):**
+     - **Left Column:** Action / Explanation Card, Hypothesis List (`#hypothesis-panel`), Root Cause Panel (`#root-cause-panel`), Fix MOP Panel (`#fix-panel`).
+     - **Right Column:** macOS-style CLI Terminal (`bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl flex flex-col font-mono text-sm h-[600px] sticky top-24`).
+   - **Background Grid:** The body must display the global blueprint grid (from `theme.css`). If Tailwind overrides it, append an inline `<style>` enforcing `body { background-image: linear-gradient(...) !important; }`.
+   - **Solid Canvas:** The topology canvas container itself (`#topology-canvas`) MUST have a solid background (`bg-slate-50 dark:bg-[#0f172a]`) to block the body grid inside the diagram.
+
+3. **Data-driven Topology Engine (JS):**
    - Define `REF_W = 1180` and `REF_H = 500`.
    - Maintain state in a central `topoData` object: `{ zones: [], nodes: [], links: [] }`.
    - Nodes must use absolute percentage positioning `(x / REF_W * 100)%` and `transform: translate(-50%, -50%)`.
+   - **Geometry Clearance:** When placing nodes inside a Zone, ensure the `y` coordinate is large enough (e.g., `y >= 185`) to avoid the node card (which extends ~70px upward from its center) overlapping with the Zone's top-aligned title (`top-4`).
    - Implement `renderTopology()`, `clampNodes()`, and `drawLinks()` to render the 5-layer cards and dual-layer cables dynamically.
-3. **Integration with Existing Logic:**
+
+4. **Integration with Existing Logic:**
    - Rewrite the simulator's `renderStep(index)` function to read the timeline data, update `topoData` attributes (role, status, health/color), and invoke `renderTopology()`.
-4. **Packet Animations:**
+
+5. **Packet Animations:**
    - Replace CSS `@keyframes` with the Web Animations API (`element.animate(...)`).
    - Dynamically calculate source/destination coordinates using `getBoundingClientRect()` relative to the canvas so animations remain accurate on window resize.
