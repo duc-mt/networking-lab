@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRRP Static Route Source IP — Troubleshooting Lab</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    },
+                    colors: { slate: { 850: '#151e2e' } }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Apply the saved theme before first paint -->
+    <script src="../../assets/js/theme-init.js"></script>
+    <!-- Shared theme CSS -->
+    <link rel="stylesheet" href="../../assets/css/theme.css" />
+
+    <style>
+        /* Explicit Blueprint Grid for Topology Canvas */
+        .topo-grid {
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .dark .topo-grid {
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.14) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.14) 1px, transparent 1px);
+        }
+        .topology-node { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Dual-Layer Cable Standard */
+        .link-track {
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke: rgba(203, 213, 225, 0.45);
+        }
+        .dark .link-track {
+            stroke: rgba(51, 65, 85, 0.55);
+        }
+        
+        .link-flow {
+            fill: none;
+            stroke-linecap: round;
+            stroke-width: 4;
+            stroke-dasharray: 12 12;
+            transition: all 0.5s ease;
+        }
+        
+        .link-flow-emerald { stroke: #10b981; filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.75)); }
+        .link-flow-violet { stroke: #818cf8; filter: drop-shadow(0 0 5px rgba(129, 140, 248, 0.7)); }
+        .link-flow-red { stroke: rgba(239, 68, 68, 0.85); stroke-dasharray: 4 12; }
+        .link-flow-slate { stroke: #94a3b8; stroke-dasharray: none; }
+        .dark .link-flow-slate { stroke: #475569; }
+
+        .topology-hit {
+            fill: none;
+            stroke: transparent;
+            stroke-width: 24;
+            cursor: pointer;
+        }
+
+        @keyframes dash { to { stroke-dashoffset: -24; } }
+        .animate-dash { animation: dash 1.2s linear infinite; }
+
+        /* Smooth state transitions for badges */
+        .badge-transition { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        
+        /* Draggable Wrapper */
+        .drag-wrapper { touch-action: pan-x pan-y; cursor: grab; }
+        .drag-wrapper:active { cursor: grabbing; }
+        
+        .fullscreen-fallback {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 9999 !important;
+            background: inherit;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 flex flex-col min-h-screen transition-colors duration-300">
+
+<!-- Header -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
+    <div class="max-w-[1600px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <a href="../../index.html" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-rose-500 to-orange-600 flex items-center justify-center text-white shadow-sm">
+                    <i class="fas fa-stethoscope text-lg"></i>
+                </div>
+                <h1 class="font-bold text-sm md:text-base hidden sm:block">VRRP Route Next-Hop Source IP</h1>
+            </div>
+        </div>
+        
+        <!-- Unified Control Cluster -->
+        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner">
+            <button onclick="app.prevStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i class="fas fa-backward-step"></i></button>
+            <div id="play-pause-btn" onclick="app.togglePlay()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast cursor-pointer"><i class="fas fa-play"></i></div>
+            <button onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast"><i class="fas fa-forward-step"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" aria-label="Đổi giao diện"><i id="theme-icon" class="fas fa-sun"></i></button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
+
+    <!-- Timeline Stepper -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
+        <div class="min-w-[700px]">
+            <div class="relative flex justify-between items-center w-full">
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
+                <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-amber-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out" style="width:0%"></div>
+                <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-2"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Topology Section (Full Width Top) -->
+    <div id="topo-wrapper" class="w-full overflow-x-auto drag-wrapper bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner relative topo-grid">
+        <button id="fs-toggle-btn" class="absolute top-4 right-4 z-30 w-9 h-9 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors backdrop-blur">
+            <i class="fas fa-expand"></i>
+        </button>
+        
+        <section id="topology-canvas" class="relative w-full h-[540px] md:h-[600px] overflow-hidden min-w-[1180px]">
+            <!-- Dynamic elements will be injected here by renderTopology() -->
+            <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
+            <div id="labels-layer"></div>
+            
+            <div id="animated-packet" class="absolute w-6 h-6 -ml-3 -mt-3 flex items-center justify-center z-30 opacity-0 pointer-events-none" style="left:0; top:0;">
+                <i id="packet-icon" class="fas fa-envelope text-red-500 text-lg filter drop-shadow-md"></i>
+                <div id="packet-label" class="absolute -bottom-6 whitespace-nowrap text-[9px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/60 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-700 hidden"></div></div>
+        
+
+            <!-- Embedded Topology Legend Overlay -->
+            <div id="topo-legend" class="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-4 text-[11px] px-4 py-2 rounded-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg pointer-events-auto">
+                <span class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-slate-400 dark:bg-slate-500 rounded-full"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Link Bình Thường</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-4 border-b-2 border-violet-500 border-dashed"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Src IP = VIP</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-4 border-b-2 border-red-500 border-dashed"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Link Đứt/Drop</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-4 border-b-2 border-emerald-500 border-dashed"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Src IP = Vật Lý (OK)</span></span>
+            </div>
+</section>
+    </div>
+
+    
+
+    <!-- Bottom Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Left Column: Context, Hypotheses, Fix -->
+        <div class="flex flex-col gap-6">
+            <!-- Symptom Banner -->
+            <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl px-6 py-4 flex items-start gap-4">
+                <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0 mt-0.5">
+                    <i class="fas fa-triangle-exclamation text-red-600 dark:text-red-400 text-lg"></i>
+                </div>
+                <div>
+                    <div class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">Ticket #INC-2024-VRRP — Mức độ: MEDIUM</div>
+                    <div class="font-bold text-red-800 dark:text-red-300 text-sm md:text-base leading-snug">
+                        Triệu chứng: Node Master không thể ping tới subnet VPN 10.10.248.0/24 phía sau Firewall. Tuy nhiên, node Standby lại ping được bình thường mặc dù cấu hình static route (nhìn qua) hoàn toàn giống nhau.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action / Explanation Card -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 md:p-6 transition-colors">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <span id="stage-badge" class="inline-flex self-start items-center px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border border-blue-300 dark:border-blue-700 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 shrink-0">
+                        <i class="fas fa-search mr-1.5"></i> TRIAGE
+                    </span>
+                </div>
+                <h2 id="stage-title" class="text-lg font-bold text-slate-800 dark:text-white mt-4 mb-2">Tiếp nhận sự cố & Mô phỏng</h2>
+                <div id="stage-desc" class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4"></div>
+            </div>
+
+            <!-- Hypothesis List -->
+            <div id="hypothesis-panel" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 md:p-6 transition-colors flex-1 flex flex-col">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-widest mb-4 flex items-center">
+                    <i class="fas fa-list-check text-slate-400 mr-2"></i> Danh sách Giả thuyết
+                </h3>
+                <ul id="hypothesis-list" class="space-y-3 text-sm text-slate-600 dark:text-slate-300"></ul>
+            </div>
+
+            <!-- Root Cause (Hidden initially) -->
+            <div id="root-cause-panel" class="hidden bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 shadow-sm rounded-2xl p-5 md:p-6">
+                <h3 class="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest mb-3 flex items-center">
+                    <i class="fas fa-bullseye text-amber-500 mr-2"></i> Nguyên nhân gốc rễ
+                </h3>
+                <div id="root-cause-text" class="text-sm text-amber-900 dark:text-amber-200 leading-relaxed font-medium"></div>
+            </div>
+
+            <!-- Fix (Hidden initially) -->
+            <div id="fix-panel" class="hidden bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 shadow-sm rounded-2xl p-5 md:p-6">
+                <h3 class="text-sm font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-3 flex items-center">
+                    <i class="fas fa-wrench text-emerald-500 mr-2"></i> Biện pháp Khắc phục
+                </h3>
+                <div id="fix-text" class="text-sm text-emerald-900 dark:text-emerald-200 leading-relaxed font-medium mb-4"></div>
+                <div id="rollback-text" class="text-xs bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700 p-3 rounded-lg text-emerald-800 dark:text-emerald-300 font-mono"></div>
+            </div>
+        </div>
+
+        <!-- Right Column: CLI Terminal -->
+        <div class="flex flex-col gap-6">
+            <section class="bg-[#1e1e1e] rounded-2xl overflow-hidden border border-slate-700 shadow-xl flex flex-col font-mono text-sm h-[600px] sticky top-24">
+                <div class="bg-[#2d2d2d] px-4 py-2 flex justify-between items-center border-b border-black/50">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <div id="terminal-title" class="text-slate-400 text-xs font-bold tracking-wider">vt100</div>
+                    <div class="flex space-x-2">
+                        <i class="fas fa-terminal text-slate-500"></i>
+                    </div>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1 text-emerald-400 whitespace-pre-wrap" id="terminal-content"></div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<script>
+    const REF_W = 1180;
+    const REF_H = 500;
+
+    // EVPN Data-driven Topology Engine State
+    const topoData = {
+        zones: [
+            { id: 'zone-lan', title: 'LAN SEGMENT 10.10.4.0/28', color: 'blue', x: 200, y: 240, w: 320, h: 420 },
+            { id: 'zone-vpn', title: 'VPN SUBNET', color: 'indigo', x: 920, y: 240, w: 320, h: 420 }
+        ],
+        nodes: [
+            { id: 'node-master', role: 'VRRP Master', icon: 'fa-route', name: 'GW-Master', ip: 'eth1: 10.10.4.2<br>VIP: 10.10.4.1', x: 200, y: 165, state: 'ONLINE', health: 'green' },
+            { id: 'node-standby', role: 'VRRP Standby', icon: 'fa-route', name: 'GW-Standby', ip: 'eth1: 10.10.4.3<br>VIP: (None)', x: 200, y: 355, state: 'ONLINE', health: 'green' },
+            { id: 'node-fw', role: 'Gateway FW', icon: 'fa-shield-halved', name: 'FW-CORE', ip: 'eth1: 10.10.4.4', x: 560, y: 240, state: 'ACTIVE', health: 'green' },
+            { id: 'node-vpn', role: 'VPN Client', icon: 'fa-laptop', name: 'VPN-Host', ip: '10.10.248.10', x: 920, y: 240, state: 'ONLINE', health: 'green' }
+        ],
+        links: [
+            { id: 'l1', from: 'node-master', to: 'node-fw', curve: 20, state: 'slate' },
+            { id: 'l2', from: 'node-standby', to: 'node-fw', curve: -20, state: 'slate' },
+            { id: 'l3', from: 'node-fw', to: 'node-vpn', curve: 0, state: 'slate' }
+        ]
+    };
+
+    const TIMELINE = [
+        {
+            step: 1, phase: 'TRIAGE',
+            title: 'Hiện tượng: Ping lỗi trên Master',
+            desc: 'Thử nghiệm Ping tới subnet VPN 10.10.248.0/24. Kết quả cho thấy từ Master bị rớt 100%, trong khi Standby cùng subnet vẫn ping bình thường.',
+            terminalTitle: 'admin@GW-Master:~$',
+            cli: `admin@GW-Master:~$ ping 10.10.248.10 -c 2
+PING 10.10.248.10 (10.10.248.10) 56(84) bytes of data.
+
+--- 10.10.248.10 ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 1024ms
+
+admin@GW-Standby:~$ ping 10.10.248.10 -c 2
+PING 10.10.248.10 (10.10.248.10) 56(84) bytes of data.
+64 bytes from 10.10.248.10: icmp_seq=1 ttl=63 time=2.12 ms
+64 bytes from 10.10.248.10: icmp_seq=2 ttl=63 time=1.85 ms`,
+            hypotheses: [
+                { id: 1, text: 'Firewall block IP của GW Master', status: 'investigating' },
+                { id: 2, text: 'GW Standby có bảng định tuyến (Route Table) khác GW Master', status: 'investigating' },
+                { id: 3, text: 'Lỗi chọn Source IP do Master có interface ảo (VRRP VIP)', status: 'investigating' }
+            ],
+            nodeUpdates: {
+                'node-master': { health: 'red', state: 'PING DROP' },
+                'node-standby': { health: 'green', state: 'PING OK' },
+                'node-fw': { health: 'green', state: 'ACTIVE' }
+            },
+            linkUpdates: { 'l1': 'red animate-dash', 'l2': 'emerald', 'l3': 'slate' },
+            packet: {
+                from: 'node-master', to: 'node-fw', 
+                icon: 'fa-envelope text-red-500', label: 'ICMP (Drop)'
+            }
+        },
+        {
+            step: 2, phase: 'ISOLATE',
+            title: 'Kiểm tra bảng định tuyến và Source IP',
+            desc: 'Kiểm tra Route table của Linux Kernel, cả Master và Standby đều có static route: `10.10.248.0/24 via 10.10.4.4`. Tuy nhiên khi dùng lệnh `ip route get` để xem Kernel quyết định Source IP thế nào, ta thấy điều bất thường.',
+            terminalTitle: 'admin@GW-Master:~$',
+            cli: `admin@GW-Master:~$ show ip route 10.10.248.0/24
+Routing entry for 10.10.248.0/24
+  Known via "static", distance 1, metric 0, best
+  * 10.10.4.4, via eth1
+
+admin@GW-Master:~$ ip route get 10.10.248.10
+10.10.248.10 via 10.10.4.4 dev eth1v10v4 src 10.10.4.1 
+    cache 
+
+! BẤT THƯỜNG: Linux Kernel quyết định đẩy gói tin ra với Source IP là 10.10.4.1 (VRRP VIP) thông qua interface ảo eth1v10v4 thay vì IP thật của eth1.`,
+            hypotheses: [
+                { id: 1, text: 'Firewall block IP của GW Master', status: 'ruled_out' },
+                { id: 2, text: 'GW Standby có bảng định tuyến (Route Table) khác GW Master', status: 'ruled_out' },
+                { id: 3, text: 'Lỗi chọn Source IP do Master có interface ảo (VRRP VIP)', status: 'confirmed' }
+            ],
+            nodeUpdates: {
+                'node-master': { health: 'yellow', state: 'SRC IP = VIP' },
+                'node-standby': { health: 'green', state: 'ONLINE' },
+                'node-fw': { health: 'red', state: 'NO ROUTE BACK' }
+            },
+            linkUpdates: { 'l1': 'violet animate-dash', 'l2': 'slate', 'l3': 'slate' },
+            packet: {
+                from: 'node-master', to: 'node-fw', 
+                icon: 'fa-envelope text-violet-500', label: 'Src: 10.10.4.1 (VIP)'
+            }
+        },
+        {
+            step: 3, phase: 'ROOT CAUSE',
+            title: 'Phân tích hành vi Kernel Connected Route',
+            desc: 'Khi Static route không chỉ định interface ra, Kernel phải resolve next-hop `10.10.4.4` dựa vào Connected route. Trên Master có 2 interface cùng chung subnet `10.10.4.0/28` là `eth1` và `eth1v10v4`. Kernel đánh dấu `eth1v10v4` là primary (có dấu *), do đó gói tin bị ép Source IP thành VIP. Firewall nhận được gói tin từ VIP, nhưng không có route trả về VIP hoặc ARP trả về không khớp.',
+            terminalTitle: 'admin@GW-Master:~$',
+            cli: `admin@GW-Master:~$ show ip route connected
+C>* 10.10.4.0/28 is directly connected, eth1v10v4
+C   10.10.4.0/28 is directly connected, eth1
+
+! Kernel luôn ưu tiên interface có dấu * (Primary)
+! Standby không bị lỗi này vì Standby không gán VIP, interface eth1v10v4 không có IP nên Kernel chỉ có 1 lựa chọn là eth1.`,
+            hypotheses: [
+                { id: 1, text: 'Firewall block IP của GW Master', status: 'ruled_out' },
+                { id: 2, text: 'GW Standby có bảng định tuyến (Route Table) khác GW Master', status: 'ruled_out' },
+                { id: 3, text: 'Lỗi chọn Source IP do Master có interface ảo (VRRP VIP)', status: 'confirmed' }
+            ],
+            nodeUpdates: {
+                'node-master': { health: 'yellow', state: 'KERNEL ROUTE ERR' },
+                'node-fw': { health: 'red', state: 'DROP REPLY' }
+            },
+            linkUpdates: { 'l1': 'violet animate-dash', 'l2': 'slate', 'l3': 'slate' },
+            packet: null,
+            rootCause: 'Static route được cấu hình chỉ có Next-hop mà không chỉ định rõ Interface. Kernel Linux resolve Next-hop 10.10.4.4 bằng cách tìm Connected Route. Do interface ảo VRRP (eth1v10v4) được ưu tiên làm Primary Connected Route trên node Master, Kernel ép Source IP của gói tin thành VRRP VIP (10.10.4.1). Firewall không thể trả lời packet về địa chỉ VIP do thiếu route hoặc sai MAC.',
+            fix: null
+        },
+        {
+            step: 4, phase: 'FIX',
+            title: 'Khắc phục: Chỉ định Next-hop kèm Interface',
+            desc: 'Để ép Kernel xuất phát gói tin từ IP thật của node (eth1), ta cần cấu hình lại Static route chỉ định TẤT CẢ next-hop và interface. Lưu ý: KHÔNG nên chỉ định interface mà không có next-hop, vì sẽ gây ra lỗi Proxy ARP.',
+            terminalTitle: 'GW-Master(config)#',
+            cli: `admin@GW-Master:~$ configure
+GW-Master(config)# delete protocols static route 10.10.248.0/24 next-hop 10.10.4.4
+GW-Master(config)# set protocols static route 10.10.248.0/24 next-hop 10.10.4.4 interface eth1
+GW-Master(config)# commit
+[OK]
+GW-Master(config)# save
+Saving configuration to '/config/config.boot'...
+Done`,
+            hypotheses: [
+                { id: 1, text: 'Firewall block IP của GW Master', status: 'ruled_out' },
+                { id: 2, text: 'GW Standby có bảng định tuyến (Route Table) khác GW Master', status: 'ruled_out' },
+                { id: 3, text: 'Lỗi chọn Source IP do Master có interface ảo (VRRP VIP)', status: 'confirmed' }
+            ],
+            nodeUpdates: {
+                'node-master': { health: 'emerald', state: 'RECONFIGURING' },
+                'node-fw': { health: 'green', state: 'ACTIVE' }
+            },
+            linkUpdates: { 'l1': 'emerald animate-dash', 'l2': 'slate', 'l3': 'slate' },
+            packet: null,
+            rootCause: 'Static route được cấu hình chỉ có Next-hop mà không chỉ định rõ Interface. Kernel Linux resolve Next-hop 10.10.4.4 bằng cách tìm Connected Route. Do interface ảo VRRP (eth1v10v4) được ưu tiên làm Primary Connected Route trên node Master, Kernel ép Source IP của gói tin thành VRRP VIP (10.10.4.1). Firewall không thể trả lời packet về địa chỉ VIP do thiếu route hoặc sai MAC.',
+            fix: 'Xóa Static Route cũ và thêm lại bằng cấu hình đầy đủ: Set next-hop IP kết hợp với physical interface (eth1). Kernel lúc này sẽ luôn resolve next-hop qua cổng eth1, và sử dụng IP vật lý 10.10.4.2 làm Source IP. (Lưu ý: Không chỉ set interface không có next-hop vì Kernel sẽ đẩy ARP request cho mọi IP đích, yêu cầu Firewall phải Proxy ARP).',
+            rollback: 'Rollback: `delete protocols static route 10.10.248.0/24 next-hop 10.10.4.4 interface eth1`'
+        },
+        {
+            step: 5, phase: 'VERIFY',
+            title: 'Xác nhận xử lý sự cố hoàn tất',
+            desc: 'Sau khi cấu hình, ta dùng `ip route get` để xác nhận Source IP đã chuyển sang địa chỉ vật lý, và Ping tới subnet VPN thành công.',
+            terminalTitle: 'admin@GW-Master:~$',
+            cli: `admin@GW-Master:~$ ip route get 10.10.248.10
+10.10.248.10 via 10.10.4.4 dev eth1 src 10.10.4.2 
+    cache 
+
+admin@GW-Master:~$ ping 10.10.248.10 -c 2
+PING 10.10.248.10 (10.10.248.10) 56(84) bytes of data.
+64 bytes from 10.10.248.10: icmp_seq=1 ttl=63 time=2.15 ms
+64 bytes from 10.10.248.10: icmp_seq=2 ttl=63 time=1.92 ms
+
+--- 10.10.248.10 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1002ms
+
+→ Tuyệt vời! Sự cố đã được xử lý triệt để.`,
+            hypotheses: [
+                { id: 1, text: 'Firewall block IP của GW Master', status: 'ruled_out' },
+                { id: 2, text: 'GW Standby có bảng định tuyến (Route Table) khác GW Master', status: 'ruled_out' },
+                { id: 3, text: 'Lỗi chọn Source IP do Master có interface ảo (VRRP VIP)', status: 'confirmed' }
+            ],
+            nodeUpdates: {
+                'node-master': { health: 'green', state: 'PING OK' },
+                'node-standby': { health: 'green', state: 'ONLINE' },
+                'node-fw': { health: 'green', state: 'ACTIVE' },
+                'node-vpn': { health: 'green', state: 'ONLINE' }
+            },
+            linkUpdates: { 'l1': 'emerald animate-dash', 'l2': 'slate', 'l3': 'emerald animate-dash' },
+            packet: {
+                from: 'node-master', to: 'node-vpn', 
+                icon: 'fa-envelope text-emerald-500', label: 'Src: 10.10.4.2 (Physical)'
+            },
+            rootCause: 'Static route được cấu hình chỉ có Next-hop mà không chỉ định rõ Interface. Kernel Linux resolve Next-hop 10.10.4.4 bằng cách tìm Connected Route. Do interface ảo VRRP (eth1v10v4) được ưu tiên làm Primary Connected Route trên node Master, Kernel ép Source IP của gói tin thành VRRP VIP (10.10.4.1). Firewall không thể trả lời packet về địa chỉ VIP do thiếu route hoặc sai MAC.',
+            fix: 'Xóa Static Route cũ và thêm lại bằng cấu hình đầy đủ: Set next-hop IP kết hợp với physical interface (eth1). Kernel lúc này sẽ luôn resolve next-hop qua cổng eth1, và sử dụng IP vật lý 10.10.4.2 làm Source IP. (Lưu ý: Không chỉ set interface không có next-hop vì Kernel sẽ đẩy ARP request cho mọi IP đích, yêu cầu Firewall phải Proxy ARP).',
+            rollback: 'Rollback: `delete protocols static route 10.10.248.0/24 next-hop 10.10.4.4 interface eth1`'
+        }
+    ];
+
+    class App {
+        constructor() {
+            this.idx = 0;
+            this.isPlaying = false;
+            this.interval = null;
+            this.dom = {
+                svg: document.getElementById('links-svg'),
+                labels: document.getElementById('labels-layer'),
+                canvas: document.getElementById('topology-canvas'),
+                stepper: document.getElementById('stepper-container'),
+                progress: document.getElementById('timeline-progress'),
+                stageBadge: document.getElementById('stage-badge'),
+                title: document.getElementById('stage-title'),
+                desc: document.getElementById('stage-desc'),
+                termTitle: document.getElementById('terminal-title'),
+                termContent: document.getElementById('terminal-content'),
+                hypoList: document.getElementById('hypothesis-list'),
+                rootPanel: document.getElementById('root-cause-panel'),
+                rootText: document.getElementById('root-cause-text'),
+                fixPanel: document.getElementById('fix-panel'),
+                fixText: document.getElementById('fix-text'),
+                rollbackText: document.getElementById('rollback-text'),
+                packet: document.getElementById('animated-packet'),
+                packetIcon: document.getElementById('packet-icon'),
+                packetLabel: document.getElementById('packet-label'),
+                themeIcon: document.getElementById('theme-icon'),
+                topoWrapper: document.getElementById('topo-wrapper'),
+                fsToggleBtn: document.getElementById('fs-toggle-btn')
+            };
+            this.currentAnimation = null;
+
+            window.addEventListener('resize', () => {
+                this.renderTopology();
+                this.drawLinks();
+                this.animatePacket(TIMELINE[this.idx].packet);
+            });
+            
+            this.setupFullscreen();
+            this.setupDraggable();
+            this.init();
+        }
+        
+        setupFullscreen() {
+            this.dom.fsToggleBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    if (this.dom.topoWrapper.requestFullscreen) {
+                        this.dom.topoWrapper.requestFullscreen().catch(() => {
+                            this.dom.topoWrapper.classList.toggle('fullscreen-fallback');
+                        });
+                    } else {
+                        this.dom.topoWrapper.classList.toggle('fullscreen-fallback');
+                    }
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+            
+            const handleFsChange = () => {
+                const isFs = document.fullscreenElement != null || this.dom.topoWrapper.classList.contains('fullscreen-fallback');
+                this.dom.fsToggleBtn.innerHTML = isFs ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+                this.dom.fsToggleBtn.className = isFs ? 
+                    'fixed top-4 right-4 z-[99999] w-9 h-9 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors backdrop-blur' : 
+                    'absolute top-4 right-4 z-30 w-9 h-9 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors backdrop-blur';
+                setTimeout(() => {
+                    this.renderTopology();
+                    this.drawLinks();
+                    this.animatePacket(TIMELINE[this.idx].packet);
+                }, 100);
+            };
+            
+            document.addEventListener('fullscreenchange', handleFsChange);
+            document.addEventListener('webkitfullscreenchange', handleFsChange);
+        }
+        
+        setupDraggable() {
+            let isDown = false;
+            let startX, startY, scrollLeft, scrollTop;
+            
+            const startDrag = (e) => {
+                isDown = true;
+                this.dom.topoWrapper.style.cursor = 'grabbing';
+                startX = (e.pageX || e.touches[0].pageX) - this.dom.topoWrapper.offsetLeft;
+                startY = (e.pageY || e.touches[0].pageY) - this.dom.topoWrapper.offsetTop;
+                scrollLeft = this.dom.topoWrapper.scrollLeft;
+                scrollTop = this.dom.topoWrapper.scrollTop;
+            };
+            
+            const endDrag = () => {
+                isDown = false;
+                this.dom.topoWrapper.style.cursor = 'grab';
+            };
+            
+            const drag = (e) => {
+                if(!isDown) return;
+                e.preventDefault();
+                const x = (e.pageX || e.touches[0].pageX) - this.dom.topoWrapper.offsetLeft;
+                const y = (e.pageY || e.touches[0].pageY) - this.dom.topoWrapper.offsetTop;
+                const walkX = (x - startX) * 1.5;
+                const walkY = (y - startY) * 1.5;
+                this.dom.topoWrapper.scrollLeft = scrollLeft - walkX;
+                this.dom.topoWrapper.scrollTop = scrollTop - walkY;
+            };
+            
+            this.dom.topoWrapper.addEventListener('mousedown', startDrag);
+            this.dom.topoWrapper.addEventListener('touchstart', startDrag, {passive: false});
+            this.dom.topoWrapper.addEventListener('mouseleave', endDrag);
+            this.dom.topoWrapper.addEventListener('mouseup', endDrag);
+            this.dom.topoWrapper.addEventListener('touchend', endDrag);
+            this.dom.topoWrapper.addEventListener('mousemove', drag);
+            this.dom.topoWrapper.addEventListener('touchmove', drag, {passive: false});
+        }
+
+        init() {
+            let dark = false;
+            try {
+                const s = localStorage.getItem('portfolio-theme');
+                dark = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+            } catch(e){}
+            document.documentElement.classList.toggle('dark', dark);
+            if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+
+            this.buildStepper();
+            
+            setTimeout(() => {
+                this.dom.topoWrapper.scrollLeft = (this.dom.topoWrapper.scrollWidth - this.dom.topoWrapper.clientWidth) / 2;
+                this.renderStep(0);
+            }, 100);
+        }
+
+        toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            try { localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light'); } catch(e){}
+            if (this.dom.themeIcon) this.dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        buildStepper() {
+            this.dom.stepper.innerHTML = '';
+            TIMELINE.forEach((d, i) => {
+                const btn = document.createElement('button');
+                btn.className = `w-8 h-8 md:w-auto md:px-4 md:h-10 rounded-full font-bold text-xs md:text-sm transition-all duration-300 z-10 flex items-center justify-center whitespace-nowrap shadow-sm border-2 ${
+                    i === 0 ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-amber-400'
+                }`;
+                btn.innerHTML = `<span class="hidden md:block">${d.step}. ${d.phase}</span><span class="md:hidden">${d.step}</span>`;
+                btn.onclick = () => this.goTo(i);
+                btn.id = `step-btn-${i}`;
+                this.dom.stepper.appendChild(btn);
+            });
+        }
+
+        renderTopology() {
+            // Clean dynamic nodes/zones (keep SVG and animated packet)
+            const keepIds = ['links-svg', 'labels-layer', 'animated-packet', 'topo-legend'];
+            Array.from(this.dom.canvas.children).forEach(child => {
+                if (!child.id || !keepIds.includes(child.id)) {
+                    this.dom.canvas.removeChild(child);
+                }
+            });
+
+            // Draw Zones
+            topoData.zones.forEach(z => {
+                const el = document.createElement('div');
+                el.className = `absolute border-2 border-dashed rounded-xl pointer-events-none opacity-80 z-0 border-${z.color}-500 bg-${z.color}-500/5`;
+                el.style.left = `${(z.x - z.w/2) / REF_W * 100}%`;
+                el.style.top = `${(z.y - z.h/2) / REF_H * 100}%`;
+                el.style.width = `${z.w / REF_W * 100}%`;
+                el.style.height = `${z.h / REF_H * 100}%`;
+                el.innerHTML = `<div class="absolute top-4 left-5 font-black text-xs tracking-widest opacity-80 uppercase text-${z.color}-500">${z.title}</div>`;
+                this.dom.canvas.appendChild(el);
+            });
+
+            // Draw Nodes
+            topoData.nodes.forEach(n => {
+                const el = document.createElement('div');
+                el.id = n.id;
+                
+                let ringClass = '';
+                let badgeClass = 'badge-transition text-[9px] font-black tracking-widest px-2.5 py-0.5 mt-1.5 rounded-full uppercase border ';
+                
+                if (n.health === 'red') {
+                    badgeClass += 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/40 dark:text-red-400 dark:border-red-700';
+                    ringClass = 'ring-4 ring-red-400/50';
+                } else if (n.health === 'yellow') {
+                    badgeClass += 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-700';
+                    ringClass = 'ring-4 ring-yellow-400/50';
+                } else if (n.health === 'emerald') {
+                    badgeClass += 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-700';
+                    ringClass = 'ring-4 ring-emerald-400/50';
+                } else {
+                    badgeClass += 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600';
+                }
+
+                el.className = `topology-node absolute w-32 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center z-10 ${ringClass}`;
+                el.style.left = `${n.x / REF_W * 100}%`;
+                el.style.top = `${n.y / REF_H * 100}%`;
+                el.style.transform = 'translate(-50%, -50%)';
+
+                el.innerHTML = `
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">${n.role}</div>
+                    <div class="w-12 h-12 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas ${n.icon} text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white">${n.name}</h3>
+                    <div class="text-[10px] font-mono text-slate-500 mt-0.5 bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded text-center leading-tight">${n.ip}</div>
+                    <span class="${badgeClass}">${n.state}</span>
+                `;
+                this.dom.canvas.appendChild(el);
+            });
+        }
+
+        drawLinks() {
+            this.dom.svg.innerHTML = '';
+            const canvasRect = this.dom.canvas.getBoundingClientRect();
+
+            topoData.links.forEach(lDef => {
+                const srcEl = document.getElementById(lDef.from);
+                const dstEl = document.getElementById(lDef.to);
+                if (!srcEl || !dstEl) return;
+
+                const sr = srcEl.getBoundingClientRect();
+                const dr = dstEl.getBoundingClientRect();
+
+                const x1 = sr.left + sr.width/2 - canvasRect.left;
+                const y1 = sr.top + sr.height/2 - canvasRect.top;
+                const x2 = dr.left + dr.width/2 - canvasRect.left;
+                const y2 = dr.top + dr.height/2 - canvasRect.top;
+                
+                let mx = (x1 + x2) / 2;
+                let my = ((y1 + y2) / 2) + lDef.curve;
+                
+                let d = '';
+                if (lDef.curve !== 0) {
+                    d = `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;
+                } else {
+                    d = `M ${x1} ${y1} L ${x2} ${y2}`;
+                }
+
+                // Base track
+                const track = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                track.setAttribute('d', d);
+                track.setAttribute('class', 'link-track');
+                this.dom.svg.appendChild(track);
+
+                // Flow overlay
+                const flow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                flow.setAttribute('d', d);
+                flow.setAttribute('class', 'link-flow link-flow-' + lDef.state.split(' ').join(' '));
+                this.dom.svg.appendChild(flow);
+
+                // Hit area
+                const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                hit.setAttribute('d', d);
+                hit.setAttribute('class', 'topology-hit');
+                this.dom.svg.appendChild(hit);
+            });
+        }
+        
+        animatePacket(packetDef) {
+            if (this.currentAnimation) {
+                this.currentAnimation.cancel();
+            }
+            if (!packetDef) {
+                this.dom.packet.style.opacity = '0';
+                this.dom.packet.classList.add('pointer-events-none');
+                return;
+            }
+
+            const canvasRect = this.dom.canvas.getBoundingClientRect();
+            const srcEl = document.getElementById(packetDef.from);
+            const dstEl = document.getElementById(packetDef.to);
+            if (!srcEl || !dstEl) return;
+
+            const sr = srcEl.getBoundingClientRect();
+            const dr = dstEl.getBoundingClientRect();
+
+            const x1 = sr.left + sr.width/2 - canvasRect.left;
+            const y1 = sr.top + sr.height/2 - canvasRect.top;
+            const x2 = dr.left + dr.width/2 - canvasRect.left;
+            const y2 = dr.top + dr.height/2 - canvasRect.top;
+
+            this.dom.packetIcon.className = 'fas ' + packetDef.icon;
+            if (packetDef.label) {
+                this.dom.packetLabel.innerText = packetDef.label;
+                this.dom.packetLabel.classList.remove('hidden');
+            } else {
+                this.dom.packetLabel.classList.add('hidden');
+            }
+
+            this.dom.packet.style.opacity = '1';
+            this.dom.packet.classList.remove('pointer-events-none');
+
+            this.currentAnimation = this.dom.packet.animate([
+                { transform: `translate(${x1}px, ${y1}px) scale(0.75)`, opacity: 0 },
+                { transform: `translate(${x1}px, ${y1}px) scale(1)`, opacity: 1, offset: 0.1 },
+                { transform: `translate(${x2}px, ${y2}px) scale(1)`, opacity: 1, offset: 0.9 },
+                { transform: `translate(${x2}px, ${y2}px) scale(0.75)`, opacity: 0 }
+            ], {
+                duration: 2500,
+                iterations: Infinity,
+                easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+            });
+        }
+
+        renderStep(index) {
+            this.idx = index;
+            const step = TIMELINE[this.idx];
+
+            this.dom.progress.style.width = (this.idx / (TIMELINE.length - 1)) * 100 + '%';
+            
+            for (let i = 0; i < TIMELINE.length; i++) {
+                const b = document.getElementById(`step-btn-${i}`);
+                if (i < this.idx) {
+                    b.className = 'w-8 h-8 md:w-auto md:px-4 md:h-10 rounded-full font-bold text-xs md:text-sm transition-all duration-300 z-10 flex items-center justify-center whitespace-nowrap shadow-sm border-2 bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-amber-400';
+                } else if (i === this.idx) {
+                    b.className = 'w-8 h-8 md:w-auto md:px-4 md:h-10 rounded-full font-bold text-xs md:text-sm transition-all duration-300 z-10 flex items-center justify-center whitespace-nowrap shadow-sm border-2 bg-amber-500 border-amber-500 text-white transform scale-110 md:scale-105';
+                } else {
+                    b.className = 'w-8 h-8 md:w-auto md:px-4 md:h-10 rounded-full font-bold text-xs md:text-sm transition-all duration-300 z-10 flex items-center justify-center whitespace-nowrap shadow-sm border-2 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-amber-400';
+                }
+            }
+
+            this.dom.stageBadge.innerHTML = `<i class="fas fa-search mr-1.5"></i> ${step.phase}`;
+            this.dom.title.innerText = step.title;
+            this.dom.desc.innerText = step.desc;
+            this.dom.termTitle.innerText = step.terminalTitle;
+            this.dom.termContent.innerText = step.cli;
+
+            this.dom.hypoList.innerHTML = step.hypotheses.map(h => {
+                let icon = '<i class="fas fa-spinner fa-spin text-blue-500"></i>';
+                let cls = 'text-slate-600 dark:text-slate-300 font-medium';
+                if (h.status === 'ruled_out') {
+                    icon = '<i class="fas fa-xmark text-red-500"></i>';
+                    cls = 'text-slate-400 dark:text-slate-500 line-through opacity-70';
+                } else if (h.status === 'confirmed') {
+                    icon = '<i class="fas fa-check text-emerald-500"></i>';
+                    cls = 'text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded';
+                }
+                return `<li class="flex items-start gap-3"><span class="mt-0.5">${icon}</span><span class="${cls}">${h.text}</span></li>`;
+            }).join('');
+
+            // Update topoData
+            topoData.nodes.forEach(n => {
+                const update = step.nodeUpdates[n.id];
+                if (update) {
+                    n.health = update.health;
+                    n.state = update.state;
+                }
+            });
+            topoData.links.forEach(l => {
+                const update = step.linkUpdates[l.id];
+                if (update) {
+                    l.state = update;
+                }
+            });
+
+            this.renderTopology();
+            this.drawLinks();
+            this.animatePacket(step.packet);
+
+            if (step.rootCause) {
+                this.dom.rootPanel.classList.remove('hidden');
+                this.dom.rootText.innerText = step.rootCause;
+            } else {
+                this.dom.rootPanel.classList.add('hidden');
+            }
+
+            if (step.fix) {
+                this.dom.fixPanel.classList.remove('hidden');
+                this.dom.fixText.innerText = step.fix;
+                this.dom.rollbackText.innerHTML = step.rollback;
+            } else {
+                this.dom.fixPanel.classList.add('hidden');
+            }
+        }
+
+        nextStep() { if (this.idx < TIMELINE.length - 1) this.renderStep(this.idx + 1); }
+        prevStep() { if (this.idx > 0) this.renderStep(this.idx - 1); }
+        goTo(i) { this.renderStep(i); }
+        reset() { 
+            this.isPlaying = false; 
+            clearInterval(this.interval); 
+            document.getElementById('play-pause-btn').innerHTML = '<i class="fas fa-play"></i>';
+            this.renderStep(0); 
+        }
+        
+        togglePlay() {
+            const btn = document.getElementById('play-pause-btn');
+            if (this.isPlaying) {
+                this.isPlaying = false;
+                clearInterval(this.interval);
+                btn.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                if (this.idx === TIMELINE.length - 1) this.renderStep(0);
+                this.isPlaying = true;
+                btn.innerHTML = '<i class="fas fa-pause"></i>';
+                this.interval = setInterval(() => {
+                    if (this.idx < TIMELINE.length - 1) this.nextStep();
+                    else this.togglePlay();
+                }, 4000);
+            }
+        }
+    }
+
+    const app = new App();
+</script>
+</body>
+</html>

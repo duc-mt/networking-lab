@@ -184,7 +184,7 @@
     <!-- Topology Canvas -->
     <!-- Golden Standard Wrapper -->
     <div class="w-full overflow-x-auto">
-      <div id="topology-container" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-w-[900px] max-w-[1600px] mx-auto h-[500px] my-6">
+      <div id="topology-container" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full min-w-[900px] max-w-[1600px] mx-auto h-[560px] my-6">
         <!-- Zones -->
         <div id="zones-layer" class="absolute inset-0 pointer-events-none z-0"></div>
         
@@ -194,6 +194,28 @@
         
         <!-- Nodes -->
         <div id="nodes-layer" class="absolute inset-0 z-10"></div>
+
+        <!-- Embedded Topology Legend Overlay -->
+        <div class="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex flex-col gap-1.5 text-[11px] px-5 py-2.5 rounded-xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg pointer-events-auto min-w-[320px]">
+            <!-- Zones -->
+            <div class="flex items-center justify-center gap-4">
+                <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mr-2">Zones</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-blue-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">On-Prem</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-indigo-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">MPLS WAN</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-sky-500"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Cloud</span></span>
+            </div>
+            
+            <div class="w-full h-px bg-slate-200 dark:bg-slate-700 opacity-60"></div>
+            
+            <!-- Links -->
+            <div class="flex items-center justify-center gap-4">
+                <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mr-2">Links</span>
+                <span class="flex items-center gap-1.5"><span class="w-4 border-b-2 border-emerald-500 border-dashed"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Trunk (L2)</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-4 border-b-2 border-blue-500 border-dashed"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Routed</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-4 border-b-[3px] border-amber-500 border-dashed"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">MPLS</span></span>
+                <span class="flex items-center gap-1.5"><span class="w-4 border-b-[3px] border-purple-500 border-dashed"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">VXLAN</span></span>
+            </div>
+        </div>
       </div>
     </div>
 
@@ -244,9 +266,9 @@
     // --- 1. Data Schema ---
     const data = {
       zones: [
-        { id: "on-prem", label: "ON-PREMISES SITE", color: "#3b82f6", bounds: { left: 40, top: 40, width: 280, height: 420 } },
-        { id: "mpls", label: "MPLS TRANSIT (WAN)", color: "#6366f1", bounds: { left: 340, top: 40, width: 500, height: 420 } },
-        { id: "cloud", label: "CLOUD REGION", color: "#0ea5e9", bounds: { left: 860, top: 40, width: 280, height: 420 } }
+        { id: "on-prem", label: "ON-PREMISES SITE", color: "#3b82f6", bounds: { left: 40, top: 30, width: 280, height: 440 } },
+        { id: "mpls", label: "MPLS TRANSIT (WAN)", color: "#6366f1", bounds: { left: 340, top: 30, width: 500, height: 440 } },
+        { id: "cloud", label: "CLOUD REGION", color: "#0ea5e9", bounds: { left: 860, top: 30, width: 280, height: 440 } }
       ],
       nodes: [
         { id: "vtep-onprem", name: "VTEP-OnPrem", role: "VTEP / L2 GW", zone: "on-prem", icon: "fa-network-wired", x: 180, y: 150, health: "green", status: "BGP UP", specs: { loopback: "10.255.0.1", vtep_ip: "10.255.0.1", vni: "10100" }, tableType: "bgp", tableData: [ { neighbor: "10.255.0.2", asn: "65000", state: "Establ", prefixes: "2" } ] },
@@ -308,7 +330,7 @@
 
     // --- 2. Render Topology ---
     const REF_W = 1180;
-    const REF_H = 500;
+    const REF_H = 560;
 
     function renderTopology() {
       // Render Zones
