@@ -601,4 +601,15 @@ const PROJECTS = [
         status: 'soon',
         dateAdded: '2026-10-04',
     },
+    {
+        title: 'OSPF tun0 P2P Migration',
+        description:
+            'Quy trình đổi OSPF trên tun0 từ broadcast (mặc định) sang point-to-point. Khắc phục failover, dọn dẹp bầu DR/BDR trên GRE tunnels.',
+        type: 'change-mop',
+        topic: 'Routing',
+        tags: ['OSPF', 'Point-to-Point', 'GRE', 'MOP', 'VyOS'],
+        href: 'projects/change-mop/ospf-ptp-migration.html',
+        status: 'published',
+        dateAdded: '2026-10-06',
+    },
 ];
