@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captive Portal Redirect Stuck | Troubleshooting Lab</title>
+    <script src="../../assets/js/theme-init.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui','sans-serif'], mono: ['Fira Code','ui-monospace','SFMono-Regular','monospace'] } } }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/theme.css">
+    <style>
+        @keyframes dash { to { stroke-dashoffset: -16; } }
+        .animate-dash { animation: dash 1s linear infinite; }
+        @keyframes redPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0);} 50%{box-shadow:0 0 0 14px rgba(239,68,68,0.3);} }
+        .danger-pulse { animation: redPulse 1.3s infinite; }
+        @keyframes greenPulse { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0);} 50%{box-shadow:0 0 0 14px rgba(16,185,129,0.3);} }
+        .ok-pulse { animation: greenPulse 1.5s infinite; }
+        .hypothesis-strikethrough { text-decoration: line-through; opacity: 0.5; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <a href="../../index.html" class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all-fast shrink-0">
+                <i class="fas fa-stethoscope"></i>
+            </a>
+            <div>
+                <a href="../../index.html" class="text-[11px] font-semibold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Portfolio
+                </a>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">Captive Portal Redirect Stuck</h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+            <button id="btn-prev" onclick="app.prevStep()" disabled class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-amber-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-backward"></i></button>
+            <button id="btn-play" onclick="app.togglePlay()" class="w-10 h-10 rounded-full flex items-center justify-center bg-amber-500 text-white hover:bg-amber-600 shadow-md shadow-amber-500/30 transition-all-fast"><i id="icon-play" class="fas fa-play ml-1"></i></button>
+            <button id="btn-next" onclick="app.nextStep()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-amber-500 hover:shadow disabled:opacity-30 disabled:cursor-not-allowed transition-all-fast"><i class="fas fa-step-forward"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.reset()" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-red-500 hover:shadow transition-all-fast"><i class="fas fa-undo"></i></button>
+            <div class="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+            <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center text-amber-500 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow transition-all-fast" aria-label="Đổi giao diện Sáng/Tối"><i id="theme-icon" class="fas fa-sun"></i></button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
+    <!-- Symptom Banner -->
+    <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl px-6 py-4 flex items-start gap-4 mb-4">
+        <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fas fa-triangle-exclamation text-red-600 dark:text-red-400"></i>
+        </div>
+        <div>
+            <div class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">Ticket #INC-202610 — Mức độ: HIGH</div>
+            <div id="symptom-text" class="font-bold text-red-800 dark:text-red-300">Triệu chứng: Người dùng kết nối vào Wi-Fi và được redirect đúng đến trang Captive Portal. Tuy nhiên, trình duyệt bị kẹt (stuck) và xoay vòng vô tận. (Thiết bị: Check Point Quantum Spark 1800 | Ngày: 08/10/2026)</div>
+        </div>
+    </div>
+
+    <!-- Timeline Stepper -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
+        <div class="min-w-[700px]">
+
+        <div class="relative flex justify-between items-center w-full">
+            <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0"></div>
+            <div id="timeline-progress" class="absolute top-1/2 left-0 h-1 bg-amber-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500 ease-out" style="width:0%"></div>
+            <div id="stepper-container" class="flex justify-between w-full relative z-10 gap-2"></div>
+        </div>
+        </div>
+    </section>
+
+    <!-- Topology Section (Full Width Top) -->
+    <div id="topo-wrapper" class="w-full overflow-x-auto drag-wrapper">
+        <!-- Add fullscreen button if it's missing, but it's handled by JS later. We'll add it statically anyway -->
+        <button id="fs-toggle-btn" class="absolute top-4 right-4 z-30 w-9 h-9 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors backdrop-blur">
+            <i class="fas fa-expand"></i>
+        </button>
+        <section id="topology-canvas" class="relative bg-slate-50 dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden w-full h-[480px] md:h-[500px] min-w-[1180px]">
+                
+
+
+                <svg id="links-svg" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
+
+                <!-- Node: User Laptop -->
+                <div id="node-Laptop" class="absolute w-28 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:20%;top:50%;transform:translate(-50%,-50%)">
+                    <div id="role-Laptop" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-slate-100 text-slate-700 dark:bg-slate-700/50 dark:text-slate-300 border-slate-200 dark:border-slate-600">Client Device</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-mobile-alt text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">User-Mobile</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">IP: 10.10.10.50</div>
+                    <span id="state-Laptop" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">CONNECTING</span>
+                </div>
+
+                <!-- Node: Check Point FW -->
+                <div id="node-FW" class="absolute w-28 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:50%;top:50%;transform:translate(-50%,-50%)">
+                    <div id="role-FW" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-700">Check Point FW</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-shield-alt text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Quantum 1800</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">https://10.10.10.1</div>
+                    <span id="state-FW" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">REDIRECTING</span>
+                </div>
+
+                <!-- Node: Internet -->
+                <div id="node-Internet" class="absolute w-28 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10" style="left:80%;top:50%;transform:translate(-50%,-50%)">
+                    <div id="role-Internet" class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold border whitespace-nowrap bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-200 dark:border-blue-700">WAN</div>
+                    <div class="w-9 h-9 md:w-11 md:h-11 mb-1.5 bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                        <i class="fas fa-cloud text-base text-slate-700 dark:text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-white">Internet</h3>
+                    <div class="text-[8px] font-mono text-slate-500 mt-0.5">0.0.0.0/0</div>
+                    <span id="state-Internet" class="text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border">UNREACHABLE</span>
+                </div>
+
+                <!-- Port status badge'
+ — midpoint Laptop → SW-ACC -->
+                <div id="port-badge" class="hidden absolute z-20 bg-red-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-lg" style="left:33%;top:66%;transform:translate(-50%,-50%)">
+                    <i class="fas fa-lock mr-1"></i>Gi0/3 ERR-DISABLED
+                </div>
+
+                <!-- Animated packet -->
+                <div id="animated-packet" class="absolute z-50 hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold text-white whitespace-nowrap shadow-lg" style="left:0;top:0;transform:translate(-50%,-50%)">
+                    <i id="packet-icon" class="fas fa-envelope"></i>
+                    <span id="packet-label">Packet</span>
+                </div>
+
+                <!-- Embedded Topology Legend Overlay -->
+                <div id="topo-legend" class="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-4 text-[11px] px-4 py-1.5 rounded-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg pointer-events-auto">
+                    <span class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-slate-400 dark:bg-slate-500 rounded-full"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">L3 Link</span></span>
+                    <span class="flex items-center gap-1.5"><span class="w-4 border-b-2 border-red-500 border-dashed"></span><span class="text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[10px]">Lỗi / Drop</span></span>
+                </div>
+            </section>
+    </div>
+
+    <!-- Bottom 2-Column Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Left Column: Investigation Panel -->
+        <div class="flex flex-col gap-6">
+            <!-- Phase + Action -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center gap-2 mb-3">
+                    <span id="phase-badge" class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border"></span>
+                </div>
+                <h3 id="step-title" class="text-xl font-extrabold text-slate-900 dark:text-white mb-3"></h3>
+                <p id="step-desc" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300"></p>
+            </section>
+            <!-- Hypothesis Checklist -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex-1">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-list-check text-amber-500"></i>
+                    <span class="font-bold text-slate-700 dark:text-slate-300 text-sm">Danh sách Giả thuyết</span>
+                </div>
+                <ul id="hypothesis-list" class="flex flex-col gap-2"></ul>
+            </section>
+            <!-- Root Cause Banner (hidden until found) -->
+            <div id="root-cause-panel" class="hidden bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-700 rounded-2xl p-5">
+                <div class="flex items-center gap-2 mb-2 text-red-700 dark:text-red-400 font-bold text-sm">
+                    <i class="fas fa-bullseye"></i> Nguyên nhân gốc rễ
+                </div>
+                <p id="root-cause-text" class="text-sm text-red-800 dark:text-red-300 leading-relaxed"></p>
+            </div>
+
+            <!-- Fix Applied Banner -->
+            <div id="fix-panel" class="hidden bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700 rounded-2xl p-5">
+                <div class="flex items-center gap-2 mb-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
+                    <i class="fas fa-screwdriver-wrench"></i> Biện pháp Khắc phục
+                </div>
+                <p id="fix-text" class="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed"></p>
+            </div>
+        </div>
+            
+
+        <!-- Right Column: CLI Terminal -->
+        <div class="flex flex-col gap-6">
+            <!-- CLI Terminal -->
+            <section class="bg-[#1e1e1e] rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col h-[600px] sticky top-24">
+                <div class="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/50 select-none">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    </div>
+                    <span id="cli-title" class="text-xs font-mono text-slate-400">FW-1 — Console</span>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1 font-mono text-xs text-emerald-400 whitespace-pre-wrap leading-relaxed" id="cli-logs"></div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<script>
+const HYPOTHESES_MASTER = [
+    { id: 'h1', text: 'Firewall rules đang block traffic HTTP/HTTPS' },
+    { id: 'h2', text: 'Lỗi DNS khi resolve Captive Portal FQDN' },
+    { id: 'h3', text: 'Tiến trình httpd (Apache) trên Firewall bị treo (defunct)' },
+    { id: 'h4', text: 'Lỗi Certificate TLS/SSL' }
+];
+
+const TIMELINE = [
+    {
+        step: 1, phase: 'TRIAGE', phaseColor: 'amber',
+        title: 'Tiếp nhận sự cố — Xác nhận triệu chứng',
+        description: 'Người dùng kết nối Wi-Fi, redirect request được gửi nhưng trình duyệt chỉ hiện lỗi stuck (không phản hồi). Cần kiểm tra xem có drop log trên firewall hay không.',
+        cli_logs: `[Expert@FW-1:0]# fw ctl zdebug drop | grep 10.10.10.50
+(no output - không có packet nào bị drop)
+
+[Expert@FW-1:0]# fw monitor -e "accept src=10.10.10.50 and dport=443;"
+... (TCP Handshake hoàn tất, connection established)`,
+        nodes: {
+            Laptop:  { state: 'STUCK', color: 'red', border: 'border-red-500 danger-pulse' },
+            FW:      { state: 'REDIRECT OK', color: 'amber', border: 'border-amber-400' },
+            Internet:{ state: 'UNREACHABLE', color: 'slate', border: 'border-slate-300 dark:border-slate-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'FW', st: 'ACTIVE' },
+            { src: 'FW', dst: 'Internet', st: 'DOWN' },
+        ],
+        hypotheses: ['h1:investigating','h2:investigating','h3:investigating','h4:investigating'],
+        portBadge: false,
+        rootCause: null,
+        fix: null,
+        packet: null,
+        cliTitle: 'FW-1 — Expert Mode'
+    },
+    {
+        step: 2, phase: 'ISOLATE', phaseColor: 'blue',
+        title: 'Kiểm tra Firewall Logs & DNS',
+        description: 'Kiểm tra SmartConsole logs thấy traffic match rule "Captive Portal Redirect". Loại trừ <strong>H1 (Block rule)</strong>. Thử truy cập thẳng IP (https://10.10.10.1) vẫn bị lỗi stuck (không phản hồi), loại trừ <strong>H2 (DNS)</strong> và <strong>H4 (Cert Error thường sẽ có cảnh báo trình duyệt, không phải lỗi stuck (không phản hồi))</strong>.',
+        cli_logs: `SmartConsole Log Viewer:
+Time: 08:10:00  Action: Redirect
+Source: 10.10.10.50  Dest: 8.8.8.8 (HTTP)
+Rule Name: Captive Portal
+
+[Expert@FW-1:0]# curl -v -k https://10.10.10.1/connect/PortalMain
+* About to connect() to 10.10.10.1 port 443 (#0)
+*   Trying 10.10.10.1...
+* Connected to 10.10.10.1 (10.10.10.1) port 443 (#0)
+* ... (Kết nối TCP mở nhưng HTTP server không trả về dữ liệu)`,
+        nodes: {
+            Laptop:  { state: 'STUCK', color: 'red', border: 'border-red-500 danger-pulse' },
+            FW:      { state: 'TCP OPEN, NO HTTP', color: 'amber', border: 'border-amber-400' },
+            Internet:{ state: 'UNREACHABLE', color: 'slate', border: 'border-slate-300 dark:border-slate-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'FW', st: 'ACTIVE' },
+            { src: 'FW', dst: 'Internet', st: 'DOWN' },
+        ],
+        hypotheses: ['h1:ruled_out','h2:ruled_out','h3:investigating','h4:ruled_out'],
+        portBadge: false,
+        rootCause: null,
+        fix: null,
+        packet: { from: 'Laptop', to: 'FW', label: 'HTTP Request', color: 'bg-amber-500', icon: 'fa-globe' },
+        cliTitle: 'FW-1 — Console / Logs'
+    },
+    {
+        step: 3, phase: 'INVESTIGATE', phaseColor: 'blue',
+        title: 'Kiểm tra trạng thái tiến trình httpd',
+        description: 'Vào Expert mode, dùng <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded text-xs font-mono">ps aux | grep httpd</code> để kiểm tra. Phát hiện tiến trình httpd đang ở trạng thái Z (Zombie / Defunct). Đây là lý do TCP connection mở nhưng không có HTTP response.',
+        cli_logs: `[Expert@FW-1:0]# ps aux | grep httpd
+admin      8415  0.0  0.0      0     0 ?        Z    Oct07   0:00 [httpd] <defunct>
+admin     12345  0.0  0.0 112812   976 pts/1    S+   08:15   0:00 grep --color=auto httpd
+
+[Expert@FW-1:0]# netstat -tlnp | grep 443
+tcp  0  0 0.0.0.0:443  0.0.0.0:*  LISTEN  -  (Kernel nắm port, không phải httpd)`,
+        nodes: {
+            Laptop:  { state: 'WAITING', color: 'amber', border: 'border-amber-400' },
+            FW:      { state: 'HTTPD DEFUNCT', color: 'red', border: 'border-red-500 danger-pulse' },
+            Internet:{ state: 'UNREACHABLE', color: 'slate', border: 'border-slate-300 dark:border-slate-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'FW', st: 'DOWN' },
+            { src: 'FW', dst: 'Internet', st: 'DOWN' },
+        ],
+        hypotheses: ['h1:ruled_out','h2:ruled_out','h3:confirmed','h4:ruled_out'],
+        portBadge: false,
+        rootCause: 'Tiến trình httpd (Apache) đã bị crash (có thể do OOM hoặc disk full) nhưng để lại Stale PID file (/var/run/httpd.pid). Do file PID cũ vẫn tồn tại, script khởi động không thể tự restart httpd. Tiến trình ở trạng thái Zombie (Z) không thể xử lý request HTTP, dẫn đến lỗi stuck (không phản hồi).',
+        fix: null,
+        packet: null,
+        cliTitle: 'FW-1 — Expert Mode'
+    },
+    {
+        step: 4, phase: 'ROOT CAUSE', phaseColor: 'red',
+        title: 'Nguyên nhân gốc rễ: Stale PID File',
+        description: 'Xác minh sự tồn tại của Stale PID. Watchdog (cpwd) của Check Point không restart được tiến trình vì đọc thấy file PID cũ và lầm tưởng tiến trình đang chạy.',
+        cli_logs: `[Expert@FW-1:0]# cat /var/run/httpd.pid
+8415
+
+[Expert@FW-1:0]# kill -0 8415
+(Không có lỗi, vì PID là zombie nên process vẫn nằm trong bảng process table, đánh lừa cpwd)
+
+[Expert@FW-1:0]# cpwd_admin list | grep CPHTTP
+CPHTTP  8415  1  /opt/CPshrd-R82/bin/cp_http_server  ...  [ALIVE]`,
+        nodes: {
+            Laptop:  { state: 'WAITING', color: 'amber', border: 'border-amber-400' },
+            FW:      { state: 'STALE PID', color: 'red', border: 'border-red-500 danger-pulse' },
+            Internet:{ state: 'UNREACHABLE', color: 'slate', border: 'border-slate-300 dark:border-slate-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'FW', st: 'DOWN' },
+            { src: 'FW', dst: 'Internet', st: 'DOWN' },
+        ],
+        hypotheses: ['h1:ruled_out','h2:ruled_out','h3:confirmed','h4:ruled_out'],
+        portBadge: false,
+        rootCause: 'Tiến trình httpd (Apache) đã bị crash (có thể do OOM hoặc disk full) nhưng để lại Stale PID file (/var/run/httpd.pid). Do file PID cũ vẫn tồn tại, script khởi động không thể tự restart httpd. Tiến trình ở trạng thái Zombie (Z) không thể xử lý request HTTP, dẫn đến lỗi stuck (không phản hồi).',
+        fix: null,
+        packet: null,
+        cliTitle: 'FW-1 — Expert Mode'
+    },
+    {
+        step: 5, phase: 'FIX', phaseColor: 'emerald',
+        title: 'Khắc phục: Kill defunct, Xóa PID & Restart httpd',
+        description: 'Quy trình xử lý khẩn cấp: 1) Kill tiến trình cũ, 2) Xóa stale PID file, 3) Restart CPHTTP thông qua cpwd_admin.',
+        cli_logs: `[Expert@FW-1:0]# kill -9 8415
+[Expert@FW-1:0]# pkill -9 httpd
+
+[Expert@FW-1:0]# rm -f /var/run/httpd.pid
+[Expert@FW-1:0]# rm -f /var/run/cgi-bin-httpd.pid
+
+[Expert@FW-1:0]# cpwd_admin stop -name CPHTTP -path "$CPDIR/bin/cp_http_server"
+[Expert@FW-1:0]# cpwd_admin start -name CPHTTP -path "$CPDIR/bin/cp_http_server"
+
+[Expert@FW-1:0]# ps aux | grep httpd
+admin 15201 0.1 2.0 156200 80230 ? S 08:20 0:00 /opt/CPshrd-R82/bin/httpd -f ...`,
+        nodes: {
+            Laptop:  { state: 'WAITING', color: 'amber', border: 'border-amber-400' },
+            FW:      { state: 'RESTARTING...', color: 'emerald', border: 'border-emerald-400' },
+            Internet:{ state: 'UNREACHABLE', color: 'slate', border: 'border-slate-300 dark:border-slate-700' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'FW', st: 'DOWN' },
+            { src: 'FW', dst: 'Internet', st: 'DOWN' },
+        ],
+        hypotheses: ['h1:ruled_out','h2:ruled_out','h3:confirmed','h4:ruled_out'],
+        portBadge: false,
+        rootCause: 'Tiến trình httpd (Apache) đã bị crash (có thể do OOM hoặc disk full) nhưng để lại Stale PID file (/var/run/httpd.pid). Do file PID cũ vẫn tồn tại, script khởi động không thể tự restart httpd. Tiến trình ở trạng thái Zombie (Z) không thể xử lý request HTTP, dẫn đến lỗi stuck (không phản hồi).',
+        fix: 'Force kill tiến trình defunct. Xóa thủ công tệp PID (/var/run/httpd.pid). Khởi động lại dịch vụ qua cpwd_admin. Khuyến nghị cấu hình monitor /var disk space & RAM để ngăn ngừa lỗi crash tái diễn.',
+        packet: null,
+        cliTitle: 'FW-1 — Expert Mode'
+    },
+    {
+        step: 6, phase: 'VERIFY', phaseColor: 'emerald',
+        title: 'Xác minh: Portal tải thành công & Truy cập Internet',
+        description: 'Người dùng kết nối lại Wi-Fi, Captive Portal đã hiển thị bình thường. Sau khi đăng nhập, thiết bị đã có thể truy cập Internet. Sự cố được giải quyết.',
+        cli_logs: `[Expert@FW-1:0]# curl -k -I https://localhost/connect/PortalMain
+HTTP/1.1 200 OK
+Date: Thu, 08 Oct 2026 01:25:00 GMT
+Server: Check Point SVN foundation
+...
+
+(SmartConsole)
+Action: Accept
+Source: 10.10.10.50
+Dest: 8.8.8.8 (DNS)
+Rule: Access to Internet`,
+        nodes: {
+            Laptop:  { state: 'AUTH OK', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
+            FW:      { state: 'HTTPD ONLINE', color: 'emerald', border: 'border-emerald-500 ok-pulse' },
+            Internet:{ state: 'ONLINE', color: 'blue', border: 'border-blue-300 dark:border-blue-600' },
+        },
+        links: [
+            { src: 'Laptop', dst: 'FW', st: 'ACTIVE' },
+            { src: 'FW', dst: 'Internet', st: 'ACTIVE' },
+        ],
+        hypotheses: ['h1:ruled_out','h2:ruled_out','h3:confirmed','h4:ruled_out'],
+        portBadge: false,
+        rootCause: 'Tiến trình httpd (Apache) đã bị crash (có thể do OOM hoặc disk full) nhưng để lại Stale PID file (/var/run/httpd.pid). Do file PID cũ vẫn tồn tại, script khởi động không thể tự restart httpd. Tiến trình ở trạng thái Zombie (Z) không thể xử lý request HTTP, dẫn đến lỗi stuck (không phản hồi).',
+        fix: 'Force kill tiến trình defunct. Xóa thủ công tệp PID (/var/run/httpd.pid). Khởi động lại dịch vụ qua cpwd_admin. Khuyến nghị cấu hình monitor /var disk space & RAM để ngăn ngừa lỗi crash tái diễn.',
+        packet: { from: 'Laptop', to: 'Internet', label: 'HTTP 200 OK', color: 'bg-emerald-500', icon: 'fa-check-circle' },
+        cliTitle: 'FW-1 — Verification'
+    }
+];
+
+class TroubleshootingSimulator {
+    constructor() {
+        this.currentCase = 'shutdown';
+        this.idx = 0; this.playing = false; this.intervalId = null; this.currentAnim = null;
+        this.dom = {
+            stepper: document.getElementById('stepper-container'),
+            progress: document.getElementById('timeline-progress'),
+            btnPrev: document.getElementById('btn-prev'),
+            btnNext: document.getElementById('btn-next'),
+            btnPlay: document.getElementById('btn-play'),
+            iconPlay: document.getElementById('icon-play'),
+            themeIcon: document.getElementById('theme-icon'),
+            phaseBadge: document.getElementById('phase-badge'),
+            title: document.getElementById('step-title'),
+            desc: document.getElementById('step-desc'),
+            cli: document.getElementById('cli-logs'),
+            canvas: document.getElementById('topology-canvas'),
+            svg: document.getElementById('links-svg'),
+            packet: document.getElementById('animated-packet'),
+            packetIcon: document.getElementById('packet-icon'),
+            packetLabel: document.getElementById('packet-label'),
+            hypotheses: document.getElementById('hypothesis-list'),
+            hypothesisList: document.getElementById('hypothesis-list'),
+            rootCausePanel: document.getElementById('root-cause-panel'),
+            rootCauseText: document.getElementById('root-cause-text'),
+            fixPanel: document.getElementById('fix-panel'),
+            fixText: document.getElementById('fix-text'),
+            portBadge: document.getElementById('port-badge'),
+        };
+        window.addEventListener('resize', () => { 
+            this.clampNodes();
+            this.drawLinks(TIMELINE[this.idx].links); 
+        });
+        this.init();
+    }
+
+    init() {
+        let dark = false;
+        try { const s = localStorage.getItem('portfolio-theme'); dark = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; } catch(e){}
+        document.documentElement.classList.toggle('dark', dark);
+        if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+        this.buildStepper(); this.render(0);
+    }
+
+    buildStepper() {
+        this.dom.stepper.innerHTML = '';
+        TIMELINE.forEach((d, i) => {
+            const btn = document.createElement('button');
+            btn.id = `step-btn-${i}`;
+            btn.innerHTML = `<span class="hidden md:block">${d.step}. ${d.phase}</span><span class="md:hidden">${d.step}</span>`;
+            btn.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm hover:scale-105';
+            btn.onclick = () => { this.pause(); this.render(i); };
+            this.dom.stepper.appendChild(btn);
+        });
+    }
+
+    colorClass(c) {
+        const m = {
+            slate:   'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600',
+            amber:   'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700/50',
+            blue:    'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700/50',
+            emerald: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/50',
+            red:     'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700/50',
+        };
+        return m[c] || m.slate;
+    }
+
+    drawLinks(links) {
+        if (!this.dom.svg || !this.dom.canvas) return;
+        this.dom.svg.innerHTML = '';
+        const cr = this.dom.canvas.getBoundingClientRect();
+        const dark = document.documentElement.classList.contains('dark');
+        links.forEach(lk => {
+            const s = document.getElementById('node-' + lk.src);
+            const t = document.getElementById('node-' + lk.dst);
+            if (!s || !t) return;
+            const sr = s.getBoundingClientRect(), tr = t.getBoundingClientRect();
+            const x1 = sr.left-cr.left+sr.width/2, y1 = sr.top-cr.top+sr.height/2;
+            const x2 = tr.left-cr.left+tr.width/2, y2 = tr.top-cr.top+tr.height/2;
+
+            // 1. Base Track Layer (.link-track standard)
+            const track = document.createElementNS('http://www.w3.org/2000/svg','line');
+            track.setAttribute('x1', x1); track.setAttribute('y1', y1);
+            track.setAttribute('x2', x2); track.setAttribute('y2', y2);
+            track.setAttribute('stroke-width', '6');
+            track.setAttribute('stroke-linecap', 'round');
+            track.setAttribute('stroke', dark ? 'rgba(51, 65, 85, 0.55)' : 'rgba(203, 213, 225, 0.45)');
+            this.dom.svg.appendChild(track);
+
+            // 2. Active Flow Overlay Layer
+            const flow = document.createElementNS('http://www.w3.org/2000/svg','line');
+            flow.setAttribute('x1', x1); flow.setAttribute('y1', y1);
+            flow.setAttribute('x2', x2); flow.setAttribute('y2', y2);
+            flow.setAttribute('stroke-width', '4');
+            flow.setAttribute('stroke-linecap', 'round');
+            if (lk.st === 'ACTIVE') {
+                flow.setAttribute('stroke', dark ? '#60a5fa' : '#3b82f6');
+                flow.setAttribute('stroke-dasharray', '10, 10');
+                flow.classList.add('animate-dash');
+                flow.style.filter = 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.6))';
+            } else if (lk.st === 'DOWN') {
+                flow.setAttribute('stroke', dark ? 'rgba(239,68,68,0.85)' : 'rgba(239,68,68,0.95)');
+                flow.setAttribute('stroke-dasharray', '4, 12');
+            } else {
+                flow.setAttribute('stroke', dark ? 'rgba(71,85,105,0.4)' : 'rgba(203,213,225,0.6)');
+                flow.setAttribute('stroke-dasharray', '6, 8');
+            }
+            this.dom.svg.appendChild(flow);
+        });
+    }
+
+    renderHypotheses(hyps) {
+        const statusMap = {
+            investigating: { icon: 'fa-circle-question', color: 'text-amber-500', label: 'Đang điều tra', cls: '' },
+            ruled_out:     { icon: 'fa-circle-xmark',    color: 'text-slate-400',  label: 'Đã loại trừ', cls: 'hypothesis-strikethrough' },
+            confirmed:     { icon: 'fa-circle-check',    color: 'text-red-500',    label: 'Xác nhận!', cls: 'font-bold' },
+        };
+        const listEl = this.dom.hypothesisList || this.dom.hypotheses;
+        if (!listEl) return;
+        listEl.innerHTML = hyps.map(h => {
+            const [id, status] = h.split(':');
+            const master = HYPOTHESES_MASTER.find(m => m.id === id);
+            if (!master) return '';
+            const st = statusMap[status] || statusMap.investigating;
+            return `<li class="flex items-start gap-2 text-xs ${st.cls}">
+                <i class="fas ${st.icon} ${st.color} mt-0.5 shrink-0"></i>
+                <span class="text-slate-700 dark:text-slate-300 ${st.cls}">${master.text}</span>
+            </li>`;
+        }).join('');
+    }
+
+    render(i) {
+        this.idx = i;
+        const d = TIMELINE[i];
+
+        TIMELINE.forEach((_,j) => {
+            const b = document.getElementById(`step-btn-${j}`);
+            if (!b) return;
+            if (j < i) b.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-amber-500 text-white border-amber-500 cursor-pointer shadow';
+            else if (j === i) b.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 text-amber-600 border-amber-300 dark:border-amber-700 cursor-pointer';
+            else b.className = 'relative w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm border-2 transition-all duration-300 z-10 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-pointer';
+        });
+        this.dom.progress.style.width = `${(i / (TIMELINE.length - 1)) * 100}%`;
+
+        const phaseColors = {
+            amber:   'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700/50',
+            red:     'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700/50',
+            emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/50',
+        };
+        this.dom.phaseBadge.textContent = d.phase;
+        this.dom.phaseBadge.className = `px-3 py-1 rounded text-xs font-bold uppercase tracking-widest border ${phaseColors[d.phaseColor] || phaseColors.amber}`;
+        this.dom.title.textContent = d.title;
+        this.dom.desc.innerHTML = d.description;
+        this.dom.cli.textContent = d.cli_logs;
+
+        Object.entries(d.nodes).forEach(([id, nd]) => {
+            const stEl = document.getElementById(`state-${id}`);
+            const card = document.getElementById(`node-${id}`);
+            if (stEl) { stEl.textContent = nd.state; stEl.className = `text-[8px] font-black tracking-widest px-2 py-0.5 mt-1.5 rounded border ${this.colorClass(nd.color)}`; }
+            if (card) card.className = `absolute w-28 md:w-40 bg-white dark:bg-slate-800 rounded-xl p-3 border-2 shadow-lg flex flex-col items-center transition-all duration-500 z-10 ${nd.border}`;
+        });
+
+        if (this.dom.portBadge) this.dom.portBadge.classList.toggle('hidden', !d.portBadge);
+
+        this.renderHypotheses(d.hypotheses);
+        this.animatePacket(d.packet);
+
+        if (this.dom.rootCausePanel) {
+            this.dom.rootCausePanel.classList.toggle('hidden', !d.rootCause);
+            if (d.rootCause && this.dom.rootCauseText) this.dom.rootCauseText.textContent = d.rootCause;
+        }
+        if (this.dom.fixPanel) {
+            this.dom.fixPanel.classList.toggle('hidden', !d.fix);
+            if (d.fix && this.dom.fixText) this.dom.fixText.textContent = d.fix;
+        }
+
+        if (this.dom.btnPrev) this.dom.btnPrev.disabled = i === 0;
+        if (this.dom.btnNext) this.dom.btnNext.disabled = i === TIMELINE.length - 1;
+        if (i === TIMELINE.length - 1 && this.playing) this.pause();
+
+        // Clamp nodes first, then draw SVG links based on corrected positions
+        setTimeout(() => { this.clampNodes(); this.drawLinks(d.links); }, 50);
+    }
+
+    // Auto-clamp all nodes within canvas bounds — no manual top% calculation needed.
+    // Discovers all [id^="node-"] elements dynamically. Accounts for the -top-3 role
+    // badge (BADGE_PX) above each card so it is never clipped by overflow-hidden.
+    clampNodes() {
+        if (!this.dom.canvas) return;
+        const cr  = this.dom.canvas.getBoundingClientRect();
+        const BADGE_PX = 20;  // clearance for absolute -top-3 role badge (~12px) + padding
+        const EDGE_PX  = 6;   // general edge padding
+
+        this.dom.canvas.querySelectorAll('[id^="node-"]').forEach(node => {
+            const nr  = node.getBoundingClientRect();
+            const hPx = cr.height / 100;
+            const wPx = cr.width  / 100;
+            if (!node.dataset.rawTop) {
+                    node.dataset.rawTop = parseFloat(node.style.top) || 50;
+                    node.dataset.rawLeft = parseFloat(node.style.left) || 50;
+                }
+                let top = parseFloat(node.dataset.rawTop);
+                let left = parseFloat(node.dataset.rawLeft);
+
+            // Top: include badge clearance above the card
+            const topClip = (cr.top + BADGE_PX) - nr.top;
+            if (topClip > 0) top += topClip / hPx;
+
+            // Bottom
+            const botClip = nr.bottom - (cr.bottom - EDGE_PX);
+            if (botClip > 0) top -= botClip / hPx;
+
+            // Left
+            const leftClip = (cr.left + EDGE_PX) - nr.left;
+            if (leftClip > 0) left += leftClip / wPx;
+
+            // Right
+            const rightClip = nr.right - (cr.right - EDGE_PX);
+            if (rightClip > 0) left -= rightClip / wPx;
+
+            node.style.top  = top  + '%';
+            node.style.left = left + '%';
+        });
+    }
+
+    animatePacket(p) {
+        if (this.currentAnim) this.currentAnim.cancel();
+        if (!p) { this.dom.packet.classList.add('hidden'); return; }
+        const src = document.getElementById('node-' + p.from);
+        const tgt = document.getElementById('node-' + p.to);
+        if (!src || !tgt) { this.dom.packet.classList.add('hidden'); return; }
+        this.dom.packetLabel.textContent = p.label;
+        this.dom.packetIcon.className = `fas ${p.icon}`;
+        this.dom.packet.className = `absolute z-50 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold text-white whitespace-nowrap ${p.color} shadow-lg`;
+        this.dom.packet.classList.remove('hidden');
+        const cr = this.dom.canvas.getBoundingClientRect();
+        const sr = src.getBoundingClientRect(), tr = tgt.getBoundingClientRect();
+        const sx = sr.left-cr.left+sr.width/2, sy = sr.top-cr.top+sr.height/2;
+        const tx = tr.left-cr.left+tr.width/2, ty = tr.top-cr.top+tr.height/2;
+        this.dom.packet.style.left = '0px'; this.dom.packet.style.top = '0px';
+        this.currentAnim = this.dom.packet.animate([
+            { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(0.8)`, opacity: 0 },
+            { transform: `translate(calc(${sx}px - 50%), calc(${sy}px - 50%)) scale(1)`,   opacity: 1, offset: 0.1 },
+            { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(1)`,   opacity: 1, offset: 0.88 },
+            { transform: `translate(calc(${tx}px - 50%), calc(${ty}px - 50%)) scale(0.8)`, opacity: 0 },
+        ], { duration: 2800, easing: 'cubic-bezier(0.4,0,0.2,1)', fill: 'forwards' });
+    }
+
+    nextStep() { if (this.idx < TIMELINE.length - 1) this.render(this.idx + 1); }
+    prevStep() { if (this.idx > 0) this.render(this.idx - 1); }
+    togglePlay() { this.playing ? this.pause() : this.play(); }
+    play() {
+        if (this.idx === TIMELINE.length - 1) this.render(0);
+        this.playing = true;
+        if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-pause';
+        if (this.dom.btnPlay) { this.dom.btnPlay.classList.replace('bg-amber-500','bg-slate-500'); this.dom.btnPlay.classList.replace('hover:bg-amber-600','hover:bg-slate-600'); }
+        this.intervalId = setInterval(() => { if (this.idx < TIMELINE.length - 1) this.nextStep(); }, 5000);
+    }
+    pause() {
+        this.playing = false; clearInterval(this.intervalId);
+        if (this.dom.iconPlay) this.dom.iconPlay.className = 'fas fa-play ml-1';
+        if (this.dom.btnPlay) { this.dom.btnPlay.classList.replace('bg-slate-500','bg-amber-500'); this.dom.btnPlay.classList.replace('hover:bg-slate-600','hover:bg-amber-600'); }
+    }
+    reset() { this.pause(); this.render(0); }
+    toggleTheme() {
+        const dark = !document.documentElement.classList.contains('dark');
+        document.documentElement.classList.toggle('dark', dark);
+        if (this.dom.themeIcon) this.dom.themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+        try { localStorage.setItem('portfolio-theme', dark ? 'dark' : 'light'); } catch(e){}
+        this.drawLinks(TIMELINE[this.idx].links);
+    }
+}
+
+let app;
+window.addEventListener('DOMContentLoaded', () => { app = new TroubleshootingSimulator(); });
+</script>
+
+<!-- Fullscreen & Pan Topology Script -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const topo = document.getElementById('topology-canvas') || document.getElementById('topology-container') || document.getElementById('topo-container');
+    if (!topo) return;
+
+    const wrapper = topo.closest('.overflow-x-auto') || topo.parentElement;
+    if (!wrapper) return;
+
+    const fsBtn = document.createElement('button');
+    fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+    fsBtn.className = 'absolute top-4 right-4 z-30 w-8 h-8 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-md text-slate-600 dark:text-slate-300 shadow-sm hover:bg-white dark:hover:bg-slate-700 transition-colors cursor-pointer';
+    fsBtn.title = 'Toggle Fullscreen';
+    topo.appendChild(fsBtn);
+
+    let isFakeFullscreen = false;
+
+    function toggleFakeFullscreen() {
+        isFakeFullscreen = !isFakeFullscreen;
+        if (isFakeFullscreen) {
+            wrapper.classList.add('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!p-0', '!rounded-none', '!max-w-none', 'overflow-auto');
+            wrapper.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
+            wrapper.style.touchAction = 'pan-x pan-y';
+            wrapper.style.webkitOverflowScrolling = 'touch';
+
+            topo.classList.add('!min-h-full', '!h-full', '!rounded-none', '!border-0');
+
+            fsBtn.classList.remove('absolute');
+            fsBtn.classList.add('fixed');
+            fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            document.body.style.overflow = 'hidden';
+
+            setTimeout(() => {
+                const centerOffset = (topo.scrollWidth - wrapper.clientWidth) / 2;
+                if (centerOffset > 0) wrapper.scrollLeft = centerOffset;
+                window.dispatchEvent(new Event('resize'));
+            }, 60);
+        } else {
+            wrapper.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!m-0', '!p-0', '!rounded-none', '!max-w-none', 'overflow-auto');
+            wrapper.style.backgroundColor = '';
+            wrapper.style.touchAction = '';
+            wrapper.style.webkitOverflowScrolling = '';
+
+            topo.classList.remove('!min-h-full', '!h-full', '!rounded-none', '!border-0');
+
+            fsBtn.classList.remove('fixed');
+            fsBtn.classList.add('absolute');
+            fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            document.body.style.overflow = '';
+
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 60);
+        }
+    }
+
+    fsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (document.fullscreenElement || document.webkitFullscreenElement || isFakeFullscreen) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+            if (isFakeFullscreen) toggleFakeFullscreen();
+        } else {
+            const target = wrapper;
+            if (target.requestFullscreen) {
+                target.requestFullscreen().catch(() => {
+                    toggleFakeFullscreen();
+                });
+            } else if (target.webkitRequestFullscreen) {
+                target.webkitRequestFullscreen();
+            } else {
+                toggleFakeFullscreen();
+            }
+        }
+    });
+
+    const handleFsChange = () => {
+        const isFs = document.fullscreenElement === wrapper || document.webkitFullscreenElement === wrapper;
+        if (isFs) {
+            wrapper.classList.add('overflow-auto');
+            wrapper.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
+            wrapper.style.touchAction = 'pan-x pan-y';
+            wrapper.style.webkitOverflowScrolling = 'touch';
+            topo.classList.add('!min-h-full', '!h-full', '!rounded-none', '!border-0');
+            fsBtn.classList.remove('absolute');
+            fsBtn.classList.add('fixed');
+            fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            document.body.style.overflow = 'hidden';
+
+            setTimeout(() => {
+                const centerOffset = (topo.scrollWidth - wrapper.clientWidth) / 2;
+                if (centerOffset > 0) wrapper.scrollLeft = centerOffset;
+                window.dispatchEvent(new Event('resize'));
+            }, 60);
+        } else if (!isFakeFullscreen) {
+            wrapper.classList.remove('overflow-auto');
+            wrapper.style.backgroundColor = '';
+            wrapper.style.touchAction = '';
+            wrapper.style.webkitOverflowScrolling = '';
+            topo.classList.remove('!min-h-full', '!h-full', '!rounded-none', '!border-0');
+            fsBtn.classList.remove('fixed');
+            fsBtn.classList.add('absolute');
+            fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            document.body.style.overflow = '';
+
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 60);
+        }
+    };
+
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isFakeFullscreen) {
+            toggleFakeFullscreen();
+        }
+    });
+
+    // Touch & Pointer Drag-to-Pan engine (allows move around on mobile & desktop)
+    let isPanning = false;
+    let startX = 0, startY = 0;
+    let scrollStartLeft = 0, scrollStartTop = 0;
+
+    topo.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('button, a, input, select, textarea, .mode-btn, [id^="case-btn"], [id^="node-"]')) return;
+        isPanning = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        scrollStartLeft = wrapper.scrollLeft;
+        scrollStartTop = wrapper.scrollTop;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+        if (!isPanning) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        wrapper.scrollLeft = scrollStartLeft - dx;
+        wrapper.scrollTop = scrollStartTop - dy;
+    });
+
+    const stopPan = () => { isPanning = false; };
+    window.addEventListener('pointerup', stopPan);
+    window.addEventListener('pointercancel', stopPan);
+});
+</script>
+
+</body>
+</html>
